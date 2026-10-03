@@ -4,7 +4,7 @@ import pytest
 import torch
 
 from roofseg.model import EfficientNetB0UNet, build_model, state_digest
-from roofseg.pilot import build_config
+from roofseg.pilot import build_config, pilot_run_root
 from roofseg.run_artifacts import prepare_run
 from roofseg.training import adamw, restore_checkpoint
 
@@ -50,6 +50,11 @@ def test_split_config_uses_only_saved_training_and_validation_ids():
     assert config["training_ids"] == [str(i) for i in range(25)]
     assert config["validation_ids"] == ["108", "109"]
     assert not set(config["training_ids"]) & set(splits["roles"]["test"])
+
+
+def test_pilot_run_root_is_split_versioned(tmp_path: Path):
+    splits = {"split_name": "geographic_v2"}
+    assert pilot_run_root(tmp_path, splits) == tmp_path / "runs/training_pilot/geographic_v2"
 
 
 def test_checkpoint_restore_rejects_mismatch(tmp_path: Path):

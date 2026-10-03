@@ -20,26 +20,22 @@ binary target uses roof codes 0–16 and background code 17, as confirmed from t
 provider's mask-generation code. This corrects an initially attempted reversed
 mapping before any result was committed.
 
-Provider split D1 is the geographic basis. Strict complete-footprint checks and
-exact-duplicate removal retain 940 training, 289 validation and all 154 locked
-test images; 497 images are excluded with reasons saved in `splits.json`. Three
-deterministic nested training-subset repetitions use seeds 17, 29 and 43. No
-model has been trained. The next discussion point is whether this conservative
-split and the proposed pilot sizes are appropriate before Stage 2 begins.
+The active split `rid_southwest_test_north_validation_v2` holds out a compact
+259-image southwest test area and retains 289 northern validation images. Strict
+complete-footprint checks and exact-duplicate removal leave 1,210 training and
+122 excluded images, with no additional distance buffer and no positive-area
+cross-role overlap. Three deterministic nested training-subset repetitions use
+seeds 17, 29 and 43.
 
-Stage 2 keeps this saved split unchanged and adds no further geographic buffer.
-The strict footprint check prevents direct image overlap across roles, while all
-regions still come from Wartenberg. The pilot therefore studies label efficiency
-within this locality; it cannot establish independence from nearby spatial
-context or transfer to another city. The 154 test images remain locked outside
-training, checkpoint selection, error analysis and example selection.
-
-**Stage 2 is paused pending a revised evaluation split.** One random-initialized
-25-image run completed under the old split; ImageNet runs were interrupted and
-remain incomplete historical artifacts. No result or checkpoint from this pilot
-will be reused under a revised split. A metadata-only proposal for one compact
-held-out area is being reviewed before any reference split is changed or any
-training restarts.
+An early 25-image pilot under the former provider-test design was discarded when
+the evaluation question changed to transfer into a held-out part of Wartenberg.
+One random run completed and two ImageNet attempts were interrupted; these remain
+historical artifacts and are not reused. Three images in the active test region
+(146, 1762 and 1782) occurred in that old training subset. This history is not
+erased, but it did not determine the approved geographic boundary. Stage 2 now
+restarts every run from fresh random parameters or the original verified
+ImageNet weights with a newly initialized decoder. The 259 active test images
+remain outside all new training, model selection and qualitative analysis.
 
 ## Dataset and scientific decisions
 

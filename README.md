@@ -13,13 +13,14 @@ for overlapping image footprints. Learning curves will describe performance as
 the number of labelled training images increases, alongside variation across
 repetitions, computational cost and qualitative error analysis.
 
-**Status:** Stage 1 is complete. The official RID 1.0 release has been imported
-and checksum-verified, its binary roof-label contract established, and a strict
-geographic development/test split saved. No model has been trained and no
-segmentation performance is claimed.
+**Status:** Stage 2 is in progress. RID 1.0 is checksum-verified and the active
+split holds out a compact 259-image southwest test area and a 289-image northern
+validation area, with 1,210 training images and no positive-area cross-role
+footprint overlap. An early pilot under the former provider-based test design was
+discarded before this split was adopted; all reported Stage 2 models start fresh.
 
 The executed [data-exploration notebook](notebooks/01_data_exploration.ipynb) presents the
-evidence. [docs/setup.md](docs/setup.md) gives exact reproduction commands,
+data and split evidence. [docs/setup.md](docs/setup.md) gives exact reproduction commands,
 [docs/data.md](docs/data.md) records source and label interpretation, and
 [WORK_PLAN.md](WORK_PLAN.md) tracks the research stages.
 

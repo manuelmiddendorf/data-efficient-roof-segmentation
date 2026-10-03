@@ -2,25 +2,20 @@
 
 from __future__ import annotations
 
-from collections import Counter, defaultdict
+from collections import Counter
 import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as PolygonPatch, Rectangle
 import numpy as np
-from shapely.geometry import box
-from shapely.strtree import STRtree
 
 from .plots import ROLE_COLOURS
-from .spatial import metric_footprints, overlapping_pairs, remove_crossing_training_images
+from .spatial import (APPROVED_TEST_BOUNDS_M, assign_compact_geographic_roles,
+                      directional_nearest_distances, metric_footprints)
 
 
 PROPOSAL_CRS = "EPSG:25832"
-TEST_WEST_BOUNDARY_M = 720_200.0
-TEST_SOUTH_BOUNDARY_M = 5_364_860.0
-TEST_EAST_BOUNDARY_M = 720_800.0
-TEST_NORTH_BOUNDARY_M = 5_365_350.0
 
 
 def prior_development_usage(project_root: Path, manifest: dict, splits: dict) -> dict:
@@ -95,79 +90,16 @@ def prior_development_usage(project_root: Path, manifest: dict, splits: dict) ->
 def build_split_proposal(manifest: dict, old_splits: dict, usage: dict) -> dict:
     """Build one southwest test-area proposal without reading imagery or scores."""
     footprints = metric_footprints(manifest["samples"], PROPOSAL_CRS)
-    all_ids = set(footprints)
     old_validation = set(old_splits["roles"]["validation"])
     exposed = set(usage["model_or_qualitative_ids"])
-    selection_area = box(
-        TEST_WEST_BOUNDARY_M,
-        TEST_SOUTH_BOUNDARY_M,
-        TEST_EAST_BOUNDARY_M,
-        TEST_NORTH_BOUNDARY_M,
+    roles, exclusions, overlap_counts = assign_compact_geographic_roles(
+        footprints, old_validation, manifest["audit"]["exact_duplicate_image_groups"]
     )
-
-    reasons: dict[str, set[str]] = defaultdict(set)
-    retained = set(all_ids)
-    for group in manifest["audit"]["exact_duplicate_image_groups"]:
-        keep = min(
-            group,
-            key=lambda sample_id: (
-                0 if sample_id in old_validation else 1,
-                int(sample_id),
-            ),
-        )
-        for sample_id in group:
-            if sample_id != keep:
-                retained.discard(sample_id)
-                reasons[sample_id].add(f"exact_duplicate_of_{keep}")
-
-    inside = {sample_id for sample_id, geometry in footprints.items() if selection_area.covers(geometry)}
-    boundary = {
-        sample_id for sample_id, geometry in footprints.items()
-        if geometry.intersects(selection_area) and sample_id not in inside
-    }
-    for sample_id in boundary:
-        retained.discard(sample_id)
-        reasons[sample_id].add("southwest_test_boundary_straddler")
-
-    test = (inside & retained) - old_validation
-    validation = old_validation & retained
-    if overlapping_pairs(footprints, test, validation):
-        raise AssertionError("Proposed southwest test and retained northern validation footprints overlap.")
-
-    protected = test | validation
-    training_candidates = retained - protected
-    training, crossing_rows = remove_crossing_training_images(
-        footprints,
-        training_candidates,
-        {"test": test, "validation": validation},
-    )
-    for row in crossing_rows:
-        retained.discard(row["id"])
-        reasons[row["id"]].add(row["reason"])
-
-    training_set = set(training)
-    excluded = all_ids - training_set - validation - test
-    if training_set | validation | test | excluded != all_ids:
-        raise AssertionError("Proposed roles do not partition all samples.")
-
-    role_pairs = {
-        "training_validation": overlapping_pairs(footprints, training_set, validation),
-        "training_test": overlapping_pairs(footprints, training_set, test),
-        "validation_test": overlapping_pairs(footprints, validation, test),
-    }
-    if any(role_pairs.values()):
-        raise AssertionError("Positive-area cross-role footprint overlap remains in proposal.")
-
-    roles = {
-        "training": sorted(training_set, key=int),
-        "validation": sorted(validation, key=int),
-        "test": sorted(test, key=int),
-        "excluded": sorted(excluded, key=int),
-    }
+    test = set(roles["test"])
     old_role = {sample_id: role for role, ids in old_splits["roles"].items() for sample_id in ids}
     transitions = Counter((old_role[sample_id], role) for role, ids in roles.items() for sample_id in ids)
     old_test = set(old_splits["roles"]["test"])
-    test_bounds = selection_area.bounds
+    test_bounds = APPROVED_TEST_BOUNDS_M
     return {
         "status": "proposal_only_not_adopted",
         "do_not_use_for_training": True,
@@ -179,14 +111,11 @@ def build_split_proposal(manifest: dict, old_splits: dict, usage: dict) -> dict:
         "test_area_height_m": test_bounds[3] - test_bounds[1],
         "roles": roles,
         "counts": {role: len(ids) for role, ids in roles.items()},
-        "exclusions": [
-            {"id": sample_id, "reasons": sorted(reasons.get(sample_id, {"outside_retained_roles"}))}
-            for sample_id in sorted(excluded, key=int)
-        ],
+        "exclusions": exclusions,
         "exclusion_reason_counts": dict(sorted(Counter(
-            reason for sample_id in excluded for reason in reasons.get(sample_id, {"outside_retained_roles"})
+            reason for row in exclusions for reason in row["reasons"]
         ).items())),
-        "cross_role_positive_area_overlaps": {name: len(rows) for name, rows in role_pairs.items()},
+        "cross_role_positive_area_overlaps": overlap_counts,
         "prior_use_intersection": {
             "proposed_test_images_previously_used": sorted(test & exposed, key=int),
             "model_training": sorted(test & set(usage["model_training_ids"]), key=int),
@@ -210,19 +139,9 @@ def cross_role_distances(footprints: dict[str, object], roles: dict[str, list[st
     """Summarize nearest complete-footprint distances between proposed roles."""
     rows = []
     for left_role, right_role in (("training", "validation"), ("training", "test"), ("validation", "test")):
-        right_geometries = [footprints[sample_id] for sample_id in roles[right_role]]
-        tree = STRtree(right_geometries)
-        distances = []
-        for sample_id in roles[left_role]:
-            geometry = footprints[sample_id]
-            nearest_index = int(tree.nearest(geometry))
-            distances.append(geometry.distance(right_geometries[nearest_index]))
-        values = np.asarray(distances)
         rows.append({
             "roles": f"{left_role}–{right_role}",
-            "minimum": float(values.min()),
-            "p10": float(np.quantile(values, 0.1)),
-            "median": float(np.median(values)),
+            **directional_nearest_distances(footprints, roles[left_role], roles[right_role]),
         })
     return rows
 

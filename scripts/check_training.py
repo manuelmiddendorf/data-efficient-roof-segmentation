@@ -8,6 +8,7 @@ import time
 
 import torch
 
+from roofseg.audit import build_splits
 from roofseg.integrity import load_json
 from roofseg.model import build_model, state_digest
 from roofseg.objectives import segmentation_loss
@@ -21,6 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 torch.hub.set_dir(str(ROOT / ".cache/torch/hub"))
 manifest = load_json(ROOT / "data/metadata/data_manifest.json")
 splits = load_json(ROOT / "data/metadata/splits.json")
+if build_splits(manifest, ROOT) != splits:
+    raise SystemExit("Active geographic split does not reproduce exactly from RID metadata.")
 config = build_config(splits, 25, "random")
 device = select_device()
 if device.type != "mps":
@@ -128,6 +131,8 @@ estimated_seconds_per_run = (
 )
 report = {
     "device": str(device),
+    "split_name": splits["split_name"],
+    "split_counts": splits["counts"],
     "output": {"shape": list(output.shape), "dtype": str(output.dtype)},
     "paired_schedule_sha256": schedule_record["sha256"],
     "paired_decoder_sha256": random_initialization["decoder_sha256"],

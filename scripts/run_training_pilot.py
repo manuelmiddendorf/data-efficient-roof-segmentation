@@ -5,7 +5,8 @@ import torch
 
 from roofseg.audit import build_data_manifest, build_splits
 from roofseg.integrity import load_json
-from roofseg.pilot import INITIALIZATIONS, PILOT_SIZES, build_config, build_metadata, run_name
+from roofseg.pilot import (INITIALIZATIONS, PILOT_SIZES, build_config, build_metadata,
+                           pilot_run_root, run_name)
 from roofseg.run_artifacts import prepare_run, verify_completed_run
 from roofseg.training import fit_run, select_device
 
@@ -27,11 +28,12 @@ for size in PILOT_SIZES:
 if pilot_ids & set(splits["roles"]["test"]):
     raise SystemExit("Pilot inputs intersect the locked test role.")
 
+run_root = pilot_run_root(ROOT, splits)
 for size in PILOT_SIZES:
     for initialization in INITIALIZATIONS:
         config = build_config(splits, size, initialization)
         metadata = build_metadata(ROOT, manifest, splits, config, device)
-        directory = ROOT / "runs/training_pilot" / run_name(size, initialization)
+        directory = run_root / run_name(size, initialization)
         if prepare_run(directory, config, metadata):
             verify_completed_run(directory)
             print(f"Reusing compatible completed run: {directory.name}", flush=True)

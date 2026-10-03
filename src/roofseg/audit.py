@@ -10,8 +10,9 @@ import numpy as np
 
 from .data import RIDDataset, check_role_partition, parse_split_file, raster_metadata, read_mask
 from .integrity import read_provider_checksums, sha256_file, verify_files
-from .spatial import (metric_footprints, overlapping_pairs, remove_crossing_training_images,
-                      select_nested_spatial_subsets)
+from .spatial import (APPROVED_TEST_BOUNDS_M, assign_compact_geographic_roles,
+                      directional_nearest_distances, metric_footprints, overlapping_pairs,
+                      remove_crossing_training_images, select_nested_spatial_subsets)
 
 
 RELEASE_PREFIXES = (
@@ -141,7 +142,7 @@ def build_data_manifest(project_root: Path) -> dict:
 
 
 def build_splits(manifest: dict, project_root: Path) -> dict:
-    """Adopt provider split D1 and exclude every positive-area cross-role footprint."""
+    """Build the approved southwest-test and northern-validation geographic split."""
     samples = manifest["samples"]
     footprints = metric_footprints(samples)
     release_root = project_root / "data/raw/rid/RID_dataset/filenames_train_val_test_split"
@@ -153,65 +154,65 @@ def build_splits(manifest: dict, project_root: Path) -> dict:
     validation_test_pairs = overlapping_pairs(footprints, official["val"], official["test"])
     validation_crossing = {pair["left"] for pair in validation_test_pairs}
     validation = sorted(set(official["val"]) - validation_crossing, key=int)
-    training, training_exclusions = remove_crossing_training_images(
+    legacy_training, _ = remove_crossing_training_images(
         footprints, official["train"], {"test": official["test"], "validation": validation}
     )
-    duplicate_exclusions = []
     for group in manifest["audit"]["exact_duplicate_image_groups"]:
-        retained_group = [sample_id for sample_id in group if sample_id in set(training) | set(validation)]
+        retained_group = [sample_id for sample_id in group
+                          if sample_id in set(legacy_training) | set(validation)]
         if len(retained_group) < 2:
             continue
         canonical = min(retained_group, key=int)
         for sample_id in retained_group:
             if sample_id == canonical:
                 continue
-            training = [value for value in training if value != sample_id]
             validation = [value for value in validation if value != sample_id]
-            duplicate_exclusions.append({"id": sample_id, "reason": f"exact_duplicate_of_{canonical}"})
-    exclusions = ([{"id": sample_id, "reason": "validation_footprint_intersects_test"}
-                   for sample_id in sorted(validation_crossing, key=int)]
-                  + training_exclusions + duplicate_exclusions)
-    exclusions.sort(key=lambda row: int(row["id"]))
-    excluded_ids = [row["id"] for row in exclusions]
-    roles = {"training": training, "validation": validation,
-             "test": sorted(official["test"], key=int), "excluded": excluded_ids}
+
+    roles, exclusions, overlap_counts = assign_compact_geographic_roles(
+        footprints,
+        validation,
+        manifest["audit"]["exact_duplicate_image_groups"],
+        APPROVED_TEST_BOUNDS_M,
+    )
     check_role_partition(roles, all_ids)
-    after = {
-        "training_validation": overlapping_pairs(footprints, training, validation),
-        "training_test": overlapping_pairs(footprints, training, official["test"]),
-        "validation_test": overlapping_pairs(footprints, validation, official["test"]),
-    }
-    if any(after.values()):
-        raise AssertionError("Positive-area geographic overlap remains after exclusions.")
-    subset_sizes = [size for size in (25, 50, 100, 250, 500) if size < len(training)]
+    subset_sizes = [size for size in (25, 50, 100, 250, 500) if size < len(roles["training"])]
     repetitions = {}
     for repetition, seed in enumerate((17, 29, 43), 1):
-        subsets = select_nested_spatial_subsets(footprints, training, subset_sizes, seed)
-        subsets["full"] = training
+        subsets = select_nested_spatial_subsets(footprints, roles["training"], subset_sizes, seed)
+        subsets["full"] = roles["training"]
         repetitions[str(repetition)] = {"seed": seed, "subsets": subsets}
+    distance_directions = []
+    for from_role, to_role in (("training", "validation"), ("training", "test"),
+                               ("validation", "test")):
+        distance_directions.append({
+            "from_role": from_role,
+            "to_role": to_role,
+            **directional_nearest_distances(footprints, roles[from_role], roles[to_role]),
+        })
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset_manifest": "data/metadata/data_manifest.json",
-        "split_name": "rid_d1_strict_footprints_v1",
+        "split_name": "rid_southwest_test_north_validation_v2",
         "source": {
-            "provider_split": "D1 / north (files ending _1_rev.txt)",
-            "rationale": "Use the provider's northern validation block and shared buffered test IDs, remove every positive-area cross-role footprint overlap, and retain only one copy from each exact duplicate group within development roles.",
+            "provider_validation_basis": "D1 / north (files ending _1_rev.txt), after the established complete-footprint and duplicate filters",
+            "approved_design_record": "reports/geographic_split_proposal.json",
+            "rationale": "Hold out one compact southwest test area and retain the northern validation area; use geography and image counts without model scores, prediction errors or label distribution.",
             "metric_crs": "EPSG:25832",
+            "test_area_bounds_m": list(APPROVED_TEST_BOUNDS_M),
             "intersection_tolerance_m2": 0.01,
-            "test_policy": "All 154 provider test IDs are locked outside development and subset selection.",
+            "distance_buffer_m": 0,
+            "test_policy": "All 259 active test IDs stay outside training, preflight learning, checkpoint selection, error analysis and qualitative example selection.",
+            "historical_use": "Three active test IDs (146, 1762 and 1782) were training images in a discarded old-split pilot; this did not determine the geographic boundary.",
         },
         "roles": roles,
         "exclusions": exclusions,
         "counts": {role: len(ids) for role, ids in roles.items()},
         "spatial_audit": {
-            "before": {
-                "training_validation_pair_count": len(overlapping_pairs(footprints, official["train"], official["val"])),
-                "training_test_pair_count": len(overlapping_pairs(footprints, official["train"], official["test"])),
-                "validation_test_pair_count": len(validation_test_pairs),
-            },
-            "after": {name + "_pair_count": len(pairs) for name, pairs in after.items()},
+            "after": {name + "_pair_count": count for name, count in overlap_counts.items()},
+            "directional_nearest_footprint_distances_m": distance_directions,
             "method": "Pairwise intersections of complete georeferenced 512x512 image footprints; positive area above 0.01 m² counts as overlap.",
-            "repeated_building_limit": "Disjoint footprints prevent the same visible building from appearing across roles, but do not establish independence of nearby architecture, capture conditions or map-source processing.",
+            "distance_direction": "Each row summarizes, for every image in from_role, the distance to its nearest image in to_role; reversing roles gives a different distribution.",
+            "repeated_building_limit": "Disjoint footprints prevent shared visible ground across roles, but no buffer is applied and all data remain within Wartenberg.",
         },
         "training_subsets": {
             "method": "Seeded maximin sampling of image-footprint centres within the retained training pool; subsets are nested within each repetition.",

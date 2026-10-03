@@ -26,6 +26,11 @@ def run_name(training_size: int, initialization: str) -> str:
     return f"n{training_size}_{initialization}"
 
 
+def pilot_run_root(project_root: Path, splits: dict) -> Path:
+    """Return the split-versioned directory for the active six-run pilot."""
+    return project_root / "runs/training_pilot" / splits["split_name"]
+
+
 def build_config(splits: dict, training_size: int, initialization: str) -> dict:
     """Resolve the fixed pilot recipe and exact repetition-1 training IDs."""
     if training_size not in PILOT_SIZES or initialization not in INITIALIZATIONS:
@@ -129,11 +134,13 @@ def build_metadata(project_root: Path, manifest: dict, splits: dict, config: dic
 
 def load_pilot_results(project_root: Path) -> tuple[list[dict], dict[str, list[dict]]]:
     """Load summaries and histories without importing checkpoints."""
+    splits = json.loads((project_root / "data/metadata/splits.json").read_text())
+    run_root = pilot_run_root(project_root, splits)
     summaries, histories = [], {}
     for size in PILOT_SIZES:
         for initialization in INITIALIZATIONS:
             name = run_name(size, initialization)
-            directory = project_root / "runs/training_pilot" / name
+            directory = run_root / name
             config = json.loads((directory / "config.json").read_text())
             summary = json.loads((directory / "summary.json").read_text())
             metadata = json.loads((directory / "metadata.json").read_text())

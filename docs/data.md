@@ -16,18 +16,22 @@ flat roof, and code 17 is background. Binary roof targets are therefore
 `mask != 17`. There is no unknown code in this product. This code coverage does
 not establish that annotations are complete or correct.
 
-The project adopts provider split D1 (the northern validation region) and the
-provider's shared 154-image test set. Complete georeferenced image footprints are
-projected to EPSG:25832. Any positive cross-role intersection larger than
-0.01 m² causes the development image to be excluded; test IDs remain unchanged.
-Exact byte-identical copies are also reduced to one retained development sample.
-The resulting exact IDs, exclusions, reasons, nested training subsets and seeds
-are in `data/metadata/splits.json`.
+The active split retains the provider-D1 northern area as validation and holds
+out one compact southwest area as test. The approved metric bounds are easting
+720,200–720,800 m and northing 5,364,860–5,365,350 m in EPSG:25832. Only complete
+image footprints inside this window enter the test role; boundary-straddling
+images are excluded. Positive cross-role intersections larger than 0.01 m² are
+removed, and exact byte-identical copies are reduced to one retained sample. No
+additional distance buffer is applied. This leaves 1,210 training, 289
+validation, 259 test and 122 excluded images. Exact IDs, reasons and newly
+generated nested subsets are in `data/metadata/splits.json`.
 
-The locked test region is excluded from subset selection and qualitative image
-inspection. Stage 1 checks its file and spatial contracts because those checks
-are necessary to establish the split; it does not use test appearance or labels
-to choose a model or training protocol.
+The active test region is excluded from subset selection, preflight learning,
+checkpoint selection and qualitative inspection. Three active test images (146,
+1762 and 1782) were training samples in a discarded pilot under the old split.
+This historical use is disclosed but did not determine the new boundary. Every
+model under the active design starts from fresh random parameters or the original
+verified ImageNet encoder weights and a newly initialized decoder.
 
 RID data and code have separate licenses. The dataset README states CC BY-NC;
 the upstream code declares GPLv3. This project reimplements small data-contract

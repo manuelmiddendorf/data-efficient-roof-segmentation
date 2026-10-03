@@ -42,16 +42,20 @@ The preflight checks one real 512-pixel forward/backward path, paired model and
 data initialization, BatchNorm behaviour, strict checkpoint restoration, a
 small no-augmentation learning test and warmed timing. It writes the compact
 report `reports/training_preflight.json`. The complete six-run pilot is an
-explicit long-running command:
+explicit long-running command. On macOS, bind `caffeinate` to that process so
+the machine cannot enter idle sleep during the runs; this changes no persistent
+energy setting:
 
 ```bash
-uv run python scripts/run_training_pilot.py
+caffeinate -i -m uv run python scripts/run_training_pilot.py
 ```
 
-Completed runs live under `runs/training_pilot/`. A compatible completed run is
-reused; conflicting or incomplete directories stop with an explanation. The
-analysis notebook reads the saved CSV and JSON files and never launches
-training.
+Completed runs live under
+`runs/training_pilot/rid_southwest_test_north_validation_v2/`. The split version
+is part of the path and compatibility identity, so historical old-split runs
+cannot be reused. A compatible completed run is reused; conflicting or
+incomplete directories stop with an explanation. The analysis notebook reads
+the saved CSV and JSON files and never launches training.
 
 | Reference | Origin | Compared with | Check time |
 | --- | --- | --- | --- |
