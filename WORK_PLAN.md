@@ -27,6 +27,13 @@ deterministic nested training-subset repetitions use seeds 17, 29 and 43. No
 model has been trained. The next discussion point is whether this conservative
 split and the proposed pilot sizes are appropriate before Stage 2 begins.
 
+Stage 2 keeps this saved split unchanged and adds no further geographic buffer.
+The strict footprint check prevents direct image overlap across roles, while all
+regions still come from Wartenberg. The pilot therefore studies label efficiency
+within this locality; it cannot establish independence from nearby spatial
+context or transfer to another city. The 154 test images remain locked outside
+training, checkpoint selection, error analysis and example selection.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
