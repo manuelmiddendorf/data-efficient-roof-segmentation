@@ -1,5 +1,12 @@
 {
   "device": "mps",
+  "split_name": "rid_southwest_test_north_validation_v2",
+  "split_counts": {
+    "training": 1210,
+    "validation": 289,
+    "test": 259,
+    "excluded": 122
+  },
   "output": {
     "shape": [
       4,
@@ -9,7 +16,7 @@
     ],
     "dtype": "torch.float32"
   },
-  "paired_schedule_sha256": "17d14cd7f3fc07a4de97ff19ea0ada4c66f08d9965a5575b5d08fdcad5409e96",
+  "paired_schedule_sha256": "1aba76c71b1af8b83f87e1a1ea9d0077ba8288fc8a39f4c85132c0157a84a8c9",
   "paired_decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f",
   "random_encoder_sha256": "8621aebfa51d1f415abfd08bcc18ab465238fbec482209ffc5d4f023bdfc81c6",
   "pretrained_encoder_sha256": "472a71f44830515296f51ac595a8baa944b82411895830376287e506dc298191",
@@ -40,64 +47,64 @@
     "locked_test_role_absent": true
   },
   "timed_step_seconds_after_warmup": [
-    0.27973604190628976,
-    0.28009487490635365,
-    0.2783129579620436,
-    0.2787396250059828,
-    4.07999158394523
+    0.279375083046034,
+    0.27861004194710404,
+    0.2798329999204725,
+    0.27713083394337445,
+    0.9250674170907587
   ],
-  "median_step_seconds": 0.27973604190628976,
-  "seconds_per_validation_image_sample": 0.02265318750141887,
-  "estimated_seconds_per_run_upper_size": 714.8276436973101,
-  "estimated_seconds_six_runs": 4288.965862183861,
+  "median_step_seconds": 0.279375083046034,
+  "seconds_per_validation_image_sample": 0.022449822870839853,
+  "estimated_seconds_per_run_upper_size": 712.7110513402877,
+  "estimated_seconds_six_runs": 4276.266308041726,
   "tiny_learning": {
     "ids": [
       "8",
-      "144"
+      "40"
     ],
     "augmentation": false,
     "curve": [
       {
         "step": 0,
-        "loss": 0.7254902124404907,
+        "loss": 0.7139689922332764,
         "mean_iou": 0.0
       },
       {
         "step": 10,
-        "loss": 0.6981970071792603,
-        "mean_iou": 0.000488906058751613
+        "loss": 0.6898382306098938,
+        "mean_iou": 4.348897554469942e-05
       },
       {
         "step": 20,
-        "loss": 0.5932927131652832,
-        "mean_iou": 0.9225622839886057
+        "loss": 0.5459397435188293,
+        "mean_iou": 0.9123353088681974
       },
       {
         "step": 30,
-        "loss": 0.5022339224815369,
-        "mean_iou": 0.9480381026290877
+        "loss": 0.4778783917427063,
+        "mean_iou": 0.9550953976412839
       },
       {
         "step": 40,
-        "loss": 0.44099798798561096,
-        "mean_iou": 0.9748290814381096
+        "loss": 0.4416807293891907,
+        "mean_iou": 0.9682032372750909
       },
       {
         "step": 50,
-        "loss": 0.4288943111896515,
-        "mean_iou": 0.9623186780851412
+        "loss": 0.42874830961227417,
+        "mean_iou": 0.965106946427346
       },
       {
         "step": 60,
-        "loss": 0.41735291481018066,
-        "mean_iou": 0.9726916383868369
+        "loss": 0.4149235785007477,
+        "mean_iou": 0.9756993884190174
       }
     ],
-    "loss_reduction_fraction": 0.4247297790465856
+    "loss_reduction_fraction": 0.4188493015601734
   },
   "checkpoint_restoration": true,
   "mps_memory": {
     "current_allocated_bytes": 337881856,
-    "driver_allocated_bytes": 4862033920
+    "driver_allocated_bytes": 4862017536
   }
 }
