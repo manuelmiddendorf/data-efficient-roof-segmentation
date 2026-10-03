@@ -13,14 +13,18 @@ for overlapping image footprints. Learning curves will describe performance as
 the number of labelled training images increases, alongside variation across
 repetitions, computational cost and qualitative error analysis.
 
-**Status:** planning documents are prepared. Dataset inspection, implementation
-and experiments have not started; no results are claimed.
+**Status:** Stage 1 is complete. The official RID 1.0 release has been imported
+and checksum-verified, its binary roof-label contract established, and a strict
+geographic development/test split saved. No model has been trained and no
+segmentation performance is claimed.
 
-See [WORK_PLAN.md](WORK_PLAN.md) for the research stages and proposed experiments,
-and [AGENTS.md](AGENTS.md) for development conventions. Setup instructions and
-scientific notebooks will be added with the corresponding implementation.
+The executed [data-exploration notebook](notebooks/01_data_exploration.ipynb) presents the
+evidence. [docs/setup.md](docs/setup.md) gives exact reproduction commands,
+[docs/data.md](docs/data.md) records source and label interpretation, and
+[WORK_PLAN.md](WORK_PLAN.md) tracks the research stages.
 
 The dataset remains available from its original provider and is not bundled with
 this repository. Its usage terms and attribution are separate from those of the
-project code. Codex assists with project planning and implementation; its actual
-contributions will be documented as the work progresses.
+project code. Codex assisted with the Stage 1 implementation, tests and
+documentation; the scientific decisions and computed outputs remain explicit
+and reviewable.

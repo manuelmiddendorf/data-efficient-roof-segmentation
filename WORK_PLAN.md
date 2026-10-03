@@ -13,12 +13,19 @@ segmentation decoder.
 
 ## Current status
 
-Only project instructions and planning documents have been prepared.
-No RID data have been imported, splits verified, code implemented or models
-trained in this project. There are no project results to report.
+Stage 1 is complete on branch `codex/data-foundation`. RID 1.0 was downloaded
+from the provider, every required file was checked against the provider SHA-256
+list, and the data contract was verified for all 1,880 image/mask pairs. The
+binary target uses roof codes 0–16 and background code 17, as confirmed from the
+provider's mask-generation code. This corrects an initially attempted reversed
+mapping before any result was committed.
 
-The first implementation task is Stage 1. Local prompts live in .local/ and are
-not part of the public repository.
+Provider split D1 is the geographic basis. Strict complete-footprint checks and
+exact-duplicate removal retain 940 training, 289 validation and all 154 locked
+test images; 497 images are excluded with reasons saved in `splits.json`. Three
+deterministic nested training-subset repetitions use seeds 17, 29 and 43. No
+model has been trained. The next discussion point is whether this conservative
+split and the proposed pilot sizes are appropriate before Stage 2 begins.
 
 ## Dataset and scientific decisions
 

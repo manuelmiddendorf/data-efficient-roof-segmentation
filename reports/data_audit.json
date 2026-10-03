@@ -1,0 +1,279 @@
+{
+  "dataset": {
+    "name": "RID \u2013 Roof Information Dataset",
+    "release": "1.0",
+    "issued": "2022-05-11",
+    "doi": "10.14459/2022mp1655470",
+    "record_url": "https://mediatum.ub.tum.de/1655470",
+    "provider_checksum_file": "data/raw/rid/Checksums.sha256",
+    "provider_checksum_file_sha256": "919ea977df0f7088faf800698ba54879e5fd32c8f8657ad8978b25dcf875429f",
+    "download_transport": "rsync://m1655470@dataserv.ub.tum.de/m1655470/",
+    "upstream_code_commit": "6f5d084b699ced0963a0a414b2746d85de50bdb4",
+    "dataset_terms": "CC BY-NC (as stated in RID_dataset/README_data.md)",
+    "imagery_notice": "Google Maps Static API imagery; provider limits use to non-commercial research/education and related fair-use purposes."
+  },
+  "label_contract": {
+    "product": "masks_segments_reviewed",
+    "background_codes": [
+      17
+    ],
+    "roof_codes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "roof_code_meaning": "codes 0--15 are azimuth classes; code 16 is flat roof",
+    "binary_mapping": "roof = mask != 17",
+    "mapping_evidence": "RID mask_generation.py initializes background to len(label_classes)=17; definitions.py maps codes 0--16 to 16 azimuth classes plus flat roof.",
+    "unknown_codes": [],
+    "validity": "All 512x512 mask pixels have a provider-defined class code; imagery contains no alpha band or nodata declaration.",
+    "caveat": "An explicit class code does not prove that every visible roof pixel is annotated correctly or completely."
+  },
+  "audit": {
+    "pair_count": 1880,
+    "image_shapes_hwc": [
+      [
+        512,
+        512,
+        3
+      ]
+    ],
+    "image_crs": [
+      "EPSG:4326"
+    ],
+    "mask_values_observed": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17
+    ],
+    "background_pixels": 374237673,
+    "roof_pixels": 118593047,
+    "roof_fraction": 0.24063647452821124,
+    "all_image_pixels_valid": true,
+    "exact_duplicate_image_groups": [
+      [
+        "47",
+        "48",
+        "49"
+      ],
+      [
+        "71",
+        "72"
+      ],
+      [
+        "97",
+        "98"
+      ],
+      [
+        "112",
+        "113",
+        "114"
+      ],
+      [
+        "134",
+        "135"
+      ],
+      [
+        "289",
+        "290",
+        "291",
+        "292"
+      ],
+      [
+        "318",
+        "319"
+      ],
+      [
+        "500",
+        "501"
+      ],
+      [
+        "647",
+        "648"
+      ],
+      [
+        "672",
+        "673"
+      ],
+      [
+        "1271",
+        "1272"
+      ],
+      [
+        "1405",
+        "1406"
+      ],
+      [
+        "1425",
+        "1426"
+      ],
+      [
+        "1448",
+        "1449"
+      ],
+      [
+        "1602",
+        "1603"
+      ],
+      [
+        "1921",
+        "1922"
+      ]
+    ],
+    "exact_duplicate_mask_groups": [
+      [
+        "47",
+        "48",
+        "49"
+      ],
+      [
+        "71",
+        "72"
+      ],
+      [
+        "97",
+        "98"
+      ],
+      [
+        "112",
+        "113",
+        "114"
+      ],
+      [
+        "134",
+        "135"
+      ],
+      [
+        "289",
+        "290",
+        "291",
+        "292"
+      ],
+      [
+        "318",
+        "319"
+      ],
+      [
+        "500",
+        "501"
+      ],
+      [
+        "647",
+        "648"
+      ],
+      [
+        "672",
+        "673"
+      ],
+      [
+        "1271",
+        "1272"
+      ],
+      [
+        "1405",
+        "1406"
+      ],
+      [
+        "1425",
+        "1426"
+      ],
+      [
+        "1448",
+        "1449"
+      ],
+      [
+        "1602",
+        "1603"
+      ],
+      [
+        "1921",
+        "1922"
+      ]
+    ],
+    "provider_split_counts": {
+      "1": {
+        "train": 1374,
+        "val": 352,
+        "test": 154
+      },
+      "2": {
+        "train": 1366,
+        "val": 360,
+        "test": 154
+      },
+      "3": {
+        "train": 1367,
+        "val": 359,
+        "test": 154
+      },
+      "4": {
+        "train": 1376,
+        "val": 350,
+        "test": 154
+      },
+      "5": {
+        "train": 1360,
+        "val": 366,
+        "test": 154
+      }
+    },
+    "provider_test_ids_identical_across_splits": true
+  },
+  "split_counts": {
+    "training": 940,
+    "validation": 289,
+    "test": 154,
+    "excluded": 497
+  },
+  "spatial_audit": {
+    "before": {
+      "training_validation_pair_count": 122,
+      "training_test_pair_count": 1329,
+      "validation_test_pair_count": 161
+    },
+    "after": {
+      "training_validation_pair_count": 0,
+      "training_test_pair_count": 0,
+      "validation_test_pair_count": 0
+    },
+    "method": "Pairwise intersections of complete georeferenced 512x512 image footprints; positive area above 0.01 m\u00b2 counts as overlap.",
+    "repeated_building_limit": "Disjoint footprints prevent the same visible building from appearing across roles, but do not establish independence of nearby architecture, capture conditions or map-source processing."
+  },
+  "roof_fraction_summary": {
+    "minimum": 0.0,
+    "median": 0.23313140869140625,
+    "mean": 0.24063647452821124,
+    "maximum": 0.7359619140625,
+    "empty_masks": 1,
+    "full_masks": 0
+  }
+}
