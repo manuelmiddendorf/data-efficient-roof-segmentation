@@ -34,6 +34,13 @@ within this locality; it cannot establish independence from nearby spatial
 context or transfer to another city. The 154 test images remain locked outside
 training, checkpoint selection, error analysis and example selection.
 
+**Stage 2 is paused pending a revised evaluation split.** One random-initialized
+25-image run completed under the old split; ImageNet runs were interrupted and
+remain incomplete historical artifacts. No result or checkpoint from this pilot
+will be reused under a revised split. A metadata-only proposal for one compact
+held-out area is being reviewed before any reference split is changed or any
+training restarts.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
