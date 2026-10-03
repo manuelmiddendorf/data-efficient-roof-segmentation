@@ -44,8 +44,9 @@ raw_image = read_image(ROOT / sample_record["image"])
 raw_mask = read_mask(ROOT / sample_record["mask"])
 normalized_image, binary_target = store.load(sample_id)
 expected_pixel = (
-    raw_image[0, 0].astype("float32") / 255.0 - IMAGENET_MEAN
-) / IMAGENET_STD
+    raw_image[0, 0].astype("float32") / 255.0
+    - torch.tensor(IMAGENET_MEAN).numpy()
+) / torch.tensor(IMAGENET_STD).numpy()
 torch.testing.assert_close(normalized_image[:, 0, 0], torch.from_numpy(expected_pixel))
 if not torch.equal(binary_target[0], torch.from_numpy(raw_mask != 17)):
     raise AssertionError("RID target is not exactly mask != 17.")
