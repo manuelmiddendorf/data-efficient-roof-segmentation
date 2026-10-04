@@ -17,30 +17,80 @@ REFERENCE_LEARNING_RATE = 3e-4
 
 
 def learning_rate_label(learning_rate: float) -> str:
-    """Return the stable concise label for an approved learning rate."""
+    """Return the stable concise label for an approved learning rate.
+
+    Parameters
+    ----------
+    learning_rate:
+        Candidate learning rate from the fixed Stage 3 set.
+
+    Returns
+    -------
+    str
+        Scientific-notation label such as ``1e-4``.
+    """
     if learning_rate not in LEARNING_RATES:
         raise ValueError("Learning rate is outside the fixed Stage 3 block.")
     return f"{learning_rate:.0e}".replace("e-0", "e-")
 
 
 def learning_rate_run_name(initialization: str, learning_rate: float) -> str:
-    """Return the readable directory name for one new learning-rate run."""
+    """Return the readable directory name for one new learning-rate run.
+
+    Parameters
+    ----------
+    initialization:
+        ``random`` or ``imagenet``.
+    learning_rate:
+        Candidate learning rate from the fixed Stage 3 set.
+
+    Returns
+    -------
+    str
+        Run name containing training size, initialization and learning rate.
+    """
     if initialization not in INITIALIZATIONS:
         raise ValueError("Unknown initialization.")
     return f"n{TRAINING_SIZE}_{initialization}_lr{learning_rate_label(learning_rate)}"
 
 
 def optimization_run_root(project_root: Path, splits: dict) -> Path:
-    """Return the split-versioned directory for new Stage 3 runs."""
+    """Return the split-versioned directory for new Stage 3 runs.
+
+    Parameters
+    ----------
+    project_root:
+        Repository root.
+    splits:
+        Active split record containing ``split_name``.
+
+    Returns
+    -------
+    pathlib.Path
+        Directory reserved for the n=100 learning-rate block.
+    """
     return project_root / "runs/optimization" / splits["split_name"] / "learning_rate_n100"
 
 
 def build_learning_rate_config(splits: dict, initialization: str, learning_rate: float) -> dict:
     """Resolve one approved configuration while changing only the learning rate.
 
-    The 3e-4 configuration is returned byte-for-byte equivalent to its Stage 2
-    reference configuration. New candidates receive a distinct experiment and
-    run identity while preserving every other setting.
+    Parameters
+    ----------
+    splits:
+        Active split record with the saved repetition-1 n=100 subset.
+    initialization:
+        ``random`` or ``imagenet``.
+    learning_rate:
+        One of the three approved rates.
+
+    Returns
+    -------
+    dict
+        Fully resolved run configuration. The 3e-4 configuration is returned
+        byte-for-byte equivalent to its Stage 2 reference configuration. New
+        candidates receive a distinct experiment and run identity while
+        preserving every other setting.
     """
     base = build_config(splits, TRAINING_SIZE, initialization)
     if learning_rate == REFERENCE_LEARNING_RATE:
@@ -62,7 +112,24 @@ def learning_rate_run_directory(
     initialization: str,
     learning_rate: float,
 ) -> Path:
-    """Return the original reference or new optimization run directory."""
+    """Return the original reference or new optimization run directory.
+
+    Parameters
+    ----------
+    project_root:
+        Repository root.
+    splits:
+        Active split record.
+    initialization:
+        ``random`` or ``imagenet``.
+    learning_rate:
+        One of the approved rates.
+
+    Returns
+    -------
+    pathlib.Path
+        Original Stage 2 directory for 3e-4 or a distinct Stage 3 directory.
+    """
     if learning_rate == REFERENCE_LEARNING_RATE:
         return pilot_run_root(project_root, splits) / run_name(TRAINING_SIZE, initialization)
     return optimization_run_root(project_root, splits) / learning_rate_run_name(

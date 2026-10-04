@@ -45,6 +45,14 @@ achieved 0.785, 0.813 and 0.826. The corresponding paired gains were 0.049,
 (subset seed 17), not independent test performance. The six runs required 61.8
 minutes of optimization and 77.9 minutes including evaluation on MPS.
 
+The first Stage 3 block compares learning rates 1e-4, 3e-4 and 1e-3 at 100
+training images. Four fresh runs were paired with the two verified Stage 2
+references. The best observed validation IoU is 0.817 for random initialization
+and 0.865 for ImageNet initialization, both at 1e-3. ImageNet remains ahead at
+every matched rate by 0.048–0.064 IoU. The four new runs required 42.2 minutes
+of optimization and 52.7 minutes including evaluation on MPS. These are still
+single-repetition, validation-selected results; no test image was evaluated.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -170,10 +178,17 @@ to select another reported winner.
   initialization led at every budget, but n=25 ImageNet overfit after an early
   best checkpoint and several runs selected late checkpoints. Equal updates did
   not establish equal convergence or an optimal learning rate.
-- The next proposed block is limited to n=100: add learning rates 1e-4 and 1e-3
-  for both initializations, paired against the existing 3e-4 runs. Four new runs
-  are estimated at about 55 minutes on the measured MPS setup. This proposal is
-  not yet approved or executed.
+- The first Stage 3 block tested learning rates 1e-4, 3e-4 and 1e-3 at n=100.
+  ImageNet led at every matched rate. Both 1e-4 runs selected step 2,000 and
+  still had higher training objectives, so their lower scores reflect
+  underoptimization at this horizon rather than established lower attainable
+  performance.
+- Thresholds 0.1–0.9 were evaluated only for the stored 3e-4 references.
+  ImageNet remained ahead by 0.050–0.070 IoU; changing the threshold therefore
+  did not explain the reference gap. The primary threshold remains 0.5.
+- The next proposed block is two fresh 1e-4 runs at n=100 with 4,000 updates and
+  otherwise unchanged settings. Its estimated MPS runtime is 50–55 minutes.
+  This horizon check is not yet approved or executed.
 
 ## Git and delivery
 
