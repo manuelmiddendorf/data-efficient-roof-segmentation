@@ -4,6 +4,11 @@ import pytest
 import torch
 
 from roofseg.model import EfficientNetB0UNet, build_model, state_digest
+from roofseg.optimization import (
+    build_learning_rate_config,
+    learning_rate_run_directory,
+    optimization_run_root,
+)
 from roofseg.pilot import build_config, pilot_run_root
 from roofseg.run_artifacts import prepare_run
 from roofseg.training import adamw, restore_checkpoint
@@ -36,6 +41,8 @@ def test_optimizer_excludes_bias_and_normalization_from_decay():
     model = EfficientNetB0UNet()
     optimizer, record = adamw(model, 3e-4, 1e-4)
     assert [group["weight_decay"] for group in optimizer.param_groups] == [1e-4, 0.0]
+    assert [group["lr"] for group in optimizer.param_groups] == [3e-4, 3e-4]
+    assert record["learning_rates"] == [3e-4, 3e-4]
     assert record["decayed_parameter_tensors"] > 0
     assert record["no_decay_parameter_tensors"] > 0
 
@@ -55,6 +62,32 @@ def test_split_config_uses_only_saved_training_and_validation_ids():
 def test_pilot_run_root_is_split_versioned(tmp_path: Path):
     splits = {"split_name": "geographic_v2"}
     assert pilot_run_root(tmp_path, splits) == tmp_path / "runs/training_pilot/geographic_v2"
+
+
+def test_learning_rate_configs_change_only_identity_and_learning_rate(tmp_path: Path):
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"validation": ["108"], "test": ["110"]},
+        "training_subsets": {
+            "repetitions": {"1": {"subsets": {"100": [str(i) for i in range(100)]}}}
+        },
+    }
+    reference = build_learning_rate_config(splits, "random", 3e-4)
+    lower = build_learning_rate_config(splits, "random", 1e-4)
+    differences = {
+        key for key in reference | lower
+        if reference.get(key) != lower.get(key)
+    }
+    assert differences == {"run_name", "experiment", "learning_rate"}
+    assert learning_rate_run_directory(tmp_path, splits, "random", 3e-4) == (
+        tmp_path / "runs/training_pilot/geographic_v2/n100_random"
+    )
+    assert learning_rate_run_directory(tmp_path, splits, "random", 1e-4) == (
+        optimization_run_root(tmp_path, splits) / "n100_random_lr1e-4"
+    )
+    assert learning_rate_run_directory(tmp_path, splits, "random", 1e-3) != (
+        learning_rate_run_directory(tmp_path, splits, "random", 1e-4)
+    )
 
 
 def test_checkpoint_restore_rejects_mismatch(tmp_path: Path):

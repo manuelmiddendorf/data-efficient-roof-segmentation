@@ -68,6 +68,34 @@ The analysis script verifies and reads the run summaries, histories and
 per-image metrics. It loads selected checkpoints only to create the documented
 validation examples; test IDs are not eligible for this analysis.
 
+## Stage 3 learning-rate block
+
+The first optimization block reuses the verified n=100 Stage 2 runs at `3e-4`
+and creates four new runs at `1e-4` and `1e-3`. Run the focused MPS smoke check,
+then start the explicit training process with sleep prevention bound to its
+lifetime:
+
+```bash
+uv run python scripts/check_optimization.py
+caffeinate -i -m uv run python scripts/run_learning_rate_block.py
+```
+
+New runs live under
+`runs/optimization/rid_southwest_test_north_validation_v2/learning_rate_n100/`.
+The runner verifies the original reference configurations, input identities and
+checkpoint hashes before using them. It does not copy or rewrite those runs.
+Generate the compact tables, threshold diagnostic and figures before executing
+the notebooks:
+
+```bash
+uv run python scripts/analyze_optimization.py
+uv run python scripts/run_notebook.py
+```
+
+The threshold analysis loads only the two stored `3e-4` validation checkpoints,
+evaluates the fixed 0.1–0.9 list in memory and does not retain probability maps.
+No command in this block evaluates the locked test role.
+
 | Reference | Origin | Compared with | Check time |
 | --- | --- | --- | --- |
 | RID file SHA-256 values | Provider `Checksums.sha256` | Every required raw image, mask and split file | Once before the six-run block |
