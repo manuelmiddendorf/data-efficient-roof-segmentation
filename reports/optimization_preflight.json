@@ -1,0 +1,44 @@
+{
+  "device": "mps",
+  "split_name": "rid_southwest_test_north_validation_v2",
+  "training_size": 100,
+  "learning_rates": [
+    0.0001,
+    0.0003,
+    0.001
+  ],
+  "run_directories": [
+    "runs/optimization/rid_southwest_test_north_validation_v2/learning_rate_n100/n100_random_lr1e-4",
+    "runs/training_pilot/rid_southwest_test_north_validation_v2/n100_random",
+    "runs/optimization/rid_southwest_test_north_validation_v2/learning_rate_n100/n100_random_lr1e-3",
+    "runs/optimization/rid_southwest_test_north_validation_v2/learning_rate_n100/n100_imagenet_lr1e-4",
+    "runs/training_pilot/rid_southwest_test_north_validation_v2/n100_imagenet",
+    "runs/optimization/rid_southwest_test_north_validation_v2/learning_rate_n100/n100_imagenet_lr1e-3"
+  ],
+  "locked_test_role_absent": true,
+  "paired_schedule_sha256": "f6cbec62f438edc7a01a29d9c097b2729524c8353ddf1e8033632b9ff3a8ddb2",
+  "initial_states": {
+    "random": [
+      "8621aebfa51d1f415abfd08bcc18ab465238fbec482209ffc5d4f023bdfc81c6",
+      "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    ],
+    "imagenet": [
+      "472a71f44830515296f51ac595a8baa944b82411895830376287e506dc298191",
+      "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    ]
+  },
+  "optimizer_learning_rates_verified": true,
+  "smoke": {
+    "initialization": "random",
+    "learning_rate": 0.001,
+    "sample_ids": [
+      "8",
+      "10",
+      "24",
+      "40"
+    ],
+    "loss": 0.6741403937339783,
+    "bce": 0.5643024444580078,
+    "soft_dice_loss": 0.7839783430099487
+  }
+}
