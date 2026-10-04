@@ -12,6 +12,7 @@ import pandas as pd
 from .optimization import (
     INITIALIZATIONS,
     learning_rate_label,
+    load_late_lr_drop_repetitions,
     load_late_lr_drop_results,
     load_training_horizon_results,
 )
@@ -220,5 +221,106 @@ def plot_lr_drop_comparison(history: pd.DataFrame) -> Figure:
     axes[0, 0].set_ylabel("Validation mean per-image IoU")
     axes[1, 0].set_ylabel("Validation loss")
     figure.suptitle("Predeclared learning-rate drop versus constant 1e-3")
+    figure.tight_layout()
+    return figure
+
+
+def collect_subset_replication_comparison(
+    project_root: Path,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, int]:
+    """Collect the matched fixed-drop results for subset seeds 17 and 29.
+
+    Returns
+    -------
+    results, paired_differences, history, overlap_count:
+        Four run summaries, ImageNet-minus-random differences within each
+        subset, all evaluation histories and the number of shared training IDs.
+    """
+    runs, histories = load_late_lr_drop_repetitions(project_root, (1, 2))
+    result_rows, history_frames = [], []
+    training_sets: dict[int, set[str]] = {}
+    for run in runs:
+        history = _history_frame(histories[run["key"]])
+        trend, _ = summarize_late_history(history)
+        trained = history[history.step > 0]
+        best = trained.loc[trained.validation_mean_iou.idxmax()]
+        endpoint = trained.loc[trained.step == 4000].iloc[0]
+        summary = run["summary"]
+        result_rows.append({
+            "subset_seed": run["subset_seed"],
+            "initialization": run["initialization"],
+            "best_step": int(best.step),
+            "best_validation_iou": float(best.validation_mean_iou),
+            "iou_step_4000": float(endpoint.validation_mean_iou),
+            "validation_loss_step_4000": float(endpoint.validation_loss),
+            "selected_validation_dice": summary["best_validation"]["mean_dice"],
+            "selected_validation_ap": summary["best_validation"]["mean_average_precision"],
+            "total_minutes": summary["total_seconds"] / 60,
+            **trend,
+        })
+        history_frames.append(history.assign(
+            subset_seed=run["subset_seed"], initialization=run["initialization"]
+        ))
+        training_sets[run["subset_seed"]] = set(run["config"]["training_ids"])
+
+    results = pd.DataFrame(result_rows).sort_values(["subset_seed", "initialization"])
+    paired_rows = []
+    for subset_seed, group in results.groupby("subset_seed"):
+        by_initialization = group.set_index("initialization")
+        paired_rows.append({
+            "subset_seed": int(subset_seed),
+            "imagenet_minus_random_best_iou": float(
+                by_initialization.loc["imagenet", "best_validation_iou"]
+                - by_initialization.loc["random", "best_validation_iou"]
+            ),
+            "imagenet_minus_random_iou_step_4000": float(
+                by_initialization.loc["imagenet", "iou_step_4000"]
+                - by_initialization.loc["random", "iou_step_4000"]
+            ),
+            "imagenet_minus_random_dice": float(
+                by_initialization.loc["imagenet", "selected_validation_dice"]
+                - by_initialization.loc["random", "selected_validation_dice"]
+            ),
+            "imagenet_minus_random_ap": float(
+                by_initialization.loc["imagenet", "selected_validation_ap"]
+                - by_initialization.loc["random", "selected_validation_ap"]
+            ),
+        })
+    overlap_count = len(training_sets[17] & training_sets[29])
+    return (
+        results,
+        pd.DataFrame(paired_rows),
+        pd.concat(history_frames, ignore_index=True),
+        overlap_count,
+    )
+
+
+def plot_subset_replication_curves(history: pd.DataFrame) -> Figure:
+    """Plot fixed-drop validation curves for both subset repetitions."""
+    colours = {"random": "#D55E00", "imagenet": "#0072B2"}
+    figure, axes = plt.subplots(2, 2, figsize=(11, 7), sharex=True)
+    for column, subset_seed in enumerate((17, 29)):
+        for initialization in INITIALIZATIONS:
+            rows = history[
+                (history.subset_seed == subset_seed)
+                & (history.initialization == initialization)
+            ].sort_values("step")
+            label = INITIALIZATION_LABELS[initialization]
+            axes[0, column].plot(
+                rows.step, rows.validation_mean_iou,
+                color=colours[initialization], label=label,
+            )
+            axes[1, column].plot(
+                rows.step, rows.validation_loss, color=colours[initialization]
+            )
+        for axis in axes[:, column]:
+            axis.axvline(2000, color="#555555", linestyle="--", linewidth=1)
+            axis.grid(alpha=0.2)
+        axes[0, column].set_title(f"Training-subset seed {subset_seed}")
+        axes[0, column].legend(frameon=False)
+        axes[1, column].set_xlabel("Optimizer step")
+    axes[0, 0].set_ylabel("Validation mean per-image IoU")
+    axes[1, 0].set_ylabel("Validation loss")
+    figure.suptitle("Fixed learning-rate drop across two training subsets")
     figure.tight_layout()
     return figure
