@@ -6,8 +6,10 @@ import torch
 from roofseg.model import EfficientNetB0UNet, build_model, state_digest
 from roofseg.optimization import (
     build_learning_rate_config,
+    build_training_horizon_config,
     learning_rate_run_directory,
     optimization_run_root,
+    training_horizon_run_directory,
 )
 from roofseg.pilot import build_config, pilot_run_root
 from roofseg.run_artifacts import prepare_run
@@ -88,6 +90,40 @@ def test_learning_rate_configs_change_only_identity_and_learning_rate(tmp_path: 
     assert learning_rate_run_directory(tmp_path, splits, "random", 1e-3) != (
         learning_rate_run_directory(tmp_path, splits, "random", 1e-4)
     )
+
+
+def test_training_horizon_changes_only_identity_and_budget(tmp_path: Path):
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"validation": ["108"], "test": ["110"]},
+        "training_subsets": {
+            "repetitions": {"1": {"subsets": {"100": [str(i) for i in range(100)]}}}
+        },
+    }
+    historical = build_learning_rate_config(splits, "imagenet", 1e-4)
+    extended = build_training_horizon_config(splits, "imagenet", 1e-4)
+    differences = {
+        key for key in historical | extended
+        if historical.get(key) != extended.get(key)
+    }
+    assert differences == {"run_name", "experiment", "max_steps", "evaluation_steps"}
+    assert extended["max_steps"] == 4000
+    assert extended["evaluation_steps"] == [0] + list(range(100, 4001, 100))
+    assert training_horizon_run_directory(tmp_path, splits, "imagenet", 1e-4) != (
+        learning_rate_run_directory(tmp_path, splits, "imagenet", 1e-4)
+    )
+
+
+def test_training_horizon_rejects_unapproved_rate():
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"validation": ["108"], "test": ["110"]},
+        "training_subsets": {
+            "repetitions": {"1": {"subsets": {"100": [str(i) for i in range(100)]}}}
+        },
+    }
+    with pytest.raises(ValueError, match="outside"):
+        build_training_horizon_config(splits, "random", 3e-4)
 
 
 def test_checkpoint_restore_rejects_mismatch(tmp_path: Path):

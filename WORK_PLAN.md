@@ -53,6 +53,15 @@ every matched rate by 0.048–0.064 IoU. The four new runs required 42.2 minutes
 of optimization and 52.7 minutes including evaluation on MPS. These are still
 single-repetition, validation-selected results; no test image was evaluated.
 
+The training-horizon block then ran four fresh 4,000-update configurations at
+`1e-4` and `1e-3`. Random initialization improved from best IoU 0.793 to 0.811
+at `1e-4` and from 0.817 to 0.831 at `1e-3` when comparing the first 2,000
+updates with the full curve. ImageNet `1e-4` improved from 0.857 to 0.863;
+ImageNet `1e-3` retained its 0.865 step-2,000 maximum. The four runs required
+92.5 minutes of optimization and 113.1 minutes including evaluation on MPS.
+The results remain exploratory validation evidence from repetition 1; the
+locked test role was not evaluated.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -186,9 +195,15 @@ to select another reported winner.
 - Thresholds 0.1–0.9 were evaluated only for the stored 3e-4 references.
   ImageNet remained ahead by 0.050–0.070 IoU; changing the threshold therefore
   did not explain the reference gap. The primary threshold remains 0.5.
-- The next proposed block is two fresh 1e-4 runs at n=100 with 4,000 updates and
-  otherwise unchanged settings. Its estimated MPS runtime is 50–55 minutes.
-  This horizon check is not yet approved or executed.
+- The training-horizon block completed four fresh 4,000-update runs at `1e-4`
+  and `1e-3`. Longer training raised both random-initialization maxima and the
+  ImageNet `1e-4` maximum, but ImageNet `1e-3` remained the overall leader with
+  its step-2,000 IoU of 0.865. Endpoints and second-half variation show that a
+  higher selected maximum alone is not evidence of stable convergence.
+- The next recommended block is confirmation on another predeclared subset
+  repetition, pairing random and ImageNet initialization at `1e-3` under the
+  common 4,000-update cap. This would test repeatability before introducing a
+  scheduler or changing weight decay. It is a proposal and has not been run.
 
 ## Git and delivery
 

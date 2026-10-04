@@ -1,6 +1,7 @@
 """Execute scientific report notebooks from fresh kernels and export HTML."""
 
 from pathlib import Path
+import sys
 
 import nbformat
 from nbclient import NotebookClient
@@ -14,7 +15,10 @@ NOTEBOOKS = [
     ROOT / "notebooks/03_optimization.ipynb",
 ]
 
-for notebook in NOTEBOOKS:
+requested = [Path(argument) for argument in sys.argv[1:]]
+notebooks = [path if path.is_absolute() else ROOT / path for path in requested] or NOTEBOOKS
+
+for notebook in notebooks:
     if not notebook.exists():
         continue
     document = nbformat.read(notebook, as_version=4)
