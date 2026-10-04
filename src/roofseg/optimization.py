@@ -16,6 +16,9 @@ NEW_LEARNING_RATES = (1e-4, 1e-3)
 REFERENCE_LEARNING_RATE = 3e-4
 HORIZON_LEARNING_RATES = (1e-4, 1e-3)
 LONG_HORIZON_STEPS = 4000
+LATE_DROP_INITIAL_RATE = 1e-3
+LATE_DROP_FINAL_RATE = 1e-4
+LATE_DROP_FIRST_FINAL_STEP = 2001
 
 
 def learning_rate_label(learning_rate: float) -> str:
@@ -194,6 +197,83 @@ def training_horizon_run_directory(
     return training_horizon_run_root(project_root, splits) / training_horizon_run_name(
         initialization, learning_rate
     )
+
+
+def late_lr_drop_run_name(initialization: str) -> str:
+    """Return the distinct name for one approved fixed-drop run."""
+    if initialization not in INITIALIZATIONS:
+        raise ValueError("Unknown initialization.")
+    return (
+        f"n{TRAINING_SIZE}_{initialization}_lr1e-3_to_1e-4_"
+        f"step{LATE_DROP_FIRST_FINAL_STEP}_steps{LONG_HORIZON_STEPS}"
+    )
+
+
+def late_lr_drop_run_root(project_root: Path, splits: dict) -> Path:
+    """Return the split-versioned directory for the fixed-drop comparison."""
+    return project_root / "runs/optimization" / splits["split_name"] / "late_lr_drop_n100"
+
+
+def build_late_lr_drop_config(splits: dict, initialization: str) -> dict:
+    """Resolve one fresh 4,000-step run with a fixed drop after step 2,000.
+
+    The first 2,000 updates use ``1e-3`` and updates 2,001--4,000 use
+    ``1e-4``. Every non-schedule training setting comes from the matched
+    constant-``1e-3`` training-horizon configuration.
+    """
+    config = deepcopy(build_training_horizon_config(
+        splits, initialization, LATE_DROP_INITIAL_RATE
+    ))
+    config.update({
+        "run_name": late_lr_drop_run_name(initialization),
+        "experiment": "stage3_late_lr_drop_n100",
+        "scheduler": {
+            "type": "piecewise_constant",
+            "adaptive": False,
+            "phases": [
+                {"start_step": 1, "end_step": 2000,
+                 "learning_rate": LATE_DROP_INITIAL_RATE},
+                {"start_step": LATE_DROP_FIRST_FINAL_STEP,
+                 "end_step": LONG_HORIZON_STEPS,
+                 "learning_rate": LATE_DROP_FINAL_RATE},
+            ],
+        },
+    })
+    return config
+
+
+def late_lr_drop_run_directory(
+    project_root: Path, splits: dict, initialization: str
+) -> Path:
+    """Return the directory for one approved fixed-drop run."""
+    return late_lr_drop_run_root(project_root, splits) / late_lr_drop_run_name(initialization)
+
+
+def load_late_lr_drop_results(
+    project_root: Path,
+) -> tuple[list[dict], dict[str, list[dict]]]:
+    """Load the two completed fixed-drop summaries and evaluation histories."""
+    splits = json.loads((project_root / "data/metadata/splits.json").read_text())
+    runs, histories = [], {}
+    for initialization in INITIALIZATIONS:
+        directory = late_lr_drop_run_directory(project_root, splits, initialization)
+        config = json.loads((directory / "config.json").read_text())
+        metadata = json.loads((directory / "metadata.json").read_text())
+        summary = json.loads((directory / "summary.json").read_text())
+        if summary.get("status") != "completed":
+            raise ValueError(f"Fixed-drop run is incomplete: {directory.name}")
+        key = f"{initialization}_late_lr_drop"
+        runs.append({
+            "key": key,
+            "initialization": initialization,
+            "directory": directory,
+            "config": config,
+            "metadata": metadata,
+            "summary": summary,
+        })
+        with (directory / "history.csv").open(newline="", encoding="utf-8") as handle:
+            histories[key] = list(csv.DictReader(handle))
+    return runs, histories
 
 
 def load_training_horizon_results(

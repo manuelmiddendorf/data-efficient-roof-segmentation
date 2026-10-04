@@ -1,0 +1,105 @@
+{
+  "device": "mps",
+  "split_name": "rid_southwest_test_north_validation_v2",
+  "run_count": 2,
+  "training_size": 100,
+  "max_steps": 4000,
+  "evaluation_steps": [
+    0,
+    100,
+    200,
+    300,
+    400,
+    500,
+    600,
+    700,
+    800,
+    900,
+    1000,
+    1100,
+    1200,
+    1300,
+    1400,
+    1500,
+    1600,
+    1700,
+    1800,
+    1900,
+    2000,
+    2100,
+    2200,
+    2300,
+    2400,
+    2500,
+    2600,
+    2700,
+    2800,
+    2900,
+    3000,
+    3100,
+    3200,
+    3300,
+    3400,
+    3500,
+    3600,
+    3700,
+    3800,
+    3900,
+    4000
+  ],
+  "learning_rate_schedule": {
+    "type": "piecewise_constant",
+    "adaptive": false,
+    "phases": [
+      {
+        "start_step": 1,
+        "end_step": 2000,
+        "learning_rate": 0.001
+      },
+      {
+        "start_step": 2001,
+        "end_step": 4000,
+        "learning_rate": 0.0001
+      }
+    ]
+  },
+  "run_directories": [
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n100/n100_random_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n100/n100_imagenet_lr1e-3_to_1e-4_step2001_steps4000"
+  ],
+  "locked_test_role_absent": true,
+  "constant_references_verified": true,
+  "paired_schedule_sha256": "6a09cfccecf0d883085ea5530996e98d4c6078fc984552e8b163b8d718e65f7d",
+  "initial_states": {
+    "random": [
+      "8621aebfa51d1f415abfd08bcc18ab465238fbec482209ffc5d4f023bdfc81c6",
+      "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    ],
+    "imagenet": [
+      "472a71f44830515296f51ac595a8baa944b82411895830376287e506dc298191",
+      "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    ]
+  },
+  "optimizer_boundary_verified": true,
+  "weight_decay_groups_unchanged": true,
+  "estimated_total_minutes": [
+    55,
+    70
+  ],
+  "smoke": [
+    {
+      "nominal_step": 2000,
+      "learning_rate": 0.001,
+      "loss": 0.6741403937339783,
+      "bce": 0.5643024444580078,
+      "soft_dice_loss": 0.7839783430099487
+    },
+    {
+      "nominal_step": 2001,
+      "learning_rate": 0.0001,
+      "loss": 0.634032130241394,
+      "bce": 0.5075920820236206,
+      "soft_dice_loss": 0.7604721188545227
+    }
+  ]
+}

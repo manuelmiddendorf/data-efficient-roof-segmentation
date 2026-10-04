@@ -56,6 +56,35 @@ def adamw(model: nn.Module, learning_rate: float, weight_decay: float):
     }
 
 
+def learning_rate_for_step(config: dict, step: int) -> float:
+    """Return the configured learning rate for a one-based optimizer step.
+
+    A missing scheduler preserves the historical constant-rate behavior. The
+    only scheduled form currently accepted is an explicit piecewise-constant
+    list whose phases must cover the requested step exactly once.
+    """
+    if step < 1 or step > config["max_steps"]:
+        raise ValueError("Optimizer step is outside the configured training horizon.")
+    scheduler = config.get("scheduler")
+    if scheduler is None:
+        return float(config["learning_rate"])
+    if scheduler.get("type") != "piecewise_constant" or scheduler.get("adaptive") is not False:
+        raise ValueError("Unsupported learning-rate scheduler configuration.")
+    matches = [
+        phase for phase in scheduler["phases"]
+        if phase["start_step"] <= step <= phase["end_step"]
+    ]
+    if len(matches) != 1:
+        raise ValueError("Learning-rate phases must cover each optimizer step exactly once.")
+    return float(matches[0]["learning_rate"])
+
+
+def apply_learning_rate(optimizer: torch.optim.Optimizer, learning_rate: float) -> None:
+    """Set the same learning rate on every existing optimizer parameter group."""
+    for group in optimizer.param_groups:
+        group["lr"] = learning_rate
+
+
 def train_step(model, optimizer, batch: dict, device: torch.device) -> dict:
     """Run one float32 optimizer step and return scalar objective components."""
     model.train()
@@ -133,7 +162,9 @@ def fit_run(
     }
     write_json(directory / "metadata.json", metadata)
     model.to(device)
-    optimizer, optimizer_record = adamw(model, config["learning_rate"], config["weight_decay"])
+    initial_learning_rate = learning_rate_for_step(config, 1)
+    optimizer, optimizer_record = adamw(model, initial_learning_rate, config["weight_decay"])
+    optimizer_record["configured_scheduler"] = config.get("scheduler")
     history: list[dict] = []
     best_iou, best_step = -math.inf, None
     training_seconds, evaluation_seconds, examples_processed = 0.0, 0.0, 0
@@ -141,11 +172,14 @@ def fit_run(
 
     before_rows, before = evaluate(model, store, config["validation_ids"], config["batch_size"], device)
     history.append({"step": 0, "examples_processed": 0, "data_passages": 0.0,
+                    "learning_rate": initial_learning_rate,
                     "train_loss": "", "train_bce": "", "train_soft_dice_loss": "",
                     **{f"validation_{name}": value for name, value in before.items()},
                     "elapsed_seconds": time.perf_counter() - started})
     interval = []
     for step, (batch_ids, d4_codes) in enumerate(schedule, 1):
+        current_learning_rate = learning_rate_for_step(config, step)
+        apply_learning_rate(optimizer, current_learning_rate)
         tick = time.perf_counter()
         values = train_step(model, optimizer, store.batch(batch_ids, d4_codes), device)
         synchronize(device)
@@ -163,6 +197,7 @@ def fit_run(
         means = {name: float(np.mean([row[name] for row in interval])) for name in interval[0]}
         row = {"step": step, "examples_processed": examples_processed,
                "data_passages": examples_processed / len(config["training_ids"]),
+               "learning_rate": current_learning_rate,
                **{f"train_{name}": value for name, value in means.items()},
                **{f"validation_{name}": value for name, value in validation.items()},
                "elapsed_seconds": time.perf_counter() - started}
@@ -170,7 +205,8 @@ def fit_run(
         interval = []
         write_csv(directory / "history.csv", history)
         print(f"{directory.name}: step {step}/{config['max_steps']} "
-              f"loss={means['loss']:.4f} val_iou={validation['mean_iou']:.4f}", flush=True)
+              f"lr={current_learning_rate:.0e} loss={means['loss']:.4f} "
+              f"val_iou={validation['mean_iou']:.4f}", flush=True)
         if validation["mean_iou"] > best_iou:
             best_iou, best_step = validation["mean_iou"], step
             torch.save({
@@ -192,6 +228,7 @@ def fit_run(
     metrics_rows = ([{"split": "training", **row} for row in training_rows]
                     + [{"split": "validation", **row} for row in validation_rows])
     write_csv(directory / "metrics.csv", metrics_rows)
+    optimizer_record["final_learning_rates"] = [group["lr"] for group in optimizer.param_groups]
     summary = {
         "status": "completed",
         "selection": "highest mean per-image validation IoU at threshold 0.5; earlier step wins ties",

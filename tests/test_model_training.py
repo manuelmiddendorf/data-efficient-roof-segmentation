@@ -5,15 +5,19 @@ import torch
 
 from roofseg.model import EfficientNetB0UNet, build_model, state_digest
 from roofseg.optimization import (
+    build_late_lr_drop_config,
     build_learning_rate_config,
     build_training_horizon_config,
+    late_lr_drop_run_directory,
     learning_rate_run_directory,
     optimization_run_root,
     training_horizon_run_directory,
 )
 from roofseg.pilot import build_config, pilot_run_root
 from roofseg.run_artifacts import prepare_run
-from roofseg.training import adamw, restore_checkpoint
+from roofseg.training import (
+    adamw, apply_learning_rate, learning_rate_for_step, restore_checkpoint,
+)
 
 
 def test_model_output_and_batchnorm_modes():
@@ -143,3 +147,42 @@ def test_incomplete_or_conflicting_run_is_not_reused(tmp_path: Path):
         prepare_run(tmp_path, config, metadata)
     with pytest.raises(ValueError, match="conflicts"):
         prepare_run(tmp_path, {"a": 2}, metadata)
+
+
+def test_fixed_late_drop_changes_only_identity_and_scheduler(tmp_path: Path):
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"validation": ["108"], "test": ["110"]},
+        "training_subsets": {
+            "repetitions": {"1": {"subsets": {"100": [str(i) for i in range(100)]}}}
+        },
+    }
+    reference = build_training_horizon_config(splits, "random", 1e-3)
+    scheduled = build_late_lr_drop_config(splits, "random")
+    differences = {
+        key for key in reference | scheduled
+        if reference.get(key) != scheduled.get(key)
+    }
+    assert differences == {"run_name", "experiment", "scheduler"}
+    assert late_lr_drop_run_directory(tmp_path, splits, "random") != (
+        training_horizon_run_directory(tmp_path, splits, "random", 1e-3)
+    )
+
+
+def test_fixed_late_drop_boundary_updates_all_groups_without_changing_decay():
+    config = {"max_steps": 4000, "learning_rate": 1e-3, "scheduler": {
+        "type": "piecewise_constant", "adaptive": False, "phases": [
+            {"start_step": 1, "end_step": 2000, "learning_rate": 1e-3},
+            {"start_step": 2001, "end_step": 4000, "learning_rate": 1e-4},
+        ],
+    }}
+    model = torch.nn.Linear(2, 1)
+    optimizer, _ = adamw(model, 1e-3, 1e-4)
+    original_decay = [group["weight_decay"] for group in optimizer.param_groups]
+    assert learning_rate_for_step(config, 2000) == 1e-3
+    assert learning_rate_for_step(config, 2001) == 1e-4
+    apply_learning_rate(optimizer, learning_rate_for_step(config, 2001))
+    assert [group["lr"] for group in optimizer.param_groups] == [1e-4, 1e-4]
+    assert [group["weight_decay"] for group in optimizer.param_groups] == original_decay
+    constant = {"max_steps": 4000, "learning_rate": 1e-3, "scheduler": None}
+    assert learning_rate_for_step(constant, 4000) == 1e-3
