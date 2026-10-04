@@ -62,6 +62,16 @@ ImageNet `1e-3` retained its 0.865 step-2,000 maximum. The four runs required
 The results remain exploratory validation evidence from repetition 1; the
 locked test role was not evaluated.
 
+A late-trajectory analysis then separated linear change from residual variation
+over steps 2,100–4,000. One predeclared schedule block ran exactly two fresh
+configurations, using `1e-3` through step 2,000 and `1e-4` thereafter. The drop
+reduced late IoU residual SD from 0.0075 to 0.0012 for random initialization and
+from 0.0055 to 0.0010 for ImageNet. ImageNet best IoU rose from 0.865 to 0.868;
+random best IoU was effectively tied (0.831 constant versus 0.830 drop), while
+its endpoint rose from 0.806 to 0.830. The two fresh runs required 51.3 minutes
+including evaluation. These remain single-repetition validation results; the
+locked test role was not accessed.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -200,10 +210,16 @@ to select another reported winner.
   ImageNet `1e-4` maximum, but ImageNet `1e-3` remained the overall leader with
   its step-2,000 IoU of 0.865. Endpoints and second-half variation show that a
   higher selected maximum alone is not evidence of stable convergence.
-- The next recommended block is confirmation on another predeclared subset
-  repetition, pairing random and ImageNet initialization at `1e-3` under the
-  common 4,000-update cap. This would test repeatability before introducing a
-  scheduler or changing weight decay. It is a proposal and has not been run.
+- Late linear trends and residual SD were computed separately for validation
+  IoU and validation loss over steps 2,100–4,000. Residual SD is descriptive,
+  not a confidence interval or convergence threshold; adjacent checkpoints are
+  dependent.
+- Exactly two fresh runs tested the predeclared `1e-3 → 1e-4` change at step
+  2,001. The drop substantially reduced late IoU variation for both
+  initializations, improved the ImageNet best and endpoint scores, and preserved
+  the random best while improving its endpoint. The next recommended block is a
+  paired Seed 29 confirmation of this common fixed-drop recipe. It is a proposal
+  and has not been run.
 
 ## Git and delivery
 

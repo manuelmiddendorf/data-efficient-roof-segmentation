@@ -125,6 +125,28 @@ including evaluation on MPS. The analysis reads completed saved artifacts; it
 does not start training, repeat the threshold diagnostic or access the locked
 test role.
 
+## Stage 3 late-trajectory and fixed-drop block
+
+First generate the descriptive late-trajectory analysis from the four completed
+constant-rate horizon runs. The two-run schedule test then uses `1e-3` through
+step 2,000 and `1e-4` from step 2,001 through step 4,000 for both
+initializations:
+
+```bash
+uv run python scripts/check_late_lr_drop.py
+caffeinate -i -m uv run python scripts/run_late_lr_drop_block.py
+uv run python scripts/analyze_late_lr_drop.py
+uv run python scripts/run_notebook.py notebooks/03_optimization.ipynb
+```
+
+The preflight performs a real two-step MPS forward/backward check across the
+schedule boundary, verifies every optimizer group and confirms unchanged weight
+decay. The runner reuses a completed compatible run, refuses conflicting or
+incomplete directories and logs the applied learning rate with every validation
+row. Exactly two fresh runs belong to this block; the constant-`1e-3` horizon
+runs are read-only references. Analysis reads saved validation artifacts and does
+not evaluate the locked test role.
+
 | Reference | Origin | Compared with | Check time |
 | --- | --- | --- | --- |
 | RID file SHA-256 values | Provider `Checksums.sha256` | Every required raw image, mask and split file | Once before the six-run block |
