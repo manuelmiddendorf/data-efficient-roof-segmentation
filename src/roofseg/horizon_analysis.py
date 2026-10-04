@@ -232,7 +232,7 @@ def plot_horizon_examples(
         axis.set_xticks([])
         axis.set_yticks([])
     figure.suptitle(
-        "Selected 4,000-step models on common validation cases\n"
+        "Selected checkpoints from 4,000-step runs on common validation cases\n"
         "green true positive, orange false positive, blue false negative",
         y=1.01,
     )

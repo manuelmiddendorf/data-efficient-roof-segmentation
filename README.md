@@ -13,18 +13,17 @@ for overlapping image footprints. Learning curves will describe performance as
 the number of labelled training images increases, alongside variation across
 repetitions, computational cost and qualitative error analysis.
 
-**Status:** The first Stage 3 optimization block is complete. RID 1.0 is
-checksum-verified and the active
-split holds out a compact 259-image southwest test area and a 289-image northern
-validation area, with 1,210 training images and no positive-area cross-role
-footprint overlap. An early pilot under the former provider-based test design was
-discarded before this split was adopted; all six reported Stage 2 models start
-fresh. In the paired Seed 17 pilot, ImageNet initialization improved validation
-IoU by 0.044–0.050 across 25, 100 and 500 training images. This is exploratory
-validation evidence from one repetition. At 100 images, a fixed learning-rate
-screen found the highest observed IoU at `1e-3` for both initializations: 0.817
-for random and 0.865 for ImageNet. ImageNet remained ahead at every matched
-rate. The locked test area has not been evaluated.
+**Status:** Two limited Stage 3 optimization blocks are complete. RID 1.0 is
+checksum-verified and the active split holds out a compact 259-image southwest
+test area and a 289-image northern validation area, with 1,210 training images
+and no positive-area cross-role footprint overlap. In the paired Seed 17 pilot,
+ImageNet initialization improved validation IoU by 0.044–0.050 across 25, 100 and
+500 training images. At 100 images, `1e-3` produced the highest observed IoU for
+both initializations. Extending fresh `1e-4` and `1e-3` runs to 4,000 updates
+raised the random `1e-3` best IoU from 0.817 within 2,000 updates to 0.831, while
+the ImageNet `1e-3` best remained 0.865 at step 2,000. These are exploratory
+validation-selected results from one subset and seed. The locked test area has
+not been evaluated.
 
 The executed [data-exploration notebook](notebooks/01_data_exploration.ipynb)
 presents the data and split evidence, and the executed

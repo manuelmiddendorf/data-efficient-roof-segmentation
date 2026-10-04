@@ -96,6 +96,35 @@ The threshold analysis loads only the two stored `3e-4` validation checkpoints,
 evaluates the fixed 0.1–0.9 list in memory and does not retain probability maps.
 No command in this block evaluates the locked test role.
 
+## Stage 3 training-horizon block
+
+The horizon block creates four fresh 4,000-update runs at `1e-4` and `1e-3` for
+both initializations. The preflight verifies the exact split and subset, constant
+optimizer rates, paired initial states, the complete evaluation schedule and the
+identity of the first 2,000 sample IDs and D4 transforms with the historical
+schedule. Run the block explicitly with sleep prevention:
+
+```bash
+uv run python scripts/check_training_horizon.py
+caffeinate -i -m uv run python scripts/run_training_horizon_block.py
+```
+
+Completed runs live under
+`runs/optimization/rid_southwest_test_north_validation_v2/training_horizon_n100/`.
+They are separate from every 2,000-update run. Generate the compact result files
+and figures, then execute only the changed optimization notebook from a fresh
+kernel:
+
+```bash
+uv run python scripts/analyze_training_horizon.py
+uv run python scripts/run_notebook.py notebooks/03_optimization.ipynb
+```
+
+The four measured runs required 92.5 minutes of optimization and 113.1 minutes
+including evaluation on MPS. The analysis reads completed saved artifacts; it
+does not start training, repeat the threshold diagnostic or access the locked
+test role.
+
 | Reference | Origin | Compared with | Check time |
 | --- | --- | --- | --- |
 | RID file SHA-256 values | Provider `Checksums.sha256` | Every required raw image, mask and split file | Once before the six-run block |
