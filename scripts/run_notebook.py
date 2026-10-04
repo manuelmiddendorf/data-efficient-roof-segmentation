@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOKS = [
     ROOT / "notebooks/01_data_exploration.ipynb",
     ROOT / "notebooks/02_training_pilot.ipynb",
+    ROOT / "notebooks/03_optimization.ipynb",
 ]
 
 for notebook in NOTEBOOKS:

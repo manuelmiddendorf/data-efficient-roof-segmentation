@@ -49,6 +49,47 @@ def binary_metrics(probability: np.ndarray, target: np.ndarray, threshold: float
     }
 
 
+def mean_metrics_at_thresholds(
+    probability: np.ndarray,
+    target: np.ndarray,
+    thresholds: tuple[float, ...],
+) -> list[dict]:
+    """Compute equally weighted mean per-image IoU and Dice at fixed thresholds.
+
+    Parameters
+    ----------
+    probability:
+        Roof probabilities with shape ``(N, H, W)`` and values in ``[0, 1]``.
+    target:
+        Aligned binary targets with shape ``(N, H, W)``.
+    thresholds:
+        Non-empty threshold sequence with values strictly between zero and one.
+
+    Returns
+    -------
+    list of dict
+        Threshold, mean IoU, mean Dice and image count. Empty images use the
+        same conventions as :func:`binary_metrics`.
+    """
+    if probability.shape != target.shape or probability.ndim != 3:
+        raise ValueError("Threshold metrics expect aligned N×H×W arrays.")
+    if not thresholds or any(not 0 < threshold < 1 for threshold in thresholds):
+        raise ValueError("Thresholds must be non-empty and strictly between zero and one.")
+    rows = []
+    for threshold in thresholds:
+        per_image = [
+            binary_metrics(probability[index], target[index], threshold)
+            for index in range(len(probability))
+        ]
+        rows.append({
+            "threshold": threshold,
+            "mean_iou": float(np.mean([row["iou"] for row in per_image])),
+            "mean_dice": float(np.mean([row["dice"] for row in per_image])),
+            "image_count": len(per_image),
+        })
+    return rows
+
+
 def average_precision(probability: np.ndarray, target: np.ndarray) -> float | None:
     """Compute non-interpolated pixel AP for one image, or ``None`` if empty."""
     scores = probability.ravel().astype(np.float64)

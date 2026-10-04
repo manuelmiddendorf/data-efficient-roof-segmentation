@@ -48,6 +48,8 @@ def adamw(model: nn.Module, learning_rate: float, weight_decay: float):
         lr=learning_rate,
     )
     return optimizer, {
+        "learning_rates": [group["lr"] for group in optimizer.param_groups],
+        "weight_decays": [group["weight_decay"] for group in optimizer.param_groups],
         "decayed_parameter_tensors": len(decay_names),
         "no_decay_parameter_tensors": len(no_decay_names),
         "no_decay_rule": "parameter.ndim == 1 or name ends with .bias",
@@ -111,7 +113,7 @@ def fit_run(
     project_root: Path, config: dict, metadata: dict, manifest: dict,
     device: torch.device, directory: Path,
 ) -> dict:
-    """Train one fixed pilot run, select by validation IoU, and save six artifacts."""
+    """Train one resolved run, select by validation IoU, and save six artifacts."""
     store = RIDTensorStore(project_root, manifest)
     schedule, schedule_record = paired_schedule(
         config["training_ids"], config["max_steps"], config["batch_size"],
