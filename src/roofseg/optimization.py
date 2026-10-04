@@ -14,6 +14,8 @@ TRAINING_SIZE = 100
 LEARNING_RATES = (1e-4, 3e-4, 1e-3)
 NEW_LEARNING_RATES = (1e-4, 1e-3)
 REFERENCE_LEARNING_RATE = 3e-4
+HORIZON_LEARNING_RATES = (1e-4, 1e-3)
+LONG_HORIZON_STEPS = 4000
 
 
 def learning_rate_label(learning_rate: float) -> str:
@@ -135,6 +137,94 @@ def learning_rate_run_directory(
     return optimization_run_root(project_root, splits) / learning_rate_run_name(
         initialization, learning_rate
     )
+
+
+def training_horizon_run_name(initialization: str, learning_rate: float) -> str:
+    """Return the distinct name for one approved 4,000-step run."""
+    if initialization not in INITIALIZATIONS or learning_rate not in HORIZON_LEARNING_RATES:
+        raise ValueError("Run is outside the fixed training-horizon block.")
+    return (
+        f"n{TRAINING_SIZE}_{initialization}_lr{learning_rate_label(learning_rate)}"
+        f"_steps{LONG_HORIZON_STEPS}"
+    )
+
+
+def training_horizon_run_root(project_root: Path, splits: dict) -> Path:
+    """Return the split-versioned directory for the 4,000-step comparison."""
+    return project_root / "runs/optimization" / splits["split_name"] / "training_horizon_n100"
+
+
+def build_training_horizon_config(
+    splits: dict, initialization: str, learning_rate: float
+) -> dict:
+    """Extend one matched 2,000-step recipe to the approved 4,000-step horizon.
+
+    Parameters
+    ----------
+    splits:
+        Active split record with the saved repetition-1 n=100 subset.
+    initialization:
+        ``random`` or ``imagenet``.
+    learning_rate:
+        ``1e-4`` or ``1e-3``.
+
+    Returns
+    -------
+    dict
+        A resolved fresh-run configuration. Apart from run identity, only the
+        maximum step and corresponding evaluation-step list differ from the
+        matched 2,000-step configuration.
+    """
+    if learning_rate not in HORIZON_LEARNING_RATES:
+        raise ValueError("Learning rate is outside the fixed training-horizon block.")
+    config = deepcopy(build_learning_rate_config(splits, initialization, learning_rate))
+    config.update({
+        "run_name": training_horizon_run_name(initialization, learning_rate),
+        "experiment": "stage3_training_horizon_n100",
+        "max_steps": LONG_HORIZON_STEPS,
+        "evaluation_steps": [0] + list(range(100, LONG_HORIZON_STEPS + 1, 100)),
+    })
+    return config
+
+
+def training_horizon_run_directory(
+    project_root: Path, splits: dict, initialization: str, learning_rate: float
+) -> Path:
+    """Return the directory for one approved 4,000-step run."""
+    return training_horizon_run_root(project_root, splits) / training_horizon_run_name(
+        initialization, learning_rate
+    )
+
+
+def load_training_horizon_results(
+    project_root: Path,
+) -> tuple[list[dict], dict[str, list[dict]]]:
+    """Load the four completed long-run summaries and evaluation histories."""
+    splits = json.loads((project_root / "data/metadata/splits.json").read_text())
+    runs, histories = [], {}
+    for initialization in INITIALIZATIONS:
+        for learning_rate in HORIZON_LEARNING_RATES:
+            directory = training_horizon_run_directory(
+                project_root, splits, initialization, learning_rate
+            )
+            config = json.loads((directory / "config.json").read_text())
+            metadata = json.loads((directory / "metadata.json").read_text())
+            summary = json.loads((directory / "summary.json").read_text())
+            if summary.get("status") != "completed":
+                raise ValueError(f"Training-horizon run is incomplete: {directory.name}")
+            key = f"{initialization}_{learning_rate_label(learning_rate)}_steps4000"
+            runs.append({
+                "key": key,
+                "initialization": initialization,
+                "learning_rate": learning_rate,
+                "directory": directory,
+                "config": config,
+                "metadata": metadata,
+                "summary": summary,
+            })
+            with (directory / "history.csv").open(newline="", encoding="utf-8") as handle:
+                histories[key] = list(csv.DictReader(handle))
+    return runs, histories
 
 
 def load_learning_rate_results(project_root: Path) -> tuple[list[dict], dict[str, list[dict]]]:

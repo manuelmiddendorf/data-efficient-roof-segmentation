@@ -169,7 +169,8 @@ def plot_paired_learning_rate_differences(results: pd.DataFrame) -> Figure:
     return figure
 
 
-def _restore_run_model(run: dict, device: torch.device) -> torch.nn.Module:
+def restore_run_model(run: dict, device: torch.device) -> torch.nn.Module:
+    """Restore one verified run checkpoint to evaluation mode on ``device``."""
     model, _ = build_model(run["initialization"], run["config"]["seeds"]["model"])
     restore_checkpoint(
         model,
@@ -202,7 +203,7 @@ def evaluate_reference_thresholds(project_root: Path) -> pd.DataFrame:
     for run in runs:
         if run["learning_rate"] != REFERENCE_LEARNING_RATE:
             continue
-        model = _restore_run_model(run, device)
+        model = restore_run_model(run, device)
         sums = {threshold: {"iou": 0.0, "dice": 0.0, "count": 0} for threshold in THRESHOLDS}
         validation_ids = run["config"]["validation_ids"]
         with torch.inference_mode():
@@ -295,7 +296,7 @@ def choose_optimization_examples(results: pd.DataFrame, metrics: pd.DataFrame) -
 def _probabilities_for_run(run: dict, project_root: Path, sample_ids: list[str]) -> np.ndarray:
     manifest = load_json(project_root / "data/metadata/data_manifest.json")
     device = select_device()
-    model = _restore_run_model(run, device)
+    model = restore_run_model(run, device)
     batch = RIDTensorStore(project_root, manifest).batch(sample_ids)
     with torch.inference_mode():
         return model(batch["image"].to(device)).sigmoid().cpu().numpy()[:, 0]
