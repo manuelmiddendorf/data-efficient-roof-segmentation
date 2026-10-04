@@ -147,6 +147,25 @@ row. Exactly two fresh runs belong to this block; the constant-`1e-3` horizon
 runs are read-only references. Analysis reads saved validation artifacts and does
 not evaluate the locked test role.
 
+## Stage 3 Seed 29 subset replication
+
+This block reuses the saved repetition-2 n=100 subset and changes only the
+training-image selection and required run identity relative to the Seed 17
+fixed-drop references. It performs no additional learning smoke test:
+
+```bash
+uv run python scripts/check_seed29_replication.py
+caffeinate -i -m uv run python scripts/run_seed29_replication.py
+uv run python scripts/analyze_seed29_replication.py
+uv run python scripts/run_notebook.py notebooks/03_optimization.ipynb
+```
+
+The preflight verifies MPS selection, exact Seed 29 IDs, role exclusion, paired
+data schedules and unchanged Seed 17 reference configurations. Exactly two new
+runs belong to this block. Completed compatible runs are reused; conflicting or
+incomplete directories are refused. Analysis compares only saved validation
+artifacts from the two subset repetitions and does not access the test role.
+
 | Reference | Origin | Compared with | Check time |
 | --- | --- | --- | --- |
 | RID file SHA-256 values | Provider `Checksums.sha256` | Every required raw image, mask and split file | Once before the six-run block |

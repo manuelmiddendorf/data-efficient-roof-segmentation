@@ -57,7 +57,7 @@ def test_split_config_uses_only_saved_training_and_validation_ids():
     splits = {
         "split_name": "fixture",
         "roles": {"validation": ["108", "109"], "test": ["110"]},
-        "training_subsets": {"repetitions": {"1": {"subsets": {"25": [str(i) for i in range(25)]}}}},
+        "training_subsets": {"repetitions": {"1": {"seed": 17, "subsets": {"25": [str(i) for i in range(25)]}}}},
     }
     config = build_config(splits, 25, "random")
     assert config["training_ids"] == [str(i) for i in range(25)]
@@ -75,7 +75,7 @@ def test_learning_rate_configs_change_only_identity_and_learning_rate(tmp_path: 
         "split_name": "geographic_v2",
         "roles": {"validation": ["108"], "test": ["110"]},
         "training_subsets": {
-            "repetitions": {"1": {"subsets": {"100": [str(i) for i in range(100)]}}}
+            "repetitions": {"1": {"seed": 17, "subsets": {"100": [str(i) for i in range(100)]}}}
         },
     }
     reference = build_learning_rate_config(splits, "random", 3e-4)
@@ -101,7 +101,7 @@ def test_training_horizon_changes_only_identity_and_budget(tmp_path: Path):
         "split_name": "geographic_v2",
         "roles": {"validation": ["108"], "test": ["110"]},
         "training_subsets": {
-            "repetitions": {"1": {"subsets": {"100": [str(i) for i in range(100)]}}}
+            "repetitions": {"1": {"seed": 17, "subsets": {"100": [str(i) for i in range(100)]}}}
         },
     }
     historical = build_learning_rate_config(splits, "imagenet", 1e-4)
@@ -123,7 +123,7 @@ def test_training_horizon_rejects_unapproved_rate():
         "split_name": "geographic_v2",
         "roles": {"validation": ["108"], "test": ["110"]},
         "training_subsets": {
-            "repetitions": {"1": {"subsets": {"100": [str(i) for i in range(100)]}}}
+            "repetitions": {"1": {"seed": 17, "subsets": {"100": [str(i) for i in range(100)]}}}
         },
     }
     with pytest.raises(ValueError, match="outside"):
@@ -154,7 +154,7 @@ def test_fixed_late_drop_changes_only_identity_and_scheduler(tmp_path: Path):
         "split_name": "geographic_v2",
         "roles": {"validation": ["108"], "test": ["110"]},
         "training_subsets": {
-            "repetitions": {"1": {"subsets": {"100": [str(i) for i in range(100)]}}}
+            "repetitions": {"1": {"seed": 17, "subsets": {"100": [str(i) for i in range(100)]}}}
         },
     }
     reference = build_training_horizon_config(splits, "random", 1e-3)
@@ -186,3 +186,41 @@ def test_fixed_late_drop_boundary_updates_all_groups_without_changing_decay():
     assert [group["weight_decay"] for group in optimizer.param_groups] == original_decay
     constant = {"max_steps": 4000, "learning_rate": 1e-3, "scheduler": None}
     assert learning_rate_for_step(constant, 4000) == 1e-3
+
+
+def test_fixed_drop_selects_saved_seed29_subset_and_unique_directory(tmp_path: Path):
+    seed17_ids = [str(i) for i in range(100)]
+    seed29_ids = [str(i) for i in range(100, 200)]
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"training": seed17_ids + seed29_ids,
+                  "validation": ["300"], "test": ["400"]},
+        "training_subsets": {"repetitions": {
+            "1": {"seed": 17, "subsets": {"100": seed17_ids}},
+            "2": {"seed": 29, "subsets": {"100": seed29_ids}},
+        }},
+    }
+    seed17 = build_late_lr_drop_config(splits, "random")
+    seed29_random = build_late_lr_drop_config(splits, "random", subset_repetition=2)
+    seed29_imagenet = build_late_lr_drop_config(splits, "imagenet", subset_repetition=2)
+
+    assert seed17["seeds"]["subset"] == 17
+    assert seed29_random["training_ids"] == seed29_ids
+    assert seed29_random["data"]["training_subset"] == (
+        "training_subsets.repetitions.2.subsets.100"
+    )
+    assert seed29_random["seeds"] == {
+        "subset": 29, "model": 20261004, "data_order": 1701, "augmentation": 1702
+    }
+    assert seed29_random["training_ids"] == seed29_imagenet["training_ids"]
+    assert not set(seed29_random["training_ids"]) & {"300", "400"}
+    differences = {
+        key for key in seed17 | seed29_random if seed17.get(key) != seed29_random.get(key)
+    }
+    assert differences == {"run_name", "data", "training_ids", "seeds"}
+    assert late_lr_drop_run_directory(tmp_path, splits, "random") != (
+        late_lr_drop_run_directory(tmp_path, splits, "random", subset_repetition=2)
+    )
+    assert late_lr_drop_run_directory(tmp_path, splits, "random", 2) != (
+        late_lr_drop_run_directory(tmp_path, splits, "imagenet", 2)
+    )

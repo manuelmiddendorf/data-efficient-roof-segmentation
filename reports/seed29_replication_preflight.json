@@ -1,0 +1,27 @@
+{
+  "device": "mps",
+  "split_name": "rid_southwest_test_north_validation_v2",
+  "run_count": 2,
+  "training_size": 100,
+  "subset_repetition": 2,
+  "subset_seed": 29,
+  "seed17_seed29_training_id_overlap": 24,
+  "paired_schedule_sha256": "b3061e2ad4d323bdb9530e937efb16705f83520bb9c8fa13ecc20dedb9080eee",
+  "run_directories": [
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n100/n100_random_subsetseed29_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n100/n100_imagenet_subsetseed29_lr1e-3_to_1e-4_step2001_steps4000"
+  ],
+  "initial_states": {
+    "random": {
+      "encoder_sha256": "8621aebfa51d1f415abfd08bcc18ab465238fbec482209ffc5d4f023bdfc81c6",
+      "decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    },
+    "imagenet": {
+      "encoder_sha256": "472a71f44830515296f51ac595a8baa944b82411895830376287e506dc298191",
+      "decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    }
+  },
+  "seed17_references_verified": true,
+  "validation_and_test_excluded_from_training": true,
+  "test_role_absent": true
+}

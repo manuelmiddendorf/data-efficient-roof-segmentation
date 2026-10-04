@@ -72,6 +72,14 @@ its endpoint rose from 0.806 to 0.830. The two fresh runs required 51.3 minutes
 including evaluation. These remain single-repetition validation results; the
 locked test role was not accessed.
 
+The selected fixed-drop recipe was then repeated on the saved Seed 29 n=100
+subset while model, order and augmentation seeds remained fixed. The new random
+and ImageNet runs reached best IoU 0.831 and 0.863, compared with 0.830 and
+0.868 on Seed 17. The paired ImageNet-minus-random advantage repeated at +0.032
+versus +0.038. Seed 17 and Seed 29 share 24 training IDs; both use the same
+validation region. The two new runs required 51.3 minutes including evaluation.
+No constant-rate Seed 29 control or test-role evaluation was performed.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -217,9 +225,14 @@ to select another reported winner.
 - Exactly two fresh runs tested the predeclared `1e-3 → 1e-4` change at step
   2,001. The drop substantially reduced late IoU variation for both
   initializations, improved the ImageNet best and endpoint scores, and preserved
-  the random best while improving its endpoint. The next recommended block is a
-  paired Seed 29 confirmation of this common fixed-drop recipe. It is a proposal
-  and has not been run.
+  the random best while improving its endpoint.
+- The common fixed-drop recipe was repeated on the saved Seed 29 n=100 subset.
+  The ImageNet-minus-random best-IoU difference remained positive (+0.032 versus
+  +0.038 on Seed 17), and all four late trajectories had low residual variation.
+  This varies training-image selection only; both repetitions share one
+  validation region and 24 training IDs. The next proposed block applies the
+  fixed recipe at n=25 and n=500 on Seed 17 for both initializations before a
+  broader repeated learning curve. It has not been run.
 
 ## Git and delivery
 
