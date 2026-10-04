@@ -12,6 +12,9 @@ from shapely.ops import transform
 from shapely.strtree import STRtree
 
 
+APPROVED_TEST_BOUNDS_M = (720_200.0, 5_364_860.0, 720_800.0, 5_365_350.0)
+
+
 def metric_footprints(samples: Iterable[dict], target_crs: str = "EPSG:25832") -> dict[str, object]:
     """Create metric image-footprint polygons from manifest WGS84 bounds."""
     project = Transformer.from_crs("EPSG:4326", target_crs, always_xy=True).transform
@@ -88,3 +91,101 @@ def select_nested_spatial_subsets(
         nearest[selected] = -1
     ordered = [ids[index] for index in selected]
     return {str(size): sorted(ordered[:size], key=int) for size in requested}
+
+
+def assign_compact_geographic_roles(
+    footprints: dict[str, object],
+    validation_ids: Iterable[str],
+    duplicate_groups: Iterable[Iterable[str]],
+    test_bounds_m: tuple[float, float, float, float] = APPROVED_TEST_BOUNDS_M,
+) -> tuple[dict[str, list[str]], list[dict], dict[str, int]]:
+    """Assign the approved compact test region and remove cross-role overlaps.
+
+    Complete footprints contained by ``test_bounds_m`` enter the test role.
+    Footprints crossing that coordinate boundary are excluded. The supplied
+    northern validation role is retained, one canonical copy per exact-duplicate
+    group is kept, and remaining training footprints that overlap protected
+    roles by positive area are excluded. No distance buffer is applied.
+    """
+    all_ids = set(footprints)
+    validation = set(validation_ids)
+    selection_area = box(*test_bounds_m)
+    reasons: dict[str, set[str]] = defaultdict(set)
+    retained = set(all_ids)
+
+    for group_values in duplicate_groups:
+        group = list(group_values)
+        keep = min(group, key=lambda sample_id: (0 if sample_id in validation else 1, int(sample_id)))
+        for sample_id in group:
+            if sample_id != keep:
+                retained.discard(sample_id)
+                reasons[sample_id].add(f"exact_duplicate_of_{keep}")
+
+    inside = {sample_id for sample_id, geometry in footprints.items() if selection_area.covers(geometry)}
+    boundary = {
+        sample_id for sample_id, geometry in footprints.items()
+        if geometry.intersects(selection_area) and sample_id not in inside
+    }
+    for sample_id in boundary:
+        retained.discard(sample_id)
+        reasons[sample_id].add("southwest_test_boundary_straddler")
+
+    test = (inside & retained) - validation
+    validation &= retained
+    if overlapping_pairs(footprints, test, validation):
+        raise AssertionError("Approved southwest test and northern validation footprints overlap.")
+
+    training, crossing_rows = remove_crossing_training_images(
+        footprints,
+        retained - test - validation,
+        {"test": test, "validation": validation},
+    )
+    for row in crossing_rows:
+        reasons[row["id"]].add(row["reason"])
+
+    training_set = set(training)
+    excluded = all_ids - training_set - validation - test
+    roles = {
+        "training": sorted(training_set, key=int),
+        "validation": sorted(validation, key=int),
+        "test": sorted(test, key=int),
+        "excluded": sorted(excluded, key=int),
+    }
+    assigned = [sample_id for ids in roles.values() for sample_id in ids]
+    if len(assigned) != len(set(assigned)) or set(assigned) != all_ids:
+        raise AssertionError("Geographic roles do not form a complete disjoint partition.")
+
+    overlap_counts = {
+        "training_validation": len(overlapping_pairs(footprints, training_set, validation)),
+        "training_test": len(overlapping_pairs(footprints, training_set, test)),
+        "validation_test": len(overlapping_pairs(footprints, validation, test)),
+    }
+    if any(overlap_counts.values()):
+        raise AssertionError("Positive-area cross-role footprint overlap remains.")
+    exclusions = [
+        {"id": sample_id, "reasons": sorted(reasons[sample_id])}
+        for sample_id in sorted(excluded, key=int)
+    ]
+    return roles, exclusions, overlap_counts
+
+
+def directional_nearest_distances(
+    footprints: dict[str, object], from_ids: Iterable[str], to_ids: Iterable[str]
+) -> dict[str, float]:
+    """Summarize distance from each source footprint to the nearest target footprint."""
+    source = list(from_ids)
+    target_geometries = [footprints[sample_id] for sample_id in to_ids]
+    if not source or not target_geometries:
+        raise ValueError("Directional distance roles must both be nonempty.")
+    tree = STRtree(target_geometries)
+    distances = []
+    for sample_id in source:
+        geometry = footprints[sample_id]
+        nearest_index = int(tree.nearest(geometry))
+        distances.append(geometry.distance(target_geometries[nearest_index]))
+    values = np.asarray(distances)
+    return {
+        "minimum": float(values.min()),
+        "p10": float(np.quantile(values, 0.1)),
+        "median": float(np.median(values)),
+    }

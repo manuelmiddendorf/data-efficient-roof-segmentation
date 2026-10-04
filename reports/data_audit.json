@@ -249,24 +249,43 @@
     "provider_test_ids_identical_across_splits": true
   },
   "split_counts": {
-    "training": 940,
+    "training": 1210,
     "validation": 289,
-    "test": 154,
-    "excluded": 497
+    "test": 259,
+    "excluded": 122
   },
   "spatial_audit": {
-    "before": {
-      "training_validation_pair_count": 122,
-      "training_test_pair_count": 1329,
-      "validation_test_pair_count": 161
-    },
     "after": {
       "training_validation_pair_count": 0,
       "training_test_pair_count": 0,
       "validation_test_pair_count": 0
     },
+    "directional_nearest_footprint_distances_m": [
+      {
+        "from_role": "training",
+        "to_role": "validation",
+        "minimum": 0.5779418964874766,
+        "p10": 113.4093171043942,
+        "median": 591.3863136344733
+      },
+      {
+        "from_role": "training",
+        "to_role": "test",
+        "minimum": 10.098340828319264,
+        "p10": 287.54583558143963,
+        "median": 723.1246759172955
+      },
+      {
+        "from_role": "validation",
+        "to_role": "test",
+        "minimum": 565.6134631077429,
+        "p10": 692.834808415729,
+        "median": 974.5574871280764
+      }
+    ],
     "method": "Pairwise intersections of complete georeferenced 512x512 image footprints; positive area above 0.01 m\u00b2 counts as overlap.",
-    "repeated_building_limit": "Disjoint footprints prevent the same visible building from appearing across roles, but do not establish independence of nearby architecture, capture conditions or map-source processing."
+    "distance_direction": "Each row summarizes, for every image in from_role, the distance to its nearest image in to_role; reversing roles gives a different distribution.",
+    "repeated_building_limit": "Disjoint footprints prevent shared visible ground across roles, but no buffer is applied and all data remain within Wartenberg."
   },
   "roof_fraction_summary": {
     "minimum": 0.0,
