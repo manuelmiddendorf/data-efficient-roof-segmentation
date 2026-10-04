@@ -32,10 +32,18 @@ the evaluation question changed to transfer into a held-out part of Wartenberg.
 One random run completed and two ImageNet attempts were interrupted; these remain
 historical artifacts and are not reused. Three images in the active test region
 (146, 1762 and 1782) occurred in that old training subset. This history is not
-erased, but it did not determine the approved geographic boundary. Stage 2 now
-restarts every run from fresh random parameters or the original verified
-ImageNet weights with a newly initialized decoder. The 259 active test images
-remain outside all new training, model selection and qualitative analysis.
+erased, but it did not determine the approved geographic boundary. The restarted
+Stage 2 pilot is complete: all six runs began from fresh random parameters or the
+original verified ImageNet weights with a newly initialized decoder. The 259
+active test images remained outside all new training, model selection and
+qualitative analysis.
+
+Under the common 2,000-update recipe, ImageNet initialization achieved validation
+IoU 0.834, 0.862 and 0.870 at 25, 100 and 500 images; random initialization
+achieved 0.785, 0.813 and 0.826. The corresponding paired gains were 0.049,
+0.050 and 0.044. All values are exploratory validation results from repetition 1
+(subset seed 17), not independent test performance. The six runs required 61.8
+minutes of optimization and 77.9 minutes including evaluation on MPS.
 
 ## Dataset and scientific decisions
 
@@ -150,6 +158,22 @@ the execution scope. Confirm small gains across repetitions. Keep a brief
 decision record here rather than creating a document for every trial.
 Freeze the final comparison before test evaluation; do not use test feedback
 to select another reported winner.
+
+## Decision record
+
+- The early provider-test pilot was stopped when the study adopted a compact
+  southwest test region. Its artifacts remain historical and were not reused.
+- The active split was fixed before the restart. Exact-role reconstruction,
+  zero positive-area cross-role overlap and test exclusion were verified before
+  training.
+- The paired Stage 2 pilot used the unchanged common recipe. ImageNet
+  initialization led at every budget, but n=25 ImageNet overfit after an early
+  best checkpoint and several runs selected late checkpoints. Equal updates did
+  not establish equal convergence or an optimal learning rate.
+- The next proposed block is limited to n=100: add learning rates 1e-4 and 1e-3
+  for both initializations, paired against the existing 3e-4 runs. Four new runs
+  are estimated at about 55 minutes on the measured MPS setup. This proposal is
+  not yet approved or executed.
 
 ## Git and delivery
 

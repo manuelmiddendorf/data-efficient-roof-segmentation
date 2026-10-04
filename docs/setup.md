@@ -20,10 +20,9 @@ against the provider's SHA-256 list before writing the shared manifest and split
 record. Once present, changed reference records are refused. Use
 `uv run python scripts/verify_data.py` for a full later verification.
 
-The notebook runner starts a fresh kernel, executes
-`notebooks/01_data_exploration.ipynb`, stores its outputs, and exports
-`reports/01_data_exploration.html`. No notebook cell installs software or starts model
-training.
+The notebook runner starts fresh kernels, executes the available scientific
+notebooks in order, stores their outputs, and exports matching HTML reports under
+`reports/`. No notebook cell installs software or starts model training.
 
 ## Stage 2 training pilot
 
@@ -56,6 +55,18 @@ is part of the path and compatibility identity, so historical old-split runs
 cannot be reused. A compatible completed run is reused; conflicting or
 incomplete directories stop with an explanation. The analysis notebook reads
 the saved CSV and JSON files and never launches training.
+
+After all six runs complete, regenerate the small versioned result tables and
+figures, then execute both notebooks from fresh kernels:
+
+```bash
+uv run python scripts/analyze_training_pilot.py
+uv run python scripts/run_notebook.py
+```
+
+The analysis script verifies and reads the run summaries, histories and
+per-image metrics. It loads selected checkpoints only to create the documented
+validation examples; test IDs are not eligible for this analysis.
 
 | Reference | Origin | Compared with | Check time |
 | --- | --- | --- | --- |
