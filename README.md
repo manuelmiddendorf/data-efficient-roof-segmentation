@@ -13,7 +13,7 @@ for overlapping image footprints. Learning curves will describe performance as
 the number of labelled training images increases, alongside variation across
 repetitions, computational cost and qualitative error analysis.
 
-**Status:** Four limited Stage 3 optimization blocks are complete. RID 1.0 is
+**Status:** The first fixed-recipe data-efficiency curve is complete. RID 1.0 is
 checksum-verified and the active split holds out a compact 259-image southwest
 test area and a 289-image northern validation area, with 1,210 training images
 and no positive-area cross-role footprint overlap. In the paired Seed 17 pilot,
@@ -28,15 +28,18 @@ ImageNet, while preserving or improving the achieved level. Repeating this
 fixed-drop recipe on the saved Seed 29 n=100 subset produced best IoU 0.831 for
 random and 0.863 for ImageNet, compared with 0.830 and 0.868 on Seed 17. The
 paired ImageNet advantage repeated at +0.032 versus +0.038. These remain
-exploratory validation results on one shared region. The locked test area has
-not been evaluated.
+exploratory validation results on one shared region. Under the same recipe on
+the nested Seed 17 subsets, best validation IoU increases from 0.781/0.837 at
+25 images to 0.830/0.868 at 100 and 0.840/0.879 at 500 for random/ImageNet
+initialization. The locked test area has not been evaluated.
 
 The executed [data-exploration notebook](notebooks/01_data_exploration.ipynb)
 presents the data and split evidence, and the executed
 [training-pilot notebook](notebooks/02_training_pilot.ipynb) reports the six
 paired runs. The executed [optimization notebook](notebooks/03_optimization.ipynb)
 reports learning-rate, horizon, late-trajectory, fixed-drop and training-subset
-sensitivity. [docs/setup.md](docs/setup.md)
+sensitivity. The executed [data-efficiency notebook](notebooks/04_data_efficiency.ipynb)
+reports the preliminary fixed-recipe learning curve. [docs/setup.md](docs/setup.md)
 gives exact reproduction commands,
 [docs/data.md](docs/data.md) records source and label interpretation, and
 [WORK_PLAN.md](WORK_PLAN.md) tracks the research stages.

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from matplotlib.ticker import NullFormatter
 import pandas as pd
 
 from .late_training_analysis import _history_frame, summarize_late_history
@@ -98,6 +99,7 @@ def plot_data_efficiency_summary(results: pd.DataFrame) -> Figure:
                   marker="x", linestyle="--", label=f"{label}: step 4,000")
     axis.set_xscale("log")
     axis.set_xticks(SIZES, labels=[str(size) for size in SIZES])
+    axis.xaxis.set_minor_formatter(NullFormatter())
     axis.set_xlabel("Labelled training images")
     axis.set_ylabel("Validation mean per-image IoU")
     axis.set_title("Preliminary data-efficiency curve under one common recipe")
