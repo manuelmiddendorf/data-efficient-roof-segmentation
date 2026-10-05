@@ -23,9 +23,13 @@ random/ImageNet initialization is 0.781/0.837 and 0.783/0.842 at 25 images,
 0.830/0.868 and 0.831/0.863 at 100, and 0.840/0.879 and 0.842/0.877 at 500.
 The paired ImageNet advantage remains positive at every size (+0.032 to +0.059).
 Both n=25 repetitions show large train–validation gaps and rising late validation
-loss; both n=500 random runs improve late. These are exploratory results from
-one shared validation region and two partially overlapping subset families. The
-locked test area has not been evaluated.
+loss; both n=500 random runs improve late. A targeted n=25 experiment then
+increased AdamW weight decay from `1e-4` to `1e-2`. Best-IoU changes across
+Seed 17/29 were +0.004/−0.005 for random initialization and −0.003/−0.006 for
+ImageNet, while the train–validation gap increased in every pair. The stronger
+decay is therefore not adopted. These are exploratory results from one shared
+validation region and two partially overlapping subset families. The locked test
+area has not been evaluated.
 
 The executed [data-exploration notebook](notebooks/01_data_exploration.ipynb)
 presents the data and split evidence, and the executed
@@ -33,7 +37,9 @@ presents the data and split evidence, and the executed
 paired runs. The executed [optimization notebook](notebooks/03_optimization.ipynb)
 reports learning-rate, horizon, late-trajectory, fixed-drop and training-subset
 sensitivity. The executed [data-efficiency notebook](notebooks/04_data_efficiency.ipynb)
-reports the two-repetition fixed-recipe learning curves. [docs/setup.md](docs/setup.md)
+reports the two-repetition fixed-recipe learning curves, and the executed
+[targeted-experiments notebook](notebooks/05_targeted_experiments.ipynb) reports
+the first regularization block. [docs/setup.md](docs/setup.md)
 gives exact reproduction commands,
 [docs/data.md](docs/data.md) records source and label interpretation, and
 [WORK_PLAN.md](WORK_PLAN.md) tracks the research stages.

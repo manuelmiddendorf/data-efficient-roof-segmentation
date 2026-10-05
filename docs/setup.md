@@ -197,6 +197,25 @@ runs, paired schedules, role exclusion, fresh run paths and unchanged non-subset
 seeds. The shared analysis reads twelve compatible fixed-drop runs, does not mix
 in the historical 2,000-step pilot and does not access the test role.
 
+## Stage 4 targeted n=25 weight-decay experiment
+
+This block changes only AdamW weight decay from `1e-4` to `1e-2` for n=25,
+using both saved subset selections and both initializations. The four compatible
+`1e-4` runs remain read-only references:
+
+```bash
+uv run python scripts/check_weight_decay_n25.py
+caffeinate -i -m uv run python scripts/run_weight_decay_n25.py
+uv run python scripts/analyze_weight_decay_n25.py
+uv run python scripts/run_notebook.py notebooks/05_targeted_experiments.ipynb
+```
+
+The preflight verifies the four references, exact IDs and schedules, locked-test
+exclusion, fresh run directories and optimizer groups. It also performs a
+numerical zero-gradient AdamW decay check and one real MPS forward/backward step.
+Exactly four fresh runs belong to this block. Analysis reads eight saved runs and
+does not access the test role.
+
 | Reference | Origin | Compared with | Check time |
 | --- | --- | --- | --- |
 | RID file SHA-256 values | Provider `Checksums.sha256` | Every required raw image, mask and split file | Once before the six-run block |

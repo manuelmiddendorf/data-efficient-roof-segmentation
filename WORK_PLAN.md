@@ -100,6 +100,15 @@ continued late learning for n=500 random initialization. Seeds 17 and 29 share
 varies; both repetitions use the same validation region and all other seeds.
 No test-role image was accessed.
 
+The first targeted regularization block increased AdamW weight decay from
+`1e-4` to `1e-2` at n=25 for both initializations and subset seeds 17 and 29.
+The four fresh runs required 77.3 minutes of optimization and 96.6 minutes
+including evaluation on MPS. Strong-minus-reference best-IoU changes were
++0.0035 and −0.0049 for random initialization and −0.0026 and −0.0063 for
+ImageNet. The train–validation IoU gap increased in all four pairs, and late
+loss/stability changes were inconsistent. The stronger decay is not adopted;
+`1e-4` remains the supported baseline. The locked test role was not accessed.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -255,9 +264,13 @@ to select another reported winner.
   29 at n=25, 100 and 500. Performance increased with data in both repetitions,
   with smaller gains from 100 to 500; pretraining remained beneficial at every
   size. Both n=25 selections show overfitting, while both n=500 random runs
-  improve late. The next proposed limited block is a predeclared stronger
-  weight-decay comparison at n=25 across both subset selections. It has not been
-  run.
+  improve late.
+- The predeclared n=25 Weight Decay `1e-2` block completed four fresh runs
+  against paired `1e-4` references. It improved only Seed 17 Random and worsened
+  the other three best-IoU comparisons; the comparable train–validation gap grew
+  in all four. Do not adopt `1e-2`. The next proposed block is predeclared mild
+  brightness/contrast augmentation at n=25 across both subset selections. It
+  has not been run.
 
 ## Git and delivery
 
