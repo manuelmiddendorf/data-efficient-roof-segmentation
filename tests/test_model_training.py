@@ -18,6 +18,11 @@ from roofseg.run_artifacts import prepare_run
 from roofseg.training import (
     adamw, apply_learning_rate, learning_rate_for_step, restore_checkpoint,
 )
+from roofseg.weight_decay import (
+    STRONG_WEIGHT_DECAY,
+    build_weight_decay_config,
+    weight_decay_run_directory,
+)
 
 
 def test_model_output_and_batchnorm_modes():
@@ -51,6 +56,20 @@ def test_optimizer_excludes_bias_and_normalization_from_decay():
     assert record["learning_rates"] == [3e-4, 3e-4]
     assert record["decayed_parameter_tensors"] > 0
     assert record["no_decay_parameter_tensors"] > 0
+
+
+def test_adamw_decay_step_shrinks_only_included_parameters():
+    model = torch.nn.Sequential(torch.nn.Linear(2, 2), torch.nn.LayerNorm(2))
+    for parameter in model.parameters():
+        parameter.data.fill_(1.0)
+        parameter.grad = torch.zeros_like(parameter)
+    optimizer, _ = adamw(model, 1e-3, STRONG_WEIGHT_DECAY)
+    optimizer.step()
+    expected = 1 - 1e-3 * STRONG_WEIGHT_DECAY
+    torch.testing.assert_close(model[0].weight, torch.full_like(model[0].weight, expected))
+    torch.testing.assert_close(model[0].bias, torch.ones_like(model[0].bias))
+    torch.testing.assert_close(model[1].weight, torch.ones_like(model[1].weight))
+    torch.testing.assert_close(model[1].bias, torch.ones_like(model[1].bias))
 
 
 def test_split_config_uses_only_saved_training_and_validation_ids():
@@ -282,3 +301,57 @@ def test_fixed_drop_data_efficiency_sizes_are_nested_paired_and_distinct(tmp_pat
     }
     assert len(directories) == 12
     assert build_late_lr_drop_config(splits, "random") == configs[1][100]["random"]
+
+
+def test_strong_weight_decay_changes_only_identity_and_decay(tmp_path: Path):
+    ids17 = [str(index) for index in range(25)]
+    ids29 = [str(index) for index in range(25, 50)]
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {
+            "training": ids17 + ids29,
+            "validation": ["60"],
+            "test": ["70"],
+        },
+        "training_subsets": {"repetitions": {
+            "1": {"seed": 17, "subsets": {"25": ids17}},
+            "2": {"seed": 29, "subsets": {"25": ids29}},
+        }},
+    }
+    for repetition in (1, 2):
+        for initialization in ("random", "imagenet"):
+            reference = build_late_lr_drop_config(
+                splits, initialization, repetition, 25
+            )
+            strong = build_weight_decay_config(splits, initialization, repetition)
+            differences = {
+                key for key in reference | strong
+                if reference.get(key) != strong.get(key)
+            }
+            assert differences == {"run_name", "experiment", "weight_decay"}
+            assert strong["weight_decay"] == STRONG_WEIGHT_DECAY
+            assert strong["training_ids"] == reference["training_ids"]
+            assert strong["seeds"] == reference["seeds"]
+            assert strong["weight_decay_exclusion"] == reference["weight_decay_exclusion"]
+    directories = {
+        weight_decay_run_directory(tmp_path, splits, initialization, repetition)
+        for repetition in (1, 2)
+        for initialization in ("random", "imagenet")
+    }
+    assert len(directories) == 4
+
+
+def test_run_reuse_distinguishes_weight_decay_configs(tmp_path: Path):
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"validation": ["60"], "test": ["70"]},
+        "training_subsets": {"repetitions": {
+            "1": {"seed": 17, "subsets": {"25": [str(index) for index in range(25)]}},
+        }},
+    }
+    reference = build_late_lr_drop_config(splits, "random", 1, 25)
+    strong = build_weight_decay_config(splits, "random", 1)
+    metadata = {"compatibility_identity": {"inputs": "same"}}
+    assert prepare_run(tmp_path, strong, metadata) is False
+    with pytest.raises(ValueError, match="config.json"):
+        prepare_run(tmp_path, reference, metadata)
