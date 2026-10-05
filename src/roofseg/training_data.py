@@ -9,6 +9,7 @@ from typing import Sequence
 
 import numpy as np
 import torch
+from torchvision.transforms import functional as tv_functional
 
 from .data import load_binary_target, read_image, read_mask
 
@@ -31,25 +32,44 @@ class RIDTensorStore:
         self.mean = torch.tensor(IMAGENET_MEAN, dtype=torch.float32)[:, None, None]
         self.std = torch.tensor(IMAGENET_STD, dtype=torch.float32)[:, None, None]
 
-    def load(self, sample_id: str) -> tuple[torch.Tensor, torch.Tensor]:
-        """Load one normalized image and aligned binary roof target."""
+    def load_raw(self, sample_id: str) -> tuple[torch.Tensor, torch.Tensor]:
+        """Load one float32 RGB image in ``[0, 1]`` and its binary target."""
         if sample_id not in self.records:
             raise KeyError(f"RID sample is absent from the manifest: {sample_id}")
         record = self.records[sample_id]
         image = torch.from_numpy(read_image(self.project_root / record["image"]).copy())
         image = image.permute(2, 0, 1).float().div_(255.0)
-        image = (image - self.mean) / self.std
         target_array = load_binary_target(read_mask(self.project_root / record["mask"]))
         target = torch.from_numpy(target_array.copy()).unsqueeze(0).float()
         return image, target
 
-    def batch(self, sample_ids: Sequence[str], d4_codes: Sequence[int] | None = None) -> dict:
-        """Load a batch and optionally apply aligned D4 transforms.
+    def load(self, sample_id: str) -> tuple[torch.Tensor, torch.Tensor]:
+        """Load one normalized image and aligned binary roof target."""
+        image, target = self.load_raw(sample_id)
+        return (image - self.mean) / self.std, target
+
+    def batch(
+        self,
+        sample_ids: Sequence[str],
+        d4_codes: Sequence[int] | None = None,
+        photometric_factors: Sequence[tuple[float, float]] | None = None,
+    ) -> dict:
+        """Load a batch and optionally apply photometric and aligned D4 transforms.
 
         D4 codes 0--3 are rotations by multiples of 90 degrees. Codes 4--7
-        apply a horizontal reflection before the corresponding rotation.
+        apply a horizontal reflection before the corresponding rotation. Each
+        photometric pair contains a brightness factor followed by a contrast
+        factor. Photometric transforms operate on RGB in ``[0, 1]`` before
+        ImageNet normalization and do not modify targets.
         """
-        loaded = [self.load(sample_id) for sample_id in sample_ids]
+        loaded = [self.load_raw(sample_id) for sample_id in sample_ids]
+        if photometric_factors is not None:
+            if len(photometric_factors) != len(sample_ids):
+                raise ValueError("Each sample requires one brightness/contrast pair.")
+            loaded = [
+                (apply_brightness_contrast(image, *photometric_factors[index]), target)
+                for index, (image, target) in enumerate(loaded)
+            ]
         images = torch.stack([item[0] for item in loaded])
         targets = torch.stack([item[1] for item in loaded])
         if d4_codes is not None:
@@ -59,7 +79,22 @@ class RIDTensorStore:
                            for index, code in enumerate(d4_codes)]
             images = torch.stack([item[0] for item in transformed])
             targets = torch.stack([item[1] for item in transformed])
+        images = (images - self.mean) / self.std
         return {"id": list(sample_ids), "image": images, "target": targets}
+
+
+def apply_brightness_contrast(
+    image: torch.Tensor, brightness_factor: float, contrast_factor: float
+) -> torch.Tensor:
+    """Apply whole-image brightness then contrast to float RGB in ``[0, 1]``."""
+    if image.shape != (3, 512, 512) or image.dtype != torch.float32:
+        raise ValueError("Expected a float32 3×512×512 RGB image.")
+    if image.min().item() < 0.0 or image.max().item() > 1.0:
+        raise ValueError("Photometric input must lie in [0, 1].")
+    if brightness_factor < 0.0 or contrast_factor < 0.0:
+        raise ValueError("Brightness and contrast factors must be non-negative.")
+    brightened = tv_functional.adjust_brightness(image, brightness_factor)
+    return tv_functional.adjust_contrast(brightened, contrast_factor)
 
 
 def apply_d4(image: torch.Tensor, target: torch.Tensor, code: int) -> tuple[torch.Tensor, torch.Tensor]:
@@ -105,4 +140,30 @@ def paired_schedule(
         "equivalent_data_passages": examples / len(ids),
         "completed_or_partial_passages": passages,
         "incomplete_batches_retained": len(ids) % batch_size != 0,
+    }
+
+
+def photometric_schedule(
+    training_schedule: Sequence[tuple[Sequence[str], Sequence[int]]],
+    seed: int,
+    lower: float = 0.85,
+    upper: float = 1.15,
+) -> tuple[list[list[tuple[float, float]]], dict]:
+    """Draw deterministic brightness/contrast pairs for every sample occurrence."""
+    if lower < 0.0 or upper < lower:
+        raise ValueError("Photometric factor bounds must satisfy 0 <= lower <= upper.")
+    rng = np.random.default_rng(seed)
+    factors = [
+        [tuple(map(float, pair)) for pair in rng.uniform(lower, upper, size=(len(ids), 2))]
+        for ids, _ in training_schedule
+    ]
+    serialized = json.dumps(factors, separators=(",", ":")).encode()
+    return factors, {
+        "sha256": hashlib.sha256(serialized).hexdigest(),
+        "seed": seed,
+        "distribution": "independent uniform",
+        "lower": lower,
+        "upper": upper,
+        "draws_per_occurrence": 2,
+        "occurrences": sum(len(batch) for batch in factors),
     }

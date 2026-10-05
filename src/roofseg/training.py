@@ -15,7 +15,7 @@ from .integrity import sha256_file
 from .model import build_model, state_digest
 from .objectives import average_precision, binary_metrics, segmentation_loss
 from .run_artifacts import write_csv, write_json
-from .training_data import RIDTensorStore, paired_schedule
+from .training_data import RIDTensorStore, paired_schedule, photometric_schedule
 
 
 def select_device() -> torch.device:
@@ -150,6 +150,19 @@ def fit_run(
     )
     if schedule_record["sha256"] != metadata["compatibility_identity"]["schedule_sha256"]:
         raise AssertionError("Training schedule differs from the precomputed identity.")
+    photometric_batches = None
+    photometric_config = config.get("photometric_augmentation")
+    if photometric_config is not None:
+        photometric_batches, photometric_record = photometric_schedule(
+            schedule,
+            config["seeds"]["photometric"],
+            photometric_config["factor_min"],
+            photometric_config["factor_max"],
+        )
+        if photometric_record["sha256"] != metadata["compatibility_identity"][
+            "photometric_schedule_sha256"
+        ]:
+            raise AssertionError("Photometric schedule differs from the precomputed identity.")
     model, initialization = build_model(config["initialization"], config["seeds"]["model"])
     metadata["weight_source"] = (
         initialization["pretrained_weights"]
@@ -181,7 +194,10 @@ def fit_run(
         current_learning_rate = learning_rate_for_step(config, step)
         apply_learning_rate(optimizer, current_learning_rate)
         tick = time.perf_counter()
-        values = train_step(model, optimizer, store.batch(batch_ids, d4_codes), device)
+        factors = None if photometric_batches is None else photometric_batches[step - 1]
+        values = train_step(
+            model, optimizer, store.batch(batch_ids, d4_codes, factors), device
+        )
         synchronize(device)
         training_seconds += time.perf_counter() - tick
         examples_processed += len(batch_ids)
