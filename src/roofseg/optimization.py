@@ -330,33 +330,38 @@ def load_late_lr_drop_results(
 
 
 def load_fixed_drop_data_efficiency_results(
-    project_root: Path,
+    project_root: Path, subset_repetitions: tuple[int, ...] = (1,)
 ) -> tuple[list[dict], dict[str, list[dict]]]:
-    """Load the six Seed 17 fixed-drop runs at 25, 100 and 500 images."""
+    """Load fixed-drop runs at 25, 100 and 500 images for saved subsets."""
     splits = json.loads((project_root / "data/metadata/splits.json").read_text())
     runs, histories = [], {}
-    for training_size in FIXED_DROP_TRAINING_SIZES:
-        for initialization in INITIALIZATIONS:
-            directory = late_lr_drop_run_directory(
-                project_root, splits, initialization, 1, training_size
-            )
-            config = json.loads((directory / "config.json").read_text())
-            metadata = json.loads((directory / "metadata.json").read_text())
-            summary = json.loads((directory / "summary.json").read_text())
-            if summary.get("status") != "completed":
-                raise ValueError(f"Fixed-drop run is incomplete: {directory.name}")
-            key = f"n{training_size}_{initialization}_fixed_drop_seed17"
-            runs.append({
-                "key": key,
-                "training_size": training_size,
-                "initialization": initialization,
-                "directory": directory,
-                "config": config,
-                "metadata": metadata,
-                "summary": summary,
-            })
-            with (directory / "history.csv").open(newline="", encoding="utf-8") as handle:
-                histories[key] = list(csv.DictReader(handle))
+    for subset_repetition in subset_repetitions:
+        repetition = splits["training_subsets"]["repetitions"][str(subset_repetition)]
+        subset_seed = int(repetition["seed"])
+        for training_size in FIXED_DROP_TRAINING_SIZES:
+            for initialization in INITIALIZATIONS:
+                directory = late_lr_drop_run_directory(
+                    project_root, splits, initialization, subset_repetition, training_size
+                )
+                config = json.loads((directory / "config.json").read_text())
+                metadata = json.loads((directory / "metadata.json").read_text())
+                summary = json.loads((directory / "summary.json").read_text())
+                if summary.get("status") != "completed":
+                    raise ValueError(f"Fixed-drop run is incomplete: {directory.name}")
+                key = f"n{training_size}_{initialization}_fixed_drop_seed{subset_seed}"
+                runs.append({
+                    "key": key,
+                    "training_size": training_size,
+                    "initialization": initialization,
+                    "subset_repetition": subset_repetition,
+                    "subset_seed": subset_seed,
+                    "directory": directory,
+                    "config": config,
+                    "metadata": metadata,
+                    "summary": summary,
+                })
+                with (directory / "history.csv").open(newline="", encoding="utf-8") as handle:
+                    histories[key] = list(csv.DictReader(handle))
     return runs, histories
 
 
