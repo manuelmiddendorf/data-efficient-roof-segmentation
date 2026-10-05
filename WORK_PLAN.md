@@ -80,6 +80,15 @@ versus +0.038. Seed 17 and Seed 29 share 24 training IDs; both use the same
 validation region. The two new runs required 51.3 minutes including evaluation.
 No constant-rate Seed 29 control or test-role evaluation was performed.
 
+A preliminary fixed-recipe data-efficiency curve then compared the nested Seed
+17 subsets at 25, 100 and 500 images. Best validation IoU rose from 0.781 to
+0.830 to 0.840 for random initialization and from 0.837 to 0.868 to 0.879 for
+ImageNet. The paired pretraining differences were +0.056, +0.038 and +0.039.
+The four fresh runs required 102.3 minutes including evaluation. The n=25 runs
+show strong train–validation gaps and late loss deterioration, while n=500 still
+improves after the step-2,000 rate drop. This is one nested subset repetition on
+one reused validation region; the test role remained locked.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -230,9 +239,13 @@ to select another reported winner.
   The ImageNet-minus-random best-IoU difference remained positive (+0.032 versus
   +0.038 on Seed 17), and all four late trajectories had low residual variation.
   This varies training-image selection only; both repetitions share one
-  validation region and 24 training IDs. The next proposed block applies the
-  fixed recipe at n=25 and n=500 on Seed 17 for both initializations before a
-  broader repeated learning curve. It has not been run.
+  validation region and 24 training IDs.
+- The first fixed-recipe data-efficiency curve used the nested Seed 17 subsets
+  at n=25, 100 and 500. Performance increased with data but the gain from 100 to
+  500 was smaller; pretraining remained beneficial at every size. n=25 showed
+  early overfitting, whereas n=500 still improved late. The next proposed block
+  repeats n=25 and n=500 on Seed 29 before changing the recipe. It has not been
+  run.
 
 ## Git and delivery
 

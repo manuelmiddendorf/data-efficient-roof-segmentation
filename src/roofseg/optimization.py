@@ -19,6 +19,7 @@ LONG_HORIZON_STEPS = 4000
 LATE_DROP_INITIAL_RATE = 1e-3
 LATE_DROP_FINAL_RATE = 1e-4
 LATE_DROP_FIRST_FINAL_STEP = 2001
+FIXED_DROP_TRAINING_SIZES = (25, 100, 500)
 
 
 def learning_rate_label(learning_rate: float) -> str:
@@ -199,49 +200,74 @@ def training_horizon_run_directory(
     )
 
 
-def late_lr_drop_run_name(initialization: str, subset_seed: int = 17) -> str:
-    """Return the distinct name for one fixed-drop run and subset seed."""
-    if initialization not in INITIALIZATIONS:
-        raise ValueError("Unknown initialization.")
+def late_lr_drop_run_name(
+    initialization: str, subset_seed: int = 17, training_size: int = TRAINING_SIZE
+) -> str:
+    """Return the distinct name for one fixed-drop run, subset and size."""
+    if initialization not in INITIALIZATIONS or training_size not in FIXED_DROP_TRAINING_SIZES:
+        raise ValueError("Run is outside the fixed-drop data-efficiency sizes.")
     subset_label = "" if subset_seed == 17 else f"_subsetseed{subset_seed}"
     return (
-        f"n{TRAINING_SIZE}_{initialization}{subset_label}_lr1e-3_to_1e-4_"
+        f"n{training_size}_{initialization}{subset_label}_lr1e-3_to_1e-4_"
         f"step{LATE_DROP_FIRST_FINAL_STEP}_steps{LONG_HORIZON_STEPS}"
     )
 
 
-def late_lr_drop_run_root(project_root: Path, splits: dict) -> Path:
-    """Return the split-versioned directory for the fixed-drop comparison."""
-    return project_root / "runs/optimization" / splits["split_name"] / "late_lr_drop_n100"
+def late_lr_drop_run_root(
+    project_root: Path, splits: dict, training_size: int = TRAINING_SIZE
+) -> Path:
+    """Return the split-versioned directory for one fixed-drop training size."""
+    if training_size not in FIXED_DROP_TRAINING_SIZES:
+        raise ValueError("Training size is outside the fixed-drop data-efficiency set.")
+    return (
+        project_root / "runs/optimization" / splits["split_name"]
+        / f"late_lr_drop_n{training_size}"
+    )
 
 
 def build_late_lr_drop_config(
-    splits: dict, initialization: str, subset_repetition: int = 1
+    splits: dict,
+    initialization: str,
+    subset_repetition: int = 1,
+    training_size: int = TRAINING_SIZE,
 ) -> dict:
-    """Resolve a 4,000-step fixed-drop run for one saved training subset.
+    """Resolve a 4,000-step fixed-drop run for one saved subset and size.
 
-    The default repetition 1 reproduces the existing Seed 17 configuration.
-    A different repetition changes only the saved training IDs, their explicit
-    subset reference and seed, plus the run name needed to prevent reuse.
+    Defaults reproduce the existing Seed 17 n=100 configuration exactly. Sizes
+    25 and 500 inherit the same pilot recipe before applying the selected common
+    rate schedule and horizon.
     """
-    config = deepcopy(build_training_horizon_config(
-        splits, initialization, LATE_DROP_INITIAL_RATE
-    ))
+    if training_size not in FIXED_DROP_TRAINING_SIZES:
+        raise ValueError("Training size is outside the fixed-drop data-efficiency set.")
+    if training_size == TRAINING_SIZE:
+        config = deepcopy(build_training_horizon_config(
+            splits, initialization, LATE_DROP_INITIAL_RATE
+        ))
+    else:
+        config = deepcopy(build_config(splits, training_size, initialization))
+        config.update({
+            "learning_rate": LATE_DROP_INITIAL_RATE,
+            "max_steps": LONG_HORIZON_STEPS,
+            "evaluation_steps": [0] + list(range(100, LONG_HORIZON_STEPS + 1, 100)),
+        })
     repetition_key = str(subset_repetition)
     try:
         repetition = splits["training_subsets"]["repetitions"][repetition_key]
-        training_ids = repetition["subsets"][str(TRAINING_SIZE)]
+        training_ids = repetition["subsets"][str(training_size)]
         subset_seed = int(repetition["seed"])
     except KeyError as error:
         raise ValueError(f"Unknown saved subset repetition: {subset_repetition}") from error
     config["training_ids"] = training_ids
     config["data"]["training_subset"] = (
-        f"training_subsets.repetitions.{repetition_key}.subsets.{TRAINING_SIZE}"
+        f"training_subsets.repetitions.{repetition_key}.subsets.{training_size}"
     )
     config["seeds"] = {**config["seeds"], "subset": subset_seed}
     config.update({
-        "run_name": late_lr_drop_run_name(initialization, subset_seed),
-        "experiment": "stage3_late_lr_drop_n100",
+        "run_name": late_lr_drop_run_name(initialization, subset_seed, training_size),
+        "experiment": (
+            "stage3_late_lr_drop_n100"
+            if training_size == TRAINING_SIZE else "stage5_data_efficiency_fixed_drop"
+        ),
         "scheduler": {
             "type": "piecewise_constant",
             "adaptive": False,
@@ -262,6 +288,7 @@ def late_lr_drop_run_directory(
     splits: dict,
     initialization: str,
     subset_repetition: int = 1,
+    training_size: int = TRAINING_SIZE,
 ) -> Path:
     """Return the directory for one fixed-drop run and saved subset."""
     try:
@@ -270,8 +297,8 @@ def late_lr_drop_run_directory(
         )
     except KeyError as error:
         raise ValueError(f"Unknown saved subset repetition: {subset_repetition}") from error
-    return late_lr_drop_run_root(project_root, splits) / late_lr_drop_run_name(
-        initialization, subset_seed
+    return late_lr_drop_run_root(project_root, splits, training_size) / late_lr_drop_run_name(
+        initialization, subset_seed, training_size
     )
 
 
@@ -299,6 +326,37 @@ def load_late_lr_drop_results(
         })
         with (directory / "history.csv").open(newline="", encoding="utf-8") as handle:
             histories[key] = list(csv.DictReader(handle))
+    return runs, histories
+
+
+def load_fixed_drop_data_efficiency_results(
+    project_root: Path,
+) -> tuple[list[dict], dict[str, list[dict]]]:
+    """Load the six Seed 17 fixed-drop runs at 25, 100 and 500 images."""
+    splits = json.loads((project_root / "data/metadata/splits.json").read_text())
+    runs, histories = [], {}
+    for training_size in FIXED_DROP_TRAINING_SIZES:
+        for initialization in INITIALIZATIONS:
+            directory = late_lr_drop_run_directory(
+                project_root, splits, initialization, 1, training_size
+            )
+            config = json.loads((directory / "config.json").read_text())
+            metadata = json.loads((directory / "metadata.json").read_text())
+            summary = json.loads((directory / "summary.json").read_text())
+            if summary.get("status") != "completed":
+                raise ValueError(f"Fixed-drop run is incomplete: {directory.name}")
+            key = f"n{training_size}_{initialization}_fixed_drop_seed17"
+            runs.append({
+                "key": key,
+                "training_size": training_size,
+                "initialization": initialization,
+                "directory": directory,
+                "config": config,
+                "metadata": metadata,
+                "summary": summary,
+            })
+            with (directory / "history.csv").open(newline="", encoding="utf-8") as handle:
+                histories[key] = list(csv.DictReader(handle))
     return runs, histories
 
 

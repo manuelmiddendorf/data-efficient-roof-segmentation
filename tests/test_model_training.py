@@ -224,3 +224,45 @@ def test_fixed_drop_selects_saved_seed29_subset_and_unique_directory(tmp_path: P
     assert late_lr_drop_run_directory(tmp_path, splits, "random", 2) != (
         late_lr_drop_run_directory(tmp_path, splits, "imagenet", 2)
     )
+
+
+def test_fixed_drop_data_efficiency_sizes_are_nested_paired_and_distinct(tmp_path: Path):
+    ids25 = [str(i) for i in range(25)]
+    ids100 = [str(i) for i in range(100)]
+    ids500 = [str(i) for i in range(500)]
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"training": ids500, "validation": ["600"], "test": ["700"]},
+        "training_subsets": {"repetitions": {
+            "1": {"seed": 17, "subsets": {
+                "25": ids25, "100": ids100, "500": ids500,
+            }},
+        }},
+    }
+    configs = {
+        size: {
+            initialization: build_late_lr_drop_config(
+                splits, initialization, training_size=size
+            )
+            for initialization in ("random", "imagenet")
+        }
+        for size in (25, 100, 500)
+    }
+    assert set(configs[25]["random"]["training_ids"]) < set(
+        configs[100]["random"]["training_ids"]
+    ) < set(configs[500]["random"]["training_ids"])
+    for size, pair in configs.items():
+        assert len(pair["random"]["training_ids"]) == size
+        assert pair["random"]["training_ids"] == pair["imagenet"]["training_ids"]
+        assert not set(pair["random"]["training_ids"]) & {"600", "700"}
+        assert pair["random"]["max_steps"] == 4000
+        assert pair["random"]["scheduler"] == configs[100]["random"]["scheduler"]
+    directories = {
+        late_lr_drop_run_directory(
+            tmp_path, splits, initialization, training_size=size
+        )
+        for size in (25, 100, 500)
+        for initialization in ("random", "imagenet")
+    }
+    assert len(directories) == 6
+    assert build_late_lr_drop_config(splits, "random") == configs[100]["random"]

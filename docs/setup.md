@@ -166,6 +166,23 @@ runs belong to this block. Completed compatible runs are reused; conflicting or
 incomplete directories are refused. Analysis compares only saved validation
 artifacts from the two subset repetitions and does not access the test role.
 
+## Stage 5 preliminary data-efficiency curve
+
+This block applies the selected fixed-drop recipe to the nested Seed 17 subsets
+at 25 and 500 images. The compatible n=100 Seed 17 runs are verified and reused:
+
+```bash
+uv run python scripts/check_data_efficiency.py
+caffeinate -i -m uv run python scripts/run_data_efficiency.py
+uv run python scripts/analyze_data_efficiency.py
+uv run python scripts/run_notebook.py notebooks/04_data_efficiency.ipynb
+```
+
+The preflight verifies nesting, exact subset sizes, paired schedules, role
+exclusion, unique run paths and unchanged n=100 references. Exactly four fresh
+runs belong to this block. The analysis reads the six saved Seed 17 fixed-drop
+runs and does not mix in the historical 2,000-step pilot or access the test role.
+
 | Reference | Origin | Compared with | Check time |
 | --- | --- | --- | --- |
 | RID file SHA-256 values | Provider `Checksums.sha256` | Every required raw image, mask and split file | Once before the six-run block |
