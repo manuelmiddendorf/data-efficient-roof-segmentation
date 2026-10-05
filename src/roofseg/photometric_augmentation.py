@@ -227,7 +227,9 @@ def plot_photometric_histories(history: pd.DataFrame, metric: str) -> Figure:
     }
     if metric not in labels:
         raise ValueError("Metric must be validation_mean_iou or validation_loss.")
-    figure, axes = plt.subplots(2, 2, figsize=(11, 7), sharex=True, sharey="row")
+    figure, axes = plt.subplots(
+        2, 2, figsize=(11, 8.5), sharex=True, sharey="row", constrained_layout=True
+    )
     for row, initialization in enumerate(INITIALIZATIONS):
         for column, subset_seed in enumerate((17, 29)):
             axis = axes[row, column]
@@ -251,5 +253,4 @@ def plot_photometric_histories(history: pd.DataFrame, metric: str) -> Figure:
             if column == 0:
                 axis.set_ylabel(labels[metric])
     figure.suptitle(f"n=25 mild colour augmentation: {labels[metric].lower()}")
-    figure.tight_layout()
     return figure
