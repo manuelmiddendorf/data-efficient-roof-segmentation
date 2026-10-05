@@ -1,0 +1,63 @@
+{
+  "device": "mps",
+  "split_name": "rid_southwest_test_north_validation_v2",
+  "run_count": 4,
+  "training_sizes": [
+    25,
+    500
+  ],
+  "subset_repetition": 2,
+  "subset_seed": 29,
+  "nested_sizes_verified": true,
+  "initialization_pairs_verified": true,
+  "validation_and_test_excluded": true,
+  "reference_runs_verified": 8,
+  "test_role_absent": true,
+  "run_directories": [
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n25/n25_random_subsetseed29_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n25/n25_imagenet_subsetseed29_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n500/n500_random_subsetseed29_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n500/n500_imagenet_subsetseed29_lr1e-3_to_1e-4_step2001_steps4000"
+  ],
+  "training_id_overlap": {
+    "25": 4,
+    "100": 24,
+    "500": 293
+  },
+  "schedule_records": {
+    "25": {
+      "sha256": "03c8a0cebe904aaa313171c9d9cc7018f128f94d3d931cf83056e7c0239dab24",
+      "optimizer_steps": 4000,
+      "examples_processed": 14287,
+      "equivalent_data_passages": 571.48,
+      "completed_or_partial_passages": 572,
+      "incomplete_batches_retained": true
+    },
+    "500": {
+      "sha256": "b2b51b102c1144676d098262b104843e017c780413b911b012be1470b749e1b8",
+      "optimizer_steps": 4000,
+      "examples_processed": 16000,
+      "equivalent_data_passages": 32.0,
+      "completed_or_partial_passages": 32,
+      "incomplete_batches_retained": false
+    }
+  },
+  "initial_states": {
+    "n25_random": {
+      "encoder_sha256": "8621aebfa51d1f415abfd08bcc18ab465238fbec482209ffc5d4f023bdfc81c6",
+      "decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    },
+    "n25_imagenet": {
+      "encoder_sha256": "472a71f44830515296f51ac595a8baa944b82411895830376287e506dc298191",
+      "decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    },
+    "n500_random": {
+      "encoder_sha256": "8621aebfa51d1f415abfd08bcc18ab465238fbec482209ffc5d4f023bdfc81c6",
+      "decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    },
+    "n500_imagenet": {
+      "encoder_sha256": "472a71f44830515296f51ac595a8baa944b82411895830376287e506dc298191",
+      "decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    }
+  }
+}

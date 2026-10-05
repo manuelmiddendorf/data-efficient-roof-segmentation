@@ -230,39 +230,55 @@ def test_fixed_drop_data_efficiency_sizes_are_nested_paired_and_distinct(tmp_pat
     ids25 = [str(i) for i in range(25)]
     ids100 = [str(i) for i in range(100)]
     ids500 = [str(i) for i in range(500)]
+    ids25_b = [str(i) for i in range(500, 525)]
+    ids100_b = [str(i) for i in range(500, 600)]
+    ids500_b = [str(i) for i in range(500, 1000)]
     splits = {
         "split_name": "geographic_v2",
-        "roles": {"training": ids500, "validation": ["600"], "test": ["700"]},
+        "roles": {
+            "training": ids500 + ids500_b,
+            "validation": ["1000"],
+            "test": ["1001"],
+        },
         "training_subsets": {"repetitions": {
             "1": {"seed": 17, "subsets": {
                 "25": ids25, "100": ids100, "500": ids500,
             }},
+            "2": {"seed": 29, "subsets": {
+                "25": ids25_b, "100": ids100_b, "500": ids500_b,
+            }},
         }},
     }
     configs = {
-        size: {
-            initialization: build_late_lr_drop_config(
-                splits, initialization, training_size=size
-            )
-            for initialization in ("random", "imagenet")
+        repetition: {
+            size: {
+                initialization: build_late_lr_drop_config(
+                    splits, initialization, repetition, size
+                )
+                for initialization in ("random", "imagenet")
+            }
+            for size in (25, 100, 500)
         }
-        for size in (25, 100, 500)
+        for repetition in (1, 2)
     }
-    assert set(configs[25]["random"]["training_ids"]) < set(
-        configs[100]["random"]["training_ids"]
-    ) < set(configs[500]["random"]["training_ids"])
-    for size, pair in configs.items():
-        assert len(pair["random"]["training_ids"]) == size
-        assert pair["random"]["training_ids"] == pair["imagenet"]["training_ids"]
-        assert not set(pair["random"]["training_ids"]) & {"600", "700"}
-        assert pair["random"]["max_steps"] == 4000
-        assert pair["random"]["scheduler"] == configs[100]["random"]["scheduler"]
+    for repetition, family in configs.items():
+        assert set(family[25]["random"]["training_ids"]) < set(
+            family[100]["random"]["training_ids"]
+        ) < set(family[500]["random"]["training_ids"])
+        for size, pair in family.items():
+            assert len(pair["random"]["training_ids"]) == size
+            assert pair["random"]["training_ids"] == pair["imagenet"]["training_ids"]
+            assert not set(pair["random"]["training_ids"]) & {"1000", "1001"}
+            assert pair["random"]["max_steps"] == 4000
+            assert pair["random"]["scheduler"] == family[100]["random"]["scheduler"]
+            assert pair["random"]["seeds"]["subset"] == (17 if repetition == 1 else 29)
     directories = {
         late_lr_drop_run_directory(
-            tmp_path, splits, initialization, training_size=size
+            tmp_path, splits, initialization, repetition, size
         )
+        for repetition in (1, 2)
         for size in (25, 100, 500)
         for initialization in ("random", "imagenet")
     }
-    assert len(directories) == 6
-    assert build_late_lr_drop_config(splits, "random") == configs[100]["random"]
+    assert len(directories) == 12
+    assert build_late_lr_drop_config(splits, "random") == configs[1][100]["random"]

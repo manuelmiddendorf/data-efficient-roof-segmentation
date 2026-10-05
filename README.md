@@ -13,25 +13,19 @@ for overlapping image footprints. Learning curves will describe performance as
 the number of labelled training images increases, alongside variation across
 repetitions, computational cost and qualitative error analysis.
 
-**Status:** The first fixed-recipe data-efficiency curve is complete. RID 1.0 is
-checksum-verified and the active split holds out a compact 259-image southwest
-test area and a 289-image northern validation area, with 1,210 training images
-and no positive-area cross-role footprint overlap. In the paired Seed 17 pilot,
-ImageNet initialization improved validation IoU by 0.044–0.050 across 25, 100 and
-500 training images. At 100 images, `1e-3` produced the highest observed IoU for
-both initializations. Extending fresh `1e-4` and `1e-3` runs to 4,000 updates
-raised the random `1e-3` best IoU from 0.817 within 2,000 updates to 0.831, while
-the ImageNet `1e-3` best remained 0.865 at step 2,000. A predeclared
-`1e-3 → 1e-4` drop at step 2,001 then reduced late validation-IoU residual SD
-from 0.0075 to 0.0012 for random initialization and from 0.0055 to 0.0010 for
-ImageNet, while preserving or improving the achieved level. Repeating this
-fixed-drop recipe on the saved Seed 29 n=100 subset produced best IoU 0.831 for
-random and 0.863 for ImageNet, compared with 0.830 and 0.868 on Seed 17. The
-paired ImageNet advantage repeated at +0.032 versus +0.038. These remain
-exploratory validation results on one shared region. Under the same recipe on
-the nested Seed 17 subsets, best validation IoU increases from 0.781/0.837 at
-25 images to 0.830/0.868 at 100 and 0.840/0.879 at 500 for random/ImageNet
-initialization. The locked test area has not been evaluated.
+**Status:** RID 1.0 is checksum-verified and the active geographic split
+holds out a compact 259-image southwest test area and a 289-image northern
+validation area, with 1,210 training images and no positive-area cross-role
+footprint overlap. The selected common recipe uses an EfficientNet-B0 U-Net for
+4,000 updates, with learning rate `1e-3` through step 2,000 and `1e-4`
+thereafter. Across two saved training-image selections, best validation IoU for
+random/ImageNet initialization is 0.781/0.837 and 0.783/0.842 at 25 images,
+0.830/0.868 and 0.831/0.863 at 100, and 0.840/0.879 and 0.842/0.877 at 500.
+The paired ImageNet advantage remains positive at every size (+0.032 to +0.059).
+Both n=25 repetitions show large train–validation gaps and rising late validation
+loss; both n=500 random runs improve late. These are exploratory results from
+one shared validation region and two partially overlapping subset families. The
+locked test area has not been evaluated.
 
 The executed [data-exploration notebook](notebooks/01_data_exploration.ipynb)
 presents the data and split evidence, and the executed
@@ -39,7 +33,7 @@ presents the data and split evidence, and the executed
 paired runs. The executed [optimization notebook](notebooks/03_optimization.ipynb)
 reports learning-rate, horizon, late-trajectory, fixed-drop and training-subset
 sensitivity. The executed [data-efficiency notebook](notebooks/04_data_efficiency.ipynb)
-reports the preliminary fixed-recipe learning curve. [docs/setup.md](docs/setup.md)
+reports the two-repetition fixed-recipe learning curves. [docs/setup.md](docs/setup.md)
 gives exact reproduction commands,
 [docs/data.md](docs/data.md) records source and label interpretation, and
 [WORK_PLAN.md](WORK_PLAN.md) tracks the research stages.
