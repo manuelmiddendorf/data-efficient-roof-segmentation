@@ -1,0 +1,4 @@
+training_size,shared_training_ids,share_of_each_subset
+25,4,0.16
+100,24,0.24
+500,293,0.586

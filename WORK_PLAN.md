@@ -89,6 +89,17 @@ show strong train–validation gaps and late loss deterioration, while n=500 sti
 improves after the step-2,000 rate drop. This is one nested subset repetition on
 one reused validation region; the test role remained locked.
 
+The data-efficiency curve is now complete for the saved Seed 29 subset family.
+Four fresh n=25 and n=500 runs joined the existing n=100 pair; they required
+80.1 minutes of optimization and 99.6 minutes including evaluation on MPS.
+Random/ImageNet best validation IoU was 0.783/0.842 at n=25 and 0.842/0.877 at
+n=500, with paired advantages of +0.059 and +0.035. Together, both repetitions
+show positive but smaller 100-to-500 gains, n=25 train–validation separation and
+continued late learning for n=500 random initialization. Seeds 17 and 29 share
+4, 24 and 293 training IDs at n=25, 100 and 500. Only training-image selection
+varies; both repetitions use the same validation region and all other seeds.
+No test-role image was accessed.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -240,11 +251,12 @@ to select another reported winner.
   +0.038 on Seed 17), and all four late trajectories had low residual variation.
   This varies training-image selection only; both repetitions share one
   validation region and 24 training IDs.
-- The first fixed-recipe data-efficiency curve used the nested Seed 17 subsets
-  at n=25, 100 and 500. Performance increased with data but the gain from 100 to
-  500 was smaller; pretraining remained beneficial at every size. n=25 showed
-  early overfitting, whereas n=500 still improved late. The next proposed block
-  repeats n=25 and n=500 on Seed 29 before changing the recipe. It has not been
+- The fixed-recipe data-efficiency curve now covers saved subset seeds 17 and
+  29 at n=25, 100 and 500. Performance increased with data in both repetitions,
+  with smaller gains from 100 to 500; pretraining remained beneficial at every
+  size. Both n=25 selections show overfitting, while both n=500 random runs
+  improve late. The next proposed limited block is a predeclared stronger
+  weight-decay comparison at n=25 across both subset selections. It has not been
   run.
 
 ## Git and delivery
