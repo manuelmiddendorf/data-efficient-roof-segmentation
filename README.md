@@ -27,7 +27,12 @@ loss; both n=500 random runs improve late. A targeted n=25 experiment then
 increased AdamW weight decay from `1e-4` to `1e-2`. Best-IoU changes across
 Seed 17/29 were +0.004/−0.005 for random initialization and −0.003/−0.006 for
 ImageNet, while the train–validation gap increased in every pair. The stronger
-decay is therefore not adopted. These are exploratory results from one shared
+decay is therefore not adopted. A second targeted block added whole-image
+brightness and contrast factors in `[0.85, 1.15]` at n=25. Random initialization
+improved by +0.0076 and +0.0074 best validation IoU across the two subset
+selections; ImageNet changed by −0.0071 and −0.0007. The comparable
+train–validation gap still increased in every pair, so the colour rule remains
+a Random-only candidate rather than a shared recipe. These are exploratory results from one shared
 validation region and two partially overlapping subset families. The locked test
 area has not been evaluated.
 

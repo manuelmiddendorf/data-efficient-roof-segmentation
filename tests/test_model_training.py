@@ -14,6 +14,13 @@ from roofseg.optimization import (
     training_horizon_run_directory,
 )
 from roofseg.pilot import build_config, pilot_run_root
+from roofseg.photometric_augmentation import (
+    FACTOR_MAX,
+    FACTOR_MIN,
+    PHOTOMETRIC_SEED,
+    build_photometric_config,
+    photometric_run_directory,
+)
 from roofseg.run_artifacts import prepare_run
 from roofseg.training import (
     adamw, apply_learning_rate, learning_rate_for_step, restore_checkpoint,
@@ -353,5 +360,60 @@ def test_run_reuse_distinguishes_weight_decay_configs(tmp_path: Path):
     strong = build_weight_decay_config(splits, "random", 1)
     metadata = {"compatibility_identity": {"inputs": "same"}}
     assert prepare_run(tmp_path, strong, metadata) is False
+    with pytest.raises(ValueError, match="config.json"):
+        prepare_run(tmp_path, reference, metadata)
+
+
+def test_photometric_configs_change_only_declared_augmentation_fields(tmp_path: Path):
+    ids17 = [str(index) for index in range(25)]
+    ids29 = [str(index) for index in range(25, 50)]
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"validation": ["60"], "test": ["70"]},
+        "training_subsets": {"repetitions": {
+            "1": {"seed": 17, "subsets": {"25": ids17}},
+            "2": {"seed": 29, "subsets": {"25": ids29}},
+        }},
+    }
+    directories = set()
+    for repetition in (1, 2):
+        for initialization in ("random", "imagenet"):
+            reference = build_late_lr_drop_config(splits, initialization, repetition, 25)
+            augmented = build_photometric_config(splits, initialization, repetition)
+            differences = {
+                key for key in reference | augmented
+                if reference.get(key) != augmented.get(key)
+            }
+            assert differences == {
+                "run_name", "experiment", "augmentation",
+                "photometric_augmentation", "seeds",
+            }
+            unchanged_seeds = {
+                key: value for key, value in augmented["seeds"].items()
+                if key != "photometric"
+            }
+            assert unchanged_seeds == reference["seeds"]
+            assert augmented["seeds"]["photometric"] == PHOTOMETRIC_SEED
+            assert augmented["photometric_augmentation"]["factor_min"] == FACTOR_MIN
+            assert augmented["photometric_augmentation"]["factor_max"] == FACTOR_MAX
+            assert augmented["training_ids"] == reference["training_ids"]
+            directories.add(photometric_run_directory(
+                tmp_path, splits, initialization, repetition
+            ))
+    assert len(directories) == 4
+
+
+def test_run_reuse_distinguishes_photometric_config(tmp_path: Path):
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"validation": ["60"], "test": ["70"]},
+        "training_subsets": {"repetitions": {
+            "1": {"seed": 17, "subsets": {"25": [str(index) for index in range(25)]}},
+        }},
+    }
+    reference = build_late_lr_drop_config(splits, "random", 1, 25)
+    augmented = build_photometric_config(splits, "random", 1)
+    metadata = {"compatibility_identity": {"inputs": "same"}}
+    assert prepare_run(tmp_path, augmented, metadata) is False
     with pytest.raises(ValueError, match="config.json"):
         prepare_run(tmp_path, reference, metadata)

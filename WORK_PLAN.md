@@ -109,6 +109,16 @@ ImageNet. The train–validation IoU gap increased in all four pairs, and late
 loss/stability changes were inconsistent. The stronger decay is not adopted;
 `1e-4` remains the supported baseline. The locked test role was not accessed.
 
+The next targeted block added mild whole-image brightness and contrast at n=25,
+using independent `Uniform(0.85, 1.15)` factors on every training occurrence
+with a dedicated seed. Four fresh runs required 91.7 minutes of optimization and
+113.1 minutes including evaluation on MPS. Random initialization improved by
++0.0076 and +0.0074 best validation IoU across subset seeds 17 and 29; ImageNet
+changed by −0.0071 and −0.0007. The comparable train–validation gap increased
+slightly in all four pairs. The rule is therefore retained only as a promising
+Random-specific candidate, not adopted as the shared recipe. The locked test
+role was not accessed.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -269,8 +279,13 @@ to select another reported winner.
   against paired `1e-4` references. It improved only Seed 17 Random and worsened
   the other three best-IoU comparisons; the comparable train–validation gap grew
   in all four. Do not adopt `1e-2`. The next proposed block is predeclared mild
-  brightness/contrast augmentation at n=25 across both subset selections. It
-  has not been run.
+  brightness/contrast augmentation at n=25 across both subset selections.
+- The mild colour block completed four fresh paired runs with independent
+  brightness and contrast factors in `[0.85, 1.15]`. Random initialization
+  improved by about +0.0075 best IoU in both subset selections, while ImageNet
+  did not improve and the comparable train–validation gap increased in all four
+  pairs. Do not adopt it as a shared recipe. A limited encoder-BatchNorm block
+  for the two n=25 ImageNet selections is the next proposal; it has not been run.
 
 ## Git and delivery
 

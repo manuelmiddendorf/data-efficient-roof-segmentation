@@ -13,7 +13,7 @@ import torch
 
 from .integrity import sha256_file
 from .run_artifacts import json_digest, selected_input_digest
-from .training_data import IMAGENET_MEAN, IMAGENET_STD, paired_schedule
+from .training_data import IMAGENET_MEAN, IMAGENET_STD, paired_schedule, photometric_schedule
 
 
 PILOT_SIZES = (25, 100, 500)
@@ -102,6 +102,20 @@ def build_metadata(project_root: Path, manifest: dict, splits: dict, config: dic
         "validation_inputs_sha256": selected_input_digest(manifest, config["validation_ids"]),
         "schedule_sha256": schedule["sha256"],
     }
+    photometric_config = config.get("photometric_augmentation")
+    photometric_record = None
+    if photometric_config is not None:
+        training_schedule, _ = paired_schedule(
+            config["training_ids"], config["max_steps"], config["batch_size"],
+            config["seeds"]["data_order"], config["seeds"]["augmentation"],
+        )
+        _, photometric_record = photometric_schedule(
+            training_schedule,
+            config["seeds"]["photometric"],
+            photometric_config["factor_min"],
+            photometric_config["factor_max"],
+        )
+        inputs["photometric_schedule_sha256"] = photometric_record["sha256"]
     inputs["input_sha256"] = json_digest(inputs)
     git_commit = subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=project_root, check=True, capture_output=True, text=True
@@ -128,6 +142,7 @@ def build_metadata(project_root: Path, manifest: dict, splits: dict, config: dic
             if config["pretrained_encoder"] else {"kind": "fresh random initialization"}
         ),
         "schedule": schedule,
+        **({"photometric_schedule": photometric_record} if photometric_record else {}),
         "reproducibility_limit": "Seeds and schedules are paired; MPS arithmetic is not guaranteed bitwise reproducible.",
     }
 

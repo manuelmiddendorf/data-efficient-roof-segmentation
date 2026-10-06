@@ -216,6 +216,26 @@ numerical zero-gradient AdamW decay check and one real MPS forward/backward step
 Exactly four fresh runs belong to this block. Analysis reads eight saved runs and
 does not access the test role.
 
+## Stage 4 targeted n=25 colour-augmentation experiment
+
+This block retains baseline `weight_decay=1e-4` and adds only whole-image RGB
+brightness followed by contrast, with independent factors drawn from
+`Uniform(0.85, 1.15)` for every training occurrence. A dedicated seed controls
+the factors without changing the existing data-order, D4 or model seeds:
+
+```bash
+uv run python scripts/check_photometric_n25.py
+caffeinate -i -m uv run python scripts/run_photometric_n25.py
+uv run python scripts/analyze_photometric_n25.py
+uv run python scripts/run_notebook.py notebooks/05_targeted_experiments.ipynb
+```
+
+The preflight verifies the fixed two-image preview, transform order and range,
+unchanged targets and evaluation path, paired factor schedules, historical D4
+schedule hashes, role exclusion and one real MPS forward/backward step. Exactly
+four fresh runs belong to this block. The analysis compares them with the four
+unchanged D4-only references and never evaluates the locked test role.
+
 | Reference | Origin | Compared with | Check time |
 | --- | --- | --- | --- |
 | RID file SHA-256 values | Provider `Checksums.sha256` | Every required raw image, mask and split file | Once before the six-run block |

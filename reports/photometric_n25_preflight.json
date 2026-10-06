@@ -1,0 +1,94 @@
+{
+  "device": "mps",
+  "split_name": "rid_southwest_test_north_validation_v2",
+  "run_count": 4,
+  "training_size": 25,
+  "subset_repetitions": [
+    1,
+    2
+  ],
+  "subset_seeds": [
+    17,
+    29
+  ],
+  "photometric_seed": 1703,
+  "factor_bounds": [
+    0.85,
+    1.15
+  ],
+  "transform_order": [
+    "brightness",
+    "contrast",
+    "D4",
+    "ImageNet normalization"
+  ],
+  "application": "every training-image occurrence; disabled for evaluation",
+  "reference_runs_verified": 4,
+  "locked_test_role_absent": true,
+  "paired_ids_existing_seeds_d4_and_factors_verified": true,
+  "targets_unchanged": true,
+  "evaluation_path_unchanged": true,
+  "mps_forward_backward_verified": true,
+  "preview_ids": [
+    "8",
+    "40"
+  ],
+  "preview_path": "reports/figures/photometric_n25_examples.png",
+  "run_directories": [
+    "runs/targeted/rid_southwest_test_north_validation_v2/photometric_n25/n25_random_subsetseed17_brightness_contrast_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/photometric_n25/n25_imagenet_subsetseed17_brightness_contrast_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/photometric_n25/n25_random_subsetseed29_brightness_contrast_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/photometric_n25/n25_imagenet_subsetseed29_brightness_contrast_lr1e-3_to_1e-4_step2001_steps4000"
+  ],
+  "schedule_sha256_by_repetition": {
+    "1": "de21071acc771c52eae0ebba1a68923980ae1ffe975bba466ffa2370d81f3a8a",
+    "2": "03c8a0cebe904aaa313171c9d9cc7018f128f94d3d931cf83056e7c0239dab24"
+  },
+  "photometric_schedule_sha256_by_repetition": {
+    "1": "ef298f2a1fe797269cac5e3184d889bd1328653d1da923cd5689cad75e5141f6",
+    "2": "ef298f2a1fe797269cac5e3184d889bd1328653d1da923cd5689cad75e5141f6"
+  },
+  "first_batch_factors_by_repetition": {
+    "1": [
+      [
+        1.123261291541553,
+        0.9661898698465157
+      ],
+      [
+        1.1113363232391558,
+        0.9215497630008281
+      ],
+      [
+        0.9258983783705773,
+        1.0860334100025204
+      ],
+      [
+        1.044698834754103,
+        1.0660191801624257
+      ]
+    ],
+    "2": [
+      [
+        1.123261291541553,
+        0.9661898698465157
+      ],
+      [
+        1.1113363232391558,
+        0.9215497630008281
+      ],
+      [
+        0.9258983783705773,
+        1.0860334100025204
+      ],
+      [
+        1.044698834754103,
+        1.0660191801624257
+      ]
+    ]
+  },
+  "smoke": {
+    "loss": 0.6793480515480042,
+    "bce": 0.5891952514648438,
+    "soft_dice_loss": 0.7695008516311646
+  }
+}
