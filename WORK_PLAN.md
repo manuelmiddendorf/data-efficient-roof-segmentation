@@ -119,6 +119,15 @@ slightly in all four pairs. The rule is therefore retained only as a promising
 Random-specific candidate, not adopted as the shared recipe. The locked test
 role was not accessed.
 
+The encoder-BatchNorm block then kept the original ImageNet running statistics
+fixed during training for the two n=25 subset selections. The two fresh runs
+required 36.7 minutes of optimization and 46.1 minutes including evaluation on
+MPS. Best validation IoU fell from 0.837 to 0.791 for Seed 17 and from 0.842 to
+0.803 for Seed 29; endpoint IoU, Dice and AP also fell, while the comparable
+train–validation gap increased in both pairs. Fixed ImageNet statistics are not
+adopted. This result does not establish that BatchNorm caused any earlier
+augmentation result. The locked test role was not accessed.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -285,7 +294,12 @@ to select another reported winner.
   improved by about +0.0075 best IoU in both subset selections, while ImageNet
   did not improve and the comparable train–validation gap increased in all four
   pairs. Do not adopt it as a shared recipe. A limited encoder-BatchNorm block
-  for the two n=25 ImageNet selections is the next proposal; it has not been run.
+  for the two n=25 ImageNet selections was selected as the next block.
+- The encoder-BatchNorm block completed two fresh ImageNet runs with fixed
+  pretrained running statistics. Best IoU decreased by 0.0459 and 0.0386, and
+  the comparable train–validation gap increased in both subset selections. Keep
+  normal BatchNorm adaptation. A predeclared decoder `Dropout2d(p=0.1)` block is
+  the next limited proposal; it has not been run.
 
 ## Git and delivery
 
