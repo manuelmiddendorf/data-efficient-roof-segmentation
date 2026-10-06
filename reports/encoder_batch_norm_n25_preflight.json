@@ -1,0 +1,59 @@
+{
+  "device": "mps",
+  "split_name": "rid_southwest_test_north_validation_v2",
+  "run_count": 2,
+  "training_size": 25,
+  "subset_repetitions": [
+    1,
+    2
+  ],
+  "subset_seeds": [
+    17,
+    29
+  ],
+  "initialization": "imagenet",
+  "strategy": "frozen_encoder_running_statistics",
+  "reference_runs_verified": 2,
+  "locked_test_role_absent": true,
+  "training_ids_seeds_and_schedules_verified": true,
+  "original_pretrained_encoder_and_fresh_decoder_verified": true,
+  "encoder_batch_norm_count": 49,
+  "decoder_batch_norm_count": 10,
+  "encoder_buffers_unchanged_over_two_steps": true,
+  "decoder_buffers_updated": true,
+  "encoder_and_affine_gradients_and_updates_verified": true,
+  "train_validation_train_modes_verified": true,
+  "stochastic_depth_remained_in_training_mode": true,
+  "checkpoint_restore_and_config_identity_verified": true,
+  "mps_forward_backward_steps_verified": 2,
+  "run_directories": [
+    "runs/targeted/rid_southwest_test_north_validation_v2/encoder_batch_norm_n25/n25_imagenet_subsetseed17_frozen_encoder_bn_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/encoder_batch_norm_n25/n25_imagenet_subsetseed29_frozen_encoder_bn_lr1e-3_to_1e-4_step2001_steps4000"
+  ],
+  "schedule_sha256_by_repetition": {
+    "1": "de21071acc771c52eae0ebba1a68923980ae1ffe975bba466ffa2370d81f3a8a",
+    "2": "03c8a0cebe904aaa313171c9d9cc7018f128f94d3d931cf83056e7c0239dab24"
+  },
+  "initial_states": {
+    "1": {
+      "encoder_sha256": "472a71f44830515296f51ac595a8baa944b82411895830376287e506dc298191",
+      "decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    },
+    "2": {
+      "encoder_sha256": "472a71f44830515296f51ac595a8baa944b82411895830376287e506dc298191",
+      "decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    }
+  },
+  "smoke": [
+    {
+      "loss": 0.6726686954498291,
+      "bce": 0.5787100195884705,
+      "soft_dice_loss": 0.766627311706543
+    },
+    {
+      "loss": 0.6374565362930298,
+      "bce": 0.5273858904838562,
+      "soft_dice_loss": 0.7475272417068481
+    }
+  ]
+}

@@ -2,7 +2,13 @@ from pathlib import Path
 
 import pytest
 import torch
+from torch import nn
+from torchvision.ops import StochasticDepth
 
+from roofseg.batch_norm import (
+    build_frozen_batch_norm_config,
+    frozen_batch_norm_run_directory,
+)
 from roofseg.model import EfficientNetB0UNet, build_model, state_digest
 from roofseg.optimization import (
     build_late_lr_drop_config,
@@ -23,7 +29,14 @@ from roofseg.photometric_augmentation import (
 )
 from roofseg.run_artifacts import prepare_run
 from roofseg.training import (
-    adamw, apply_learning_rate, learning_rate_for_step, restore_checkpoint,
+    FROZEN_ENCODER_BATCH_NORM,
+    UPDATE_ALL_BATCH_NORM,
+    adamw,
+    apply_learning_rate,
+    learning_rate_for_step,
+    restore_checkpoint,
+    set_training_mode,
+    train_step,
 )
 from roofseg.weight_decay import (
     STRONG_WEIGHT_DECAY,
@@ -46,6 +59,69 @@ def test_model_output_and_batchnorm_modes():
     with torch.inference_mode():
         model(torch.randn(2, 3, 64, 64))
     torch.testing.assert_close(before_eval, batch_norms[0].running_mean)
+
+
+class _TinyBatchNormModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv2d(3, 4, 3, padding=1, bias=False),
+            nn.BatchNorm2d(4),
+            StochasticDepth(0.2, "row"),
+            nn.ReLU(),
+        )
+        self.decoder_batch_norm = nn.BatchNorm2d(4)
+        self.head = nn.Conv2d(4, 1, 1)
+
+    def forward(self, image):
+        return self.head(self.decoder_batch_norm(self.encoder(image)))
+
+
+def test_frozen_encoder_batch_norm_survives_mode_switches_and_keeps_gradients():
+    torch.manual_seed(7)
+    model = _TinyBatchNormModel()
+    encoder_bn = model.encoder[1]
+    decoder_bn = model.decoder_batch_norm
+    encoder_buffers = (
+        encoder_bn.running_mean.clone(), encoder_bn.running_var.clone(),
+        encoder_bn.num_batches_tracked.clone(),
+    )
+    encoder_weight = model.encoder[0].weight.detach().clone()
+    affine_weight = encoder_bn.weight.detach().clone()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.05)
+    batch = {
+        "image": torch.randn(4, 3, 8, 8),
+        "target": torch.randint(0, 2, (4, 1, 8, 8), dtype=torch.float32),
+    }
+    for _ in range(2):
+        train_step(
+            model, optimizer, batch, torch.device("cpu"), FROZEN_ENCODER_BATCH_NORM
+        )
+        model.eval()
+    set_training_mode(model, FROZEN_ENCODER_BATCH_NORM)
+
+    assert encoder_bn.training is False
+    assert decoder_bn.training is True
+    assert model.encoder[2].training is True
+    for before, after in zip(encoder_buffers, (
+        encoder_bn.running_mean, encoder_bn.running_var, encoder_bn.num_batches_tracked,
+    )):
+        torch.testing.assert_close(before, after, rtol=0, atol=0)
+    assert decoder_bn.num_batches_tracked.item() == 2
+    assert model.encoder[0].weight.grad is not None
+    assert encoder_bn.weight.grad is not None and encoder_bn.bias.grad is not None
+    assert not torch.equal(encoder_weight, model.encoder[0].weight)
+    assert not torch.equal(affine_weight, encoder_bn.weight)
+
+
+def test_reference_batch_norm_strategy_updates_encoder_and_decoder_statistics():
+    model = _TinyBatchNormModel()
+    encoder_bn = model.encoder[1]
+    before = encoder_bn.running_mean.clone()
+    set_training_mode(model, UPDATE_ALL_BATCH_NORM)
+    model(torch.randn(4, 3, 8, 8))
+    assert encoder_bn.training and model.decoder_batch_norm.training
+    assert not torch.equal(before, encoder_bn.running_mean)
 
 
 def test_random_models_pair_decoder_initialization():
@@ -415,5 +491,51 @@ def test_run_reuse_distinguishes_photometric_config(tmp_path: Path):
     augmented = build_photometric_config(splits, "random", 1)
     metadata = {"compatibility_identity": {"inputs": "same"}}
     assert prepare_run(tmp_path, augmented, metadata) is False
+    with pytest.raises(ValueError, match="config.json"):
+        prepare_run(tmp_path, reference, metadata)
+
+
+def test_frozen_batch_norm_config_changes_only_declared_strategy(tmp_path: Path):
+    ids17 = [str(index) for index in range(25)]
+    ids29 = [str(index) for index in range(25, 50)]
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"validation": ["60"], "test": ["70"]},
+        "training_subsets": {"repetitions": {
+            "1": {"seed": 17, "subsets": {"25": ids17}},
+            "2": {"seed": 29, "subsets": {"25": ids29}},
+        }},
+    }
+    directories = set()
+    for repetition in (1, 2):
+        reference = build_late_lr_drop_config(splits, "imagenet", repetition, 25)
+        frozen = build_frozen_batch_norm_config(splits, repetition)
+        differences = {
+            key for key in reference | frozen if reference.get(key) != frozen.get(key)
+        }
+        assert differences == {
+            "run_name", "experiment", "batch_normalization",
+            "batch_normalization_strategy",
+        }
+        assert frozen["batch_normalization_strategy"] == FROZEN_ENCODER_BATCH_NORM
+        assert frozen["training_ids"] == reference["training_ids"]
+        assert frozen["seeds"] == reference["seeds"]
+        assert frozen["initialization"] == "imagenet"
+        directories.add(frozen_batch_norm_run_directory(tmp_path, splits, repetition))
+    assert len(directories) == 2
+
+
+def test_run_reuse_distinguishes_batch_norm_strategy(tmp_path: Path):
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"validation": ["60"], "test": ["70"]},
+        "training_subsets": {"repetitions": {
+            "1": {"seed": 17, "subsets": {"25": [str(index) for index in range(25)]}},
+        }},
+    }
+    reference = build_late_lr_drop_config(splits, "imagenet", 1, 25)
+    frozen = build_frozen_batch_norm_config(splits, 1)
+    metadata = {"compatibility_identity": {"inputs": "same"}}
+    assert prepare_run(tmp_path, frozen, metadata) is False
     with pytest.raises(ValueError, match="config.json"):
         prepare_run(tmp_path, reference, metadata)

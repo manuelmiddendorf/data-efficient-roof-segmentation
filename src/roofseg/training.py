@@ -18,6 +18,29 @@ from .run_artifacts import write_csv, write_json
 from .training_data import RIDTensorStore, paired_schedule, photometric_schedule
 
 
+UPDATE_ALL_BATCH_NORM = "update_all_running_statistics"
+FROZEN_ENCODER_BATCH_NORM = "frozen_encoder_running_statistics"
+
+
+def set_training_mode(model: nn.Module, batch_norm_strategy: str) -> None:
+    """Enable training while optionally retaining encoder BatchNorm statistics.
+
+    The frozen strategy changes only encoder ``BatchNorm2d`` module mode. Their
+    affine parameters remain trainable, and all other encoder and decoder
+    modules retain the mode established by ``model.train()``.
+    """
+    model.train()
+    if batch_norm_strategy == UPDATE_ALL_BATCH_NORM:
+        return
+    if batch_norm_strategy != FROZEN_ENCODER_BATCH_NORM:
+        raise ValueError(f"Unknown BatchNorm strategy: {batch_norm_strategy}")
+    if not hasattr(model, "encoder"):
+        raise ValueError("Frozen encoder BatchNorm requires model.encoder.")
+    for module in model.encoder.modules():
+        if isinstance(module, nn.BatchNorm2d):
+            module.eval()
+
+
 def select_device() -> torch.device:
     """Select MPS when available, otherwise CPU, without runtime fallback."""
     if torch.backends.mps.is_available():
@@ -85,9 +108,15 @@ def apply_learning_rate(optimizer: torch.optim.Optimizer, learning_rate: float) 
         group["lr"] = learning_rate
 
 
-def train_step(model, optimizer, batch: dict, device: torch.device) -> dict:
+def train_step(
+    model,
+    optimizer,
+    batch: dict,
+    device: torch.device,
+    batch_norm_strategy: str = UPDATE_ALL_BATCH_NORM,
+) -> dict:
     """Run one float32 optimizer step and return scalar objective components."""
-    model.train()
+    set_training_mode(model, batch_norm_strategy)
     optimizer.zero_grad(set_to_none=True)
     image, target = batch["image"].to(device), batch["target"].to(device)
     logits = model(image)
@@ -196,7 +225,11 @@ def fit_run(
         tick = time.perf_counter()
         factors = None if photometric_batches is None else photometric_batches[step - 1]
         values = train_step(
-            model, optimizer, store.batch(batch_ids, d4_codes, factors), device
+            model,
+            optimizer,
+            store.batch(batch_ids, d4_codes, factors),
+            device,
+            config.get("batch_normalization_strategy", UPDATE_ALL_BATCH_NORM),
         )
         synchronize(device)
         training_seconds += time.perf_counter() - tick
