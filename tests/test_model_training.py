@@ -9,7 +9,18 @@ from roofseg.batch_norm import (
     build_frozen_batch_norm_config,
     frozen_batch_norm_run_directory,
 )
-from roofseg.model import EfficientNetB0UNet, build_model, state_digest
+from roofseg.decoder_dropout import (
+    DROPOUT_PROBABILITY,
+    DROPOUT_SEED,
+    build_decoder_dropout_config,
+    decoder_dropout_run_directory,
+)
+from roofseg.model import (
+    EfficientNetB0UNet,
+    SeededChannelDropout2d,
+    build_model,
+    state_digest,
+)
 from roofseg.optimization import (
     build_late_lr_drop_config,
     build_learning_rate_config,
@@ -129,6 +140,48 @@ def test_random_models_pair_decoder_initialization():
     second, second_report = build_model("random", 42)
     assert first_report["decoder_sha256"] == second_report["decoder_sha256"]
     assert state_digest(first) == state_digest(second)
+
+
+def test_seeded_channel_dropout_masks_channels_and_scales_retained_values():
+    dropout = SeededChannelDropout2d(0.1, 1704)
+    dropout.train()
+    values = dropout(torch.ones(8, 16, 3, 3))
+    expected_scale = 1.0 / 0.9
+    channel_values = values[:, :, 0, 0]
+    assert torch.all((channel_values == 0) | (channel_values == expected_scale))
+    assert torch.all(values == channel_values[:, :, None, None])
+    assert (channel_values == 0).any() and (channel_values != 0).any()
+
+
+def test_seeded_channel_dropout_is_identity_when_disabled_or_evaluating():
+    features = torch.randn(2, 16, 5, 5)
+    disabled = SeededChannelDropout2d(0.0)
+    disabled.train()
+    torch.testing.assert_close(disabled(features), features, rtol=0, atol=0)
+    active = SeededChannelDropout2d(0.1, 1704)
+    active.eval()
+    torch.testing.assert_close(active(features), features, rtol=0, atol=0)
+
+
+def test_dropout_generator_does_not_advance_global_torch_random_state():
+    torch.manual_seed(123)
+    before = torch.random.get_rng_state().clone()
+    dropout = SeededChannelDropout2d(0.1, 1704)
+    dropout.train()
+    dropout(torch.ones(4, 16, 2, 2))
+    torch.testing.assert_close(torch.random.get_rng_state(), before, rtol=0, atol=0)
+
+
+def test_dropout_model_preserves_historical_state_dict_schema_and_pairing():
+    reference, reference_record = build_model("random", 42)
+    dropout, dropout_record = build_model("random", 42, 0.1, 1704)
+    assert reference.state_dict().keys() == dropout.state_dict().keys()
+    dropout.load_state_dict(reference.state_dict(), strict=True)
+    assert reference_record["encoder_sha256"] == dropout_record["encoder_sha256"]
+    assert reference_record["decoder_sha256"] == dropout_record["decoder_sha256"]
+    assert sum(parameter.numel() for parameter in reference.parameters()) == sum(
+        parameter.numel() for parameter in dropout.parameters()
+    )
 
 
 def test_optimizer_excludes_bias_and_normalization_from_decay():
@@ -537,5 +590,57 @@ def test_run_reuse_distinguishes_batch_norm_strategy(tmp_path: Path):
     frozen = build_frozen_batch_norm_config(splits, 1)
     metadata = {"compatibility_identity": {"inputs": "same"}}
     assert prepare_run(tmp_path, frozen, metadata) is False
+    with pytest.raises(ValueError, match="config.json"):
+        prepare_run(tmp_path, reference, metadata)
+
+
+def test_decoder_dropout_configs_change_only_declared_fields(tmp_path: Path):
+    ids17 = [str(index) for index in range(25)]
+    ids29 = [str(index) for index in range(25, 50)]
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"validation": ["60"], "test": ["70"]},
+        "training_subsets": {"repetitions": {
+            "1": {"seed": 17, "subsets": {"25": ids17}},
+            "2": {"seed": 29, "subsets": {"25": ids29}},
+        }},
+    }
+    directories = set()
+    for repetition in (1, 2):
+        for initialization in ("random", "imagenet"):
+            reference = build_late_lr_drop_config(splits, initialization, repetition, 25)
+            dropout = build_decoder_dropout_config(splits, initialization, repetition)
+            differences = {
+                key for key in reference | dropout
+                if reference.get(key) != dropout.get(key)
+            }
+            assert differences == {
+                "run_name", "experiment", "decoder_channel_dropout", "seeds"
+            }
+            assert dropout["decoder_channel_dropout"]["probability"] == DROPOUT_PROBABILITY
+            assert dropout["seeds"]["decoder_dropout"] == DROPOUT_SEED
+            assert {
+                key: value for key, value in dropout["seeds"].items()
+                if key != "decoder_dropout"
+            } == reference["seeds"]
+            assert dropout["training_ids"] == reference["training_ids"]
+            directories.add(decoder_dropout_run_directory(
+                tmp_path, splits, initialization, repetition
+            ))
+    assert len(directories) == 4
+
+
+def test_run_reuse_distinguishes_decoder_dropout_config(tmp_path: Path):
+    splits = {
+        "split_name": "geographic_v2",
+        "roles": {"validation": ["60"], "test": ["70"]},
+        "training_subsets": {"repetitions": {
+            "1": {"seed": 17, "subsets": {"25": [str(index) for index in range(25)]}},
+        }},
+    }
+    reference = build_late_lr_drop_config(splits, "random", 1, 25)
+    dropout = build_decoder_dropout_config(splits, "random", 1)
+    metadata = {"compatibility_identity": {"inputs": "same"}}
+    assert prepare_run(tmp_path, dropout, metadata) is False
     with pytest.raises(ValueError, match="config.json"):
         prepare_run(tmp_path, reference, metadata)

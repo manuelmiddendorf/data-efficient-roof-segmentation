@@ -15,6 +15,40 @@ WEIGHTS = EfficientNet_B0_Weights.IMAGENET1K_V1
 TRUSTED_SHA256_PREFIX = "7f5810bc"
 
 
+class SeededChannelDropout2d(nn.Module):
+    """Drop complete ``N×C`` feature maps using an isolated CPU generator.
+
+    Inputs and outputs have shape ``N×C×H×W``. During training, each feature
+    map is retained independently with probability ``1 - p`` and scaled by its
+    reciprocal. Evaluation and ``p=0`` are exact identity operations.
+    """
+
+    def __init__(self, probability: float = 0.0, seed: int | None = None):
+        super().__init__()
+        if not 0.0 <= probability < 1.0:
+            raise ValueError("Channel-dropout probability must lie in [0, 1).")
+        if probability > 0.0 and seed is None:
+            raise ValueError("Active channel dropout requires its own seed.")
+        self.probability = probability
+        self.seed = seed
+        self.generator = torch.Generator(device="cpu")
+        if seed is not None:
+            self.generator.manual_seed(seed)
+
+    def forward(self, features: torch.Tensor) -> torch.Tensor:
+        if features.ndim != 4:
+            raise ValueError("Channel dropout expects N×C×H×W features.")
+        if not self.training or self.probability == 0.0:
+            return features
+        keep_probability = 1.0 - self.probability
+        mask = torch.rand(
+            (features.shape[0], features.shape[1], 1, 1),
+            generator=self.generator,
+            device="cpu",
+        ) < keep_probability
+        return features * mask.to(device=features.device, dtype=features.dtype) / keep_probability
+
+
 class DecoderBlock(nn.Module):
     """Upsample, concatenate an optional encoder skip, and refine twice."""
 
@@ -46,7 +80,9 @@ class EfficientNetB0UNet(nn.Module):
     pixels; the 1,280-channel encoder projection is the 16-pixel bottleneck.
     """
 
-    def __init__(self):
+    def __init__(
+        self, decoder_dropout_probability: float = 0.0, decoder_dropout_seed: int | None = None
+    ):
         super().__init__()
         self.encoder = efficientnet_b0(weights=None).features
         self.up1 = DecoderBlock(1280, 112, 256)
@@ -54,6 +90,9 @@ class EfficientNetB0UNet(nn.Module):
         self.up3 = DecoderBlock(128, 24, 64)
         self.up4 = DecoderBlock(64, 16, 32)
         self.up5 = DecoderBlock(32, 0, 16)
+        self.decoder_dropout = SeededChannelDropout2d(
+            decoder_dropout_probability, decoder_dropout_seed
+        )
         self.head = nn.Conv2d(16, 1, kernel_size=1)
 
     def forward(self, image: torch.Tensor) -> torch.Tensor:
@@ -71,6 +110,7 @@ class EfficientNetB0UNet(nn.Module):
         decoded = self.up3(decoded, x2)
         decoded = self.up4(decoded, x1)
         decoded = self.up5(decoded)
+        decoded = self.decoder_dropout(decoded)
         return self.head(decoded)
 
 
@@ -101,12 +141,17 @@ def pretrained_weight_record() -> dict:
     }
 
 
-def build_model(initialization: str, model_seed: int) -> tuple[EfficientNetB0UNet, dict]:
+def build_model(
+    initialization: str,
+    model_seed: int,
+    decoder_dropout_probability: float = 0.0,
+    decoder_dropout_seed: int | None = None,
+) -> tuple[EfficientNetB0UNet, dict]:
     """Build a paired random or ImageNet-encoder model from the same fresh seed."""
     if initialization not in {"random", "imagenet"}:
         raise ValueError("Initialization must be 'random' or 'imagenet'.")
     torch.manual_seed(model_seed)
-    model = EfficientNetB0UNet()
+    model = EfficientNetB0UNet(decoder_dropout_probability, decoder_dropout_seed)
     decoder_before = state_digest(model.up1) + state_digest(model.up2) + state_digest(model.up3) + state_digest(model.up4) + state_digest(model.up5) + state_digest(model.head)
     random_encoder_digest = state_digest(model.encoder)
     weight_record = None
@@ -126,5 +171,10 @@ def build_model(initialization: str, model_seed: int) -> tuple[EfficientNetB0UNe
         "encoder_sha256": state_digest(model.encoder),
         "decoder_sha256": hashlib.sha256(decoder_after.encode()).hexdigest(),
         "pretrained_weights": weight_record,
+        "decoder_channel_dropout": {
+            "probability": decoder_dropout_probability,
+            "seed": decoder_dropout_seed,
+            "position": "after up5 and before the final 1x1 convolution",
+        },
         "trainable_parameters": sum(parameter.numel() for parameter in model.parameters()),
     }

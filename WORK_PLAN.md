@@ -128,6 +128,15 @@ train–validation gap increased in both pairs. Fixed ImageNet statistics are no
 adopted. This result does not establish that BatchNorm caused any earlier
 augmentation result. The locked test role was not accessed.
 
+The decoder channel-dropout block then applied `p=0.1` after the final decoder
+block and before the prediction head for all four n=25 pairs. Its dedicated RNG
+seed did not alter other recorded random streams. The four fresh runs required
+78.6 minutes of optimization and 97.3 minutes including evaluation on MPS.
+Dropout-minus-reference best-IoU changes were −0.0009/+0.0037 for Random and
+−0.0025/+0.0050 for ImageNet across subset seeds 17/29. Endpoint IoU, validation
+loss, fit gaps and late stability were inconsistent across pairs. Do not adopt
+this dropout setting as the shared recipe. The locked test role was not accessed.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -298,8 +307,14 @@ to select another reported winner.
 - The encoder-BatchNorm block completed two fresh ImageNet runs with fixed
   pretrained running statistics. Best IoU decreased by 0.0459 and 0.0386, and
   the comparable train–validation gap increased in both subset selections. Keep
-  normal BatchNorm adaptation. A predeclared decoder `Dropout2d(p=0.1)` block is
-  the next limited proposal; it has not been run.
+  normal BatchNorm adaptation.
+- The decoder channel-dropout block completed four fresh n=25 runs with `p=0.1`
+  at the final decoder feature map. Best-IoU effects ranged from −0.0025 to
+  +0.0050 and did not repeat consistently across initialization and subset
+  selection; endpoint and stability diagnostics were also mixed. Keep the
+  shared reference without decoder dropout. A boundary-aware objective is the
+  next bounded candidate, subject to a fixed boundary definition and at most two
+  predeclared variants.
 
 ## Git and delivery
 

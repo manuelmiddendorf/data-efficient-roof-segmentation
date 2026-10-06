@@ -35,10 +35,13 @@ train–validation gap still increased in every pair, so the colour rule remains
 a Random-only candidate rather than a shared recipe. A third targeted block kept
 the original ImageNet encoder BatchNorm statistics fixed during training. Best
 IoU fell by 0.046 and 0.039 across subset seeds 17 and 29, and the comparable
-train–validation gap increased in both pairs. Ordinary BatchNorm adaptation
-therefore remains the supported pretrained strategy. These are exploratory results from one shared
-validation region and two partially overlapping subset families. The locked test
-area has not been evaluated.
+train–validation gap increased in both pairs. A fourth block applied decoder
+channel dropout with `p=0.1`. Best-IoU changes were −0.0009/+0.0037 for Random
+and −0.0025/+0.0050 for ImageNet across subset seeds 17/29; endpoints, validation
+loss and late stability were also inconsistent. Ordinary BatchNorm adaptation
+without decoder dropout therefore remains the supported shared strategy. These
+are exploratory results from one shared validation region and two partially
+overlapping subset families. The locked test area has not been evaluated.
 
 The executed [data-exploration notebook](notebooks/01_data_exploration.ipynb)
 presents the data and split evidence, and the executed
@@ -48,7 +51,7 @@ reports learning-rate, horizon, late-trajectory, fixed-drop and training-subset
 sensitivity. The executed [data-efficiency notebook](notebooks/04_data_efficiency.ipynb)
 reports the two-repetition fixed-recipe learning curves, and the executed
 [targeted-experiments notebook](notebooks/05_targeted_experiments.ipynb) reports
-the first regularization block. [docs/setup.md](docs/setup.md)
+the completed targeted regularization blocks. [docs/setup.md](docs/setup.md)
 gives exact reproduction commands,
 [docs/data.md](docs/data.md) records source and label interpretation, and
 [WORK_PLAN.md](WORK_PLAN.md) tracks the research stages.

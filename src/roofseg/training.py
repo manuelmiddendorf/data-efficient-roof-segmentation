@@ -192,7 +192,13 @@ def fit_run(
             "photometric_schedule_sha256"
         ]:
             raise AssertionError("Photometric schedule differs from the precomputed identity.")
-    model, initialization = build_model(config["initialization"], config["seeds"]["model"])
+    dropout_config = config.get("decoder_channel_dropout")
+    model, initialization = build_model(
+        config["initialization"],
+        config["seeds"]["model"],
+        0.0 if dropout_config is None else dropout_config["probability"],
+        None if dropout_config is None else config["seeds"]["decoder_dropout"],
+    )
     metadata["weight_source"] = (
         initialization["pretrained_weights"]
         if initialization["pretrained_weights"] is not None

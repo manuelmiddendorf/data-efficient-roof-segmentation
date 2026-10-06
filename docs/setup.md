@@ -256,6 +256,27 @@ active Stochastic Depth, encoder and affine-BN parameter updates, and strict
 checkpoint restoration. Analysis reads two new runs and two references without
 accessing the locked test role.
 
+## Stage 4 targeted n=25 decoder channel-dropout experiment
+
+This block applies channel dropout with `p=0.1` after the final decoder block and
+before the prediction head. A dedicated random generator with seed `1704`
+separates its masks from all existing random streams:
+
+```bash
+uv run python scripts/check_decoder_dropout_n25.py
+caffeinate -i -m uv run python scripts/run_decoder_dropout_n25.py
+uv run python scripts/analyze_decoder_dropout_n25.py
+uv run python scripts/run_notebook.py notebooks/05_targeted_experiments.ipynb
+```
+
+The preflight verifies the exact four paired references, sample IDs and schedules,
+role exclusion, channel-wise masking and retained-value scaling, evaluation and
+disabled identity, random-stream separation, state-dict compatibility, strict
+checkpoint restoration and a real MPS forward/backward step. Exactly four fresh
+runs belong to this block. A completed compatible run is reused rather than
+trained again; analysis compares the four new runs with their unchanged D4-only
+references and never loads the locked test role.
+
 | Reference | Origin | Compared with | Check time |
 | --- | --- | --- | --- |
 | RID file SHA-256 values | Provider `Checksums.sha256` | Every required raw image, mask and split file | Once before the six-run block |
