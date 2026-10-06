@@ -29,6 +29,112 @@ def segmentation_loss(logits: torch.Tensor, target: torch.Tensor, epsilon: float
     return 0.5 * bce + 0.5 * soft_dice_loss, {"bce": bce, "soft_dice_loss": soft_dice_loss}
 
 
+def boundary_band(target: torch.Tensor, radius: int = 3, inner: bool = False) -> torch.Tensor:
+    """Construct a binary roof-boundary band while excluding the crop border.
+
+    Parameters
+    ----------
+    target:
+        Binary tensor with shape ``N×1×H×W``.
+    radius:
+        Pixel radius. Radius three uses a square ``7×7`` structuring element.
+    inner:
+        If false, return dilation minus erosion. If true, return target minus
+        erosion, as used for the symmetric Boundary-IoU diagnostic.
+
+    Returns
+    -------
+    torch.Tensor
+        Float tensor aligned with ``target``. The outer ``radius`` rows and
+        columns are zero so the image crop cannot create a measured boundary.
+    """
+    if target.ndim != 4 or target.shape[1] != 1 or radius < 1:
+        raise ValueError("Boundary bands expect N×1×H×W targets and positive radius.")
+    if target.shape[-2] <= 2 * radius or target.shape[-1] <= 2 * radius:
+        raise ValueError("Boundary radius leaves no interior pixels.")
+    if not torch.all((target == 0) | (target == 1)).item():
+        raise ValueError("Boundary bands require binary targets.")
+    kernel_size = 2 * radius + 1
+    dilated = F.max_pool2d(target, kernel_size, stride=1, padding=radius)
+    eroded = 1 - F.max_pool2d(1 - target, kernel_size, stride=1, padding=radius)
+    band = target - eroded if inner else dilated - eroded
+    band = (band > 0).to(target.dtype)
+    interior = torch.zeros_like(band)
+    interior[..., radius:-radius, radius:-radius] = 1
+    return band * interior
+
+
+def boundary_weighted_segmentation_loss(
+    logits: torch.Tensor,
+    target: torch.Tensor,
+    normalization: str,
+    mean_training_band_fraction: float,
+    radius: int = 3,
+    epsilon: float = 1e-6,
+) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+    """Add one of the two fixed boundary-weighted BCE terms to the base loss.
+
+    ``proportional_band_area`` adds each image's band BCE divided by all image
+    pixels. ``equal_per_nonempty_band`` multiplies mean BCE within each nonempty
+    band by the fixed mean training-band fraction. Both variants are averaged
+    equally over images; empty bands contribute zero.
+    """
+    base_loss, base_components = segmentation_loss(logits, target, epsilon)
+    if normalization not in {"proportional_band_area", "equal_per_nonempty_band"}:
+        raise ValueError(f"Unknown boundary normalization: {normalization}")
+    if not 0 <= mean_training_band_fraction <= 1:
+        raise ValueError("Mean training-band fraction must lie in [0, 1].")
+    band = boundary_band(target, radius=radius)
+    bce_pixels = F.binary_cross_entropy_with_logits(logits, target, reduction="none")
+    axes = (1, 2, 3)
+    band_pixels = band.sum(axes)
+    band_bce_sum = (bce_pixels * band).sum(axes)
+    nonempty = band_pixels > 0
+    band_bce_per_image = torch.where(
+        nonempty,
+        band_bce_sum / band_pixels.clamp_min(1),
+        torch.zeros_like(band_bce_sum),
+    )
+    band_fraction = band_pixels / target[0].numel()
+    coefficient = (
+        band_fraction
+        if normalization == "proportional_band_area"
+        else torch.full_like(band_fraction, mean_training_band_fraction) * nonempty
+    )
+    boundary_addition = (coefficient * band_bce_per_image).mean()
+    components = {
+        **base_components,
+        "base_loss": base_loss,
+        "boundary_bce": band_bce_per_image.mean(),
+        "boundary_coefficient": coefficient.mean(),
+        "boundary_addition": boundary_addition,
+    }
+    return base_loss + boundary_addition, components
+
+
+def boundary_iou(
+    prediction: np.ndarray,
+    target: np.ndarray,
+    radius: int = 3,
+) -> float | None:
+    """Compute symmetric IoU between inner prediction and reference bands.
+
+    The outer ``radius`` pixels are excluded by :func:`boundary_band`. ``None``
+    denotes a reference without an observable inner contour and allows callers
+    to define one common evaluation subset from reference masks alone. A missing
+    predicted contour for an included reference returns zero.
+    """
+    if prediction.shape != target.shape or prediction.ndim != 2:
+        raise ValueError("Boundary IoU expects aligned two-dimensional masks.")
+    tensors = torch.from_numpy(np.stack([prediction, target]).astype(np.float32))[:, None]
+    bands = boundary_band(tensors, radius=radius, inner=True).numpy()[:, 0].astype(bool)
+    predicted_band, reference_band = bands
+    if not reference_band.any():
+        return None
+    union = np.logical_or(predicted_band, reference_band).sum()
+    return float(np.logical_and(predicted_band, reference_band).sum() / union) if union else 0.0
+
+
 def binary_metrics(probability: np.ndarray, target: np.ndarray, threshold: float = 0.5) -> dict:
     """Compute roof IoU and Dice for one image with explicit empty-set rules."""
     if probability.shape != target.shape or probability.ndim != 2:
