@@ -32,7 +32,11 @@ brightness and contrast factors in `[0.85, 1.15]` at n=25. Random initialization
 improved by +0.0076 and +0.0074 best validation IoU across the two subset
 selections; ImageNet changed by −0.0071 and −0.0007. The comparable
 train–validation gap still increased in every pair, so the colour rule remains
-a Random-only candidate rather than a shared recipe. These are exploratory results from one shared
+a Random-only candidate rather than a shared recipe. A third targeted block kept
+the original ImageNet encoder BatchNorm statistics fixed during training. Best
+IoU fell by 0.046 and 0.039 across subset seeds 17 and 29, and the comparable
+train–validation gap increased in both pairs. Ordinary BatchNorm adaptation
+therefore remains the supported pretrained strategy. These are exploratory results from one shared
 validation region and two partially overlapping subset families. The locked test
 area has not been evaluated.
 

@@ -236,6 +236,26 @@ schedule hashes, role exclusion and one real MPS forward/backward step. Exactly
 four fresh runs belong to this block. The analysis compares them with the four
 unchanged D4-only references and never evaluates the locked test role.
 
+## Stage 4 targeted n=25 encoder-BatchNorm experiment
+
+This block runs two fresh ImageNet models while retaining the original pretrained
+running statistics in encoder `BatchNorm2d` layers. Their affine parameters and
+all other model weights remain trainable; decoder BatchNorm updates normally:
+
+```bash
+uv run python scripts/check_encoder_batch_norm_n25.py
+caffeinate -i -m uv run python scripts/run_encoder_batch_norm_n25.py
+uv run python scripts/analyze_encoder_batch_norm_n25.py
+uv run python scripts/run_notebook.py notebooks/05_targeted_experiments.ipynb
+```
+
+The preflight verifies the two references, initial ImageNet buffers, exact IDs
+and schedules, role exclusion and unique run paths. A real MPS train–validation–
+train sequence confirms unchanged encoder BN buffers, updated decoder buffers,
+active Stochastic Depth, encoder and affine-BN parameter updates, and strict
+checkpoint restoration. Analysis reads two new runs and two references without
+accessing the locked test role.
+
 | Reference | Origin | Compared with | Check time |
 | --- | --- | --- | --- |
 | RID file SHA-256 values | Provider `Checksums.sha256` | Every required raw image, mask and split file | Once before the six-run block |
