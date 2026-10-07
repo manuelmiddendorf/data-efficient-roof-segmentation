@@ -137,6 +137,16 @@ Dropout-minus-reference best-IoU changes were −0.0009/+0.0037 for Random and
 loss, fit gaps and late stability were inconsistent across pairs. Do not adopt
 this dropout setting as the shared recipe. The locked test role was not accessed.
 
+The boundary-weighted BCE block used a fixed two-sided radius-three target band
+and compared area-proportional with image-balanced normalization in eight fresh
+n=25 runs. They required 162.1 minutes of optimization and 201.1 minutes including
+validation on MPS. Area-proportional best-IoU effects ranged from −0.0093 to
++0.0173 and Boundary-IoU effects from −0.0122 to +0.0214. Image-balanced effects
+were positive for regional and Boundary IoU in three pairs but negative for Seed
+17 ImageNet. Do not replace the shared recipe. Retain image-balanced weighting
+as the only justified contour-focused follow-up candidate. The locked test role
+was not accessed.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -312,9 +322,12 @@ to select another reported winner.
   at the final decoder feature map. Best-IoU effects ranged from −0.0025 to
   +0.0050 and did not repeat consistently across initialization and subset
   selection; endpoint and stability diagnostics were also mixed. Keep the
-  shared reference without decoder dropout. A boundary-aware objective is the
-  next bounded candidate, subject to a fixed boundary definition and at most two
-  predeclared variants.
+  shared reference without decoder dropout.
+- The boundary-weighted BCE block completed eight fresh n=25 runs with a fixed
+  radius-three band. Area-proportional weighting was inconsistent. Image-balanced
+  weighting improved regional and Boundary IoU in three of four pairs but harmed
+  Seed 17 ImageNet. Keep the common reference unchanged; retain only the image-
+  balanced variant as a possible later confirmation target.
 
 ## Git and delivery
 

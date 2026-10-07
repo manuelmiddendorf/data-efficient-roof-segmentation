@@ -1,0 +1,158 @@
+{
+  "device": "mps",
+  "split_name": "rid_southwest_test_north_validation_v2",
+  "run_count": 8,
+  "training_size": 25,
+  "subset_repetitions": [
+    1,
+    2
+  ],
+  "subset_seeds": [
+    17,
+    29
+  ],
+  "initializations": [
+    "random",
+    "imagenet"
+  ],
+  "variants": [
+    "area_proportional",
+    "equal_per_image"
+  ],
+  "radius_pixels": 3,
+  "structuring_element": "square 7x7",
+  "excluded_crop_border_pixels": 3,
+  "reference_runs_verified": 4,
+  "locked_test_role_absent": true,
+  "training_ids_existing_seeds_and_schedules_verified": true,
+  "paired_initial_states_verified": true,
+  "mps_forward_backward_verified": true,
+  "band_statistics": {
+    "17": {
+      "mean_training_band_fraction": 0.04216567993164062,
+      "minimum": 0.013439178466796875,
+      "median": 0.044635772705078125,
+      "maximum": 0.06556320190429688,
+      "empty_band_count": 0,
+      "per_image": {
+        "8": 0.015865325927734375,
+        "40": 0.054439544677734375,
+        "176": 0.02382659912109375,
+        "401": 0.047565460205078125,
+        "493": 0.05010986328125,
+        "535": 0.0608367919921875,
+        "554": 0.0532989501953125,
+        "741": 0.044635772705078125,
+        "761": 0.058238983154296875,
+        "959": 0.013439178466796875,
+        "967": 0.043609619140625,
+        "1012": 0.056690216064453125,
+        "1050": 0.06556320190429688,
+        "1082": 0.051486968994140625,
+        "1119": 0.044216156005859375,
+        "1121": 0.034847259521484375,
+        "1211": 0.05084228515625,
+        "1311": 0.046634674072265625,
+        "1522": 0.038280487060546875,
+        "1607": 0.041225433349609375,
+        "1645": 0.021549224853515625,
+        "1651": 0.026126861572265625,
+        "1799": 0.054439544677734375,
+        "1860": 0.0333709716796875,
+        "1938": 0.02300262451171875
+      }
+    },
+    "29": {
+      "mean_training_band_fraction": 0.04051376342773438,
+      "minimum": 0.021549224853515625,
+      "median": 0.03972625732421875,
+      "maximum": 0.06768417358398438,
+      "empty_band_count": 0,
+      "per_image": {
+        "10": 0.038299560546875,
+        "44": 0.06341171264648438,
+        "131": 0.03287506103515625,
+        "144": 0.040988922119140625,
+        "176": 0.02382659912109375,
+        "423": 0.023662567138671875,
+        "426": 0.04125213623046875,
+        "550": 0.051074981689453125,
+        "891": 0.0649871826171875,
+        "966": 0.06768417358398438,
+        "1045": 0.05255126953125,
+        "1102": 0.0285491943359375,
+        "1120": 0.03399658203125,
+        "1121": 0.034847259521484375,
+        "1224": 0.06622695922851562,
+        "1330": 0.026615142822265625,
+        "1391": 0.043025970458984375,
+        "1539": 0.03972625732421875,
+        "1569": 0.02822113037109375,
+        "1645": 0.021549224853515625,
+        "1743": 0.04079437255859375,
+        "1800": 0.04170989990234375,
+        "1861": 0.0360107421875,
+        "1920": 0.047954559326171875,
+        "1938": 0.02300262451171875
+      }
+    }
+  },
+  "band_example_ids": [
+    "1102",
+    "1391",
+    "966"
+  ],
+  "band_figure": "reports/figures/boundary_weighted_band_examples.png",
+  "run_directories": [
+    "runs/targeted/rid_southwest_test_north_validation_v2/boundary_weighted_bce_n25/n25_random_subsetseed17_boundary_area_r3_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/boundary_weighted_bce_n25/n25_random_subsetseed17_boundary_equal_r3_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/boundary_weighted_bce_n25/n25_imagenet_subsetseed17_boundary_area_r3_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/boundary_weighted_bce_n25/n25_imagenet_subsetseed17_boundary_equal_r3_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/boundary_weighted_bce_n25/n25_random_subsetseed29_boundary_area_r3_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/boundary_weighted_bce_n25/n25_random_subsetseed29_boundary_equal_r3_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/boundary_weighted_bce_n25/n25_imagenet_subsetseed29_boundary_area_r3_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/boundary_weighted_bce_n25/n25_imagenet_subsetseed29_boundary_equal_r3_lr1e-3_to_1e-4_step2001_steps4000"
+  ],
+  "schedule_sha256_by_repetition": {
+    "1": "de21071acc771c52eae0ebba1a68923980ae1ffe975bba466ffa2370d81f3a8a",
+    "2": "03c8a0cebe904aaa313171c9d9cc7018f128f94d3d931cf83056e7c0239dab24"
+  },
+  "initial_states": {
+    "seed17_random": {
+      "encoder_sha256": "8621aebfa51d1f415abfd08bcc18ab465238fbec482209ffc5d4f023bdfc81c6",
+      "decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    },
+    "seed17_imagenet": {
+      "encoder_sha256": "472a71f44830515296f51ac595a8baa944b82411895830376287e506dc298191",
+      "decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    },
+    "seed29_random": {
+      "encoder_sha256": "8621aebfa51d1f415abfd08bcc18ab465238fbec482209ffc5d4f023bdfc81c6",
+      "decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    },
+    "seed29_imagenet": {
+      "encoder_sha256": "472a71f44830515296f51ac595a8baa944b82411895830376287e506dc298191",
+      "decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f"
+    }
+  },
+  "smoke": {
+    "area_proportional": {
+      "loss": 0.7245338559150696,
+      "bce": 0.5907667875289917,
+      "soft_dice_loss": 0.770369827747345,
+      "base_loss": 0.6805683374404907,
+      "boundary_bce": 0.8403347730636597,
+      "boundary_coefficient": 0.05209064483642578,
+      "boundary_addition": 0.043965525925159454
+    },
+    "equal_per_image": {
+      "loss": 0.7160016298294067,
+      "bce": 0.5907667875289917,
+      "soft_dice_loss": 0.770369827747345,
+      "base_loss": 0.6805683374404907,
+      "boundary_bce": 0.8403347730636597,
+      "boundary_coefficient": 0.04216568171977997,
+      "boundary_addition": 0.03543328866362572
+    }
+  }
+}

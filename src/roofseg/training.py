@@ -13,7 +13,12 @@ from torch import nn
 
 from .integrity import sha256_file
 from .model import build_model, state_digest
-from .objectives import average_precision, binary_metrics, segmentation_loss
+from .objectives import (
+    average_precision,
+    binary_metrics,
+    boundary_weighted_segmentation_loss,
+    segmentation_loss,
+)
 from .run_artifacts import write_csv, write_json
 from .training_data import RIDTensorStore, paired_schedule, photometric_schedule
 
@@ -114,13 +119,23 @@ def train_step(
     batch: dict,
     device: torch.device,
     batch_norm_strategy: str = UPDATE_ALL_BATCH_NORM,
+    boundary_objective: dict | None = None,
 ) -> dict:
     """Run one float32 optimizer step and return scalar objective components."""
     set_training_mode(model, batch_norm_strategy)
     optimizer.zero_grad(set_to_none=True)
     image, target = batch["image"].to(device), batch["target"].to(device)
     logits = model(image)
-    loss, components = segmentation_loss(logits, target)
+    if boundary_objective is None:
+        loss, components = segmentation_loss(logits, target)
+    else:
+        loss, components = boundary_weighted_segmentation_loss(
+            logits,
+            target,
+            normalization=boundary_objective["normalization"],
+            mean_training_band_fraction=boundary_objective["mean_training_band_fraction"],
+            radius=boundary_objective["radius_pixels"],
+        )
     if not torch.isfinite(loss).item():
         raise FloatingPointError("Training loss became non-finite.")
     loss.backward()
@@ -219,9 +234,15 @@ def fit_run(
     started = time.perf_counter()
 
     before_rows, before = evaluate(model, store, config["validation_ids"], config["batch_size"], device)
+    train_fields = {"train_loss": "", "train_bce": "", "train_soft_dice_loss": ""}
+    if config.get("boundary_weighted_bce") is not None:
+        train_fields.update({
+            "train_base_loss": "", "train_boundary_bce": "",
+            "train_boundary_coefficient": "", "train_boundary_addition": "",
+        })
     history.append({"step": 0, "examples_processed": 0, "data_passages": 0.0,
                     "learning_rate": initial_learning_rate,
-                    "train_loss": "", "train_bce": "", "train_soft_dice_loss": "",
+                    **train_fields,
                     **{f"validation_{name}": value for name, value in before.items()},
                     "elapsed_seconds": time.perf_counter() - started})
     interval = []
@@ -236,6 +257,7 @@ def fit_run(
             store.batch(batch_ids, d4_codes, factors),
             device,
             config.get("batch_normalization_strategy", UPDATE_ALL_BATCH_NORM),
+            config.get("boundary_weighted_bce"),
         )
         synchronize(device)
         training_seconds += time.perf_counter() - tick

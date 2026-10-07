@@ -39,9 +39,14 @@ train–validation gap increased in both pairs. A fourth block applied decoder
 channel dropout with `p=0.1`. Best-IoU changes were −0.0009/+0.0037 for Random
 and −0.0025/+0.0050 for ImageNet across subset seeds 17/29; endpoints, validation
 loss and late stability were also inconsistent. Ordinary BatchNorm adaptation
-without decoder dropout therefore remains the supported shared strategy. These
-are exploratory results from one shared validation region and two partially
-overlapping subset families. The locked test area has not been evaluated.
+without decoder dropout therefore remains the supported shared strategy. A
+subsequent boundary-weighted BCE block compared area-proportional and image-
+balanced normalization. The area-proportional best-IoU effects ranged from
+−0.0093 to +0.0173 and did not repeat. The image-balanced variant improved
+regional and Boundary IoU in three of four pairs, but reduced both for Seed 17
+ImageNet. It remains a focused follow-up candidate rather than a shared setting.
+These are exploratory results from one shared validation region and two
+partially overlapping subset families. The locked test area has not been evaluated.
 
 The executed [data-exploration notebook](notebooks/01_data_exploration.ipynb)
 presents the data and split evidence, and the executed

@@ -277,6 +277,25 @@ runs belong to this block. A completed compatible run is reused rather than
 trained again; analysis compares the four new runs with their unchanged D4-only
 references and never loads the locked test role.
 
+## Stage 4 targeted n=25 boundary-weighted BCE experiment
+
+This block compares two fixed normalizations of an extra BCE term over a
+radius-three binary-target boundary band:
+
+```bash
+uv run python scripts/check_boundary_weighted_n25.py
+caffeinate -i -m uv run python scripts/run_boundary_weighted_n25.py
+uv run python scripts/analyze_boundary_weighted_n25.py
+uv run python scripts/run_notebook.py notebooks/05_targeted_experiments.ipynb
+```
+
+The preflight verifies the square `7×7` band, excluded three-pixel crop border,
+empty-band behavior, analytical loss formulas, fixed training-only coefficients,
+D4 consistency, paired IDs/seeds/schedules, role exclusion and real MPS updates.
+Exactly eight fresh runs belong to the block. Analysis reuses four reference
+checkpoints, computes symmetric inner-band Boundary IoU on the same 288 of 289
+validation images for all twelve models, and never loads the locked test role.
+
 | Reference | Origin | Compared with | Check time |
 | --- | --- | --- | --- |
 | RID file SHA-256 values | Provider `Checksums.sha256` | Every required raw image, mask and split file | Once before the six-run block |
