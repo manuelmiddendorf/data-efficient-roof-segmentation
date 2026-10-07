@@ -137,15 +137,29 @@ Dropout-minus-reference best-IoU changes were −0.0009/+0.0037 for Random and
 loss, fit gaps and late stability were inconsistent across pairs. Do not adopt
 this dropout setting as the shared recipe. The locked test role was not accessed.
 
-The boundary-weighted BCE block used a fixed two-sided radius-three target band
-and compared area-proportional with image-balanced normalization in eight fresh
-n=25 runs. They required 162.1 minutes of optimization and 201.1 minutes including
-validation on MPS. Area-proportional best-IoU effects ranged from −0.0093 to
-+0.0173 and Boundary-IoU effects from −0.0122 to +0.0214. Image-balanced effects
-were positive for regional and Boundary IoU in three pairs but negative for Seed
-17 ImageNet. Do not replace the shared recipe. Retain image-balanced weighting
-as the only justified contour-focused follow-up candidate. The locked test role
-was not accessed.
+The boundary-weighted BCE block used a fixed two-sided radius-three target band.
+Area-proportional Variant A was evaluated on subset seeds 17 and 29 and remained
+inconsistent. Image-balanced Variant B was subsequently repeated on the third
+saved n=25 selection, adding two fresh runs. Across seeds 17/29/43, Variant B
+changed Random best IoU by +0.0037/+0.0015/+0.0037 and Boundary IoU by
++0.0153/+0.0190/+0.0188. ImageNet best-IoU changes were mixed at
+−0.0052/+0.0045/−0.0033, although Boundary IoU improved in two of three pairs.
+The two new Variant-B runs required 41.1 optimization minutes and 50.9 minutes
+including validation on MPS. Do not replace the shared objective automatically;
+retain Variant B only as a contour-focused candidate. The locked test role was
+not accessed.
+
+The fixed-recipe data-efficiency study is now complete for three saved nested
+training-image selections: 18 reference runs spanning 25, 100 and 500 images,
+Random/ImageNet initialization and subset seeds 17, 29 and 43. The six new Seed
+43 references plus two Variant-B runs required 163.2 optimization minutes and
+201.9 total minutes. Across all nine paired reference comparisons, ImageNet best
+IoU exceeds Random by +0.0322 to +0.0591. Mean best IoU across selections is
+0.781/0.833 at n=25, 0.831/0.866 at n=100 and 0.840/0.878 at n=500 for
+Random/ImageNet. All three n=500 Random trajectories improve late; all three
+n=25 selections retain overfitting evidence. These are image-selection
+repetitions on one shared validation region, not independent geographic or full
+training-randomness repetitions.
 
 ## Dataset and scientific decisions
 

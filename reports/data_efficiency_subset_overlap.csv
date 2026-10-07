@@ -1,4 +1,10 @@
-training_size,shared_training_ids,share_of_each_subset
-25,4,0.16
-100,24,0.24
-500,293,0.586
+first_subset_seed,second_subset_seed,training_size,shared_training_ids,share_of_each_subset
+17,29,25,4,0.16
+17,29,100,24,0.24
+17,29,500,293,0.586
+17,43,25,6,0.24
+17,43,100,23,0.23
+17,43,500,306,0.612
+29,43,25,6,0.24
+29,43,100,26,0.26
+29,43,500,296,0.592

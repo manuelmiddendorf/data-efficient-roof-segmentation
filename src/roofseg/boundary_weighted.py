@@ -26,6 +26,11 @@ from .training_data import RIDTensorStore
 
 TRAINING_SIZE = 25
 SUBSET_REPETITIONS = (1, 2)
+REPLICATION_STRATEGY_REPETITIONS = {
+    "reference": (1, 2, 3),
+    "area_proportional": (1, 2),
+    "equal_per_image": (1, 2, 3),
+}
 BOUNDARY_RADIUS = 3
 VARIANTS = ("area_proportional", "equal_per_image")
 NORMALIZATIONS = {
@@ -188,13 +193,19 @@ def plot_band_examples(
     return figure
 
 
-def _comparison_runs(project_root: Path) -> list[dict]:
+def _comparison_runs(
+    project_root: Path,
+    strategy_repetitions: dict[str, tuple[int, ...]] | None = None,
+) -> list[dict]:
     splits = load_json(project_root / "data/metadata/splits.json")
+    strategy_repetitions = strategy_repetitions or {
+        strategy: SUBSET_REPETITIONS for strategy in ("reference", *VARIANTS)
+    }
     runs = []
-    for repetition in SUBSET_REPETITIONS:
-        seed = int(splits["training_subsets"]["repetitions"][str(repetition)]["seed"])
-        for initialization in INITIALIZATIONS:
-            for strategy in ("reference", *VARIANTS):
+    for strategy in ("reference", *VARIANTS):
+        for repetition in strategy_repetitions[strategy]:
+            seed = int(splits["training_subsets"]["repetitions"][str(repetition)]["seed"])
+            for initialization in INITIALIZATIONS:
                 directory = (
                     late_lr_drop_run_directory(project_root, splits, initialization, repetition, 25)
                     if strategy == "reference"
@@ -263,9 +274,10 @@ def evaluate_boundary_runs(project_root: Path, runs: list[dict]) -> pd.DataFrame
 
 def collect_boundary_results(
     project_root: Path,
+    strategy_repetitions: dict[str, tuple[int, ...]] | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Collect 12-run summaries, paired effects, histories and Boundary IoU."""
-    runs = _comparison_runs(project_root)
+    """Collect run summaries, paired effects, histories and Boundary IoU."""
+    runs = _comparison_runs(project_root, strategy_repetitions)
     boundary_metrics = evaluate_boundary_runs(project_root, runs)
     rows, history_frames = [], []
     for run in runs:
@@ -310,6 +322,8 @@ def collect_boundary_results(
         by_strategy = group.set_index("strategy")
         reference = by_strategy.loc["reference"]
         for variant in VARIANTS:
+            if variant not in by_strategy.index:
+                continue
             candidate = by_strategy.loc[variant]
             effects.append({
                 "subset_seed": int(seed), "initialization": initialization, "variant": variant,
@@ -334,9 +348,13 @@ def plot_boundary_histories(history: pd.DataFrame, metric: str) -> Figure:
     labels = {"validation_mean_iou": "Validation mean per-image IoU", "validation_loss": "Validation L0"}
     if metric not in labels:
         raise ValueError("Unknown history metric.")
-    figure, axes = plt.subplots(2, 2, figsize=(11, 8.5), sharex=True, sharey="row", constrained_layout=True)
+    seeds = sorted(history.subset_seed.unique())
+    figure, axes = plt.subplots(
+        2, len(seeds), figsize=(5.3 * len(seeds), 8.5),
+        sharex=True, sharey="row", constrained_layout=True, squeeze=False,
+    )
     for row, initialization in enumerate(INITIALIZATIONS):
-        for column, seed in enumerate((17, 29)):
+        for column, seed in enumerate(seeds):
             axis = axes[row, column]
             for strategy in ("reference", *VARIANTS):
                 values = history[
@@ -344,7 +362,8 @@ def plot_boundary_histories(history: pd.DataFrame, metric: str) -> Figure:
                     & (history.subset_seed == seed)
                     & (history.strategy == strategy)
                 ].sort_values("step")
-                axis.plot(values.step, values[metric], color=COLOURS[strategy], label=VARIANT_LABELS[strategy])
+                if not values.empty:
+                    axis.plot(values.step, values[metric], color=COLOURS[strategy], label=VARIANT_LABELS[strategy])
             axis.axvline(2000, color="#555555", linestyle="--", linewidth=1)
             axis.grid(alpha=0.2)
             axis.set_title(f"{INITIALIZATION_LABELS[initialization]}, subset seed {seed}")

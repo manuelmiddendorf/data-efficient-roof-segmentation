@@ -1,5 +1,5 @@
 subset_seed,initialization,id,variant,boundary_iou_change
-29,random,1848,equal_per_image,-0.17790668061739562
+29,random,1848,equal_per_image,-0.17790668061739565
 17,imagenet,723,equal_per_image,-0.14148719502714524
-17,random,767,equal_per_image,0.14039373956310508
-29,random,29,equal_per_image,0.16231521111801597
+17,random,767,equal_per_image,0.14039373956310502
+29,random,29,equal_per_image,0.16231521111801595
