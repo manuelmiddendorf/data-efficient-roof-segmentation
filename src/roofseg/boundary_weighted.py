@@ -372,10 +372,16 @@ def choose_qualitative_examples(boundary_metrics: pd.DataFrame) -> pd.DataFrame:
                 "variant": variant, "boundary_iou_change": value,
             })
     ordered = pd.DataFrame(candidates).sort_values("boundary_iou_change")
-    chosen = pd.concat([ordered.head(2), ordered.tail(2)]).drop_duplicates("id")
-    if len(chosen) < 4:
-        remaining = ordered[~ordered.id.isin(chosen.id)]
-        chosen = pd.concat([chosen, remaining.head(4 - len(chosen))])
+    worsened = ordered[ordered.boundary_iou_change < 0].drop_duplicates("id").head(2)
+    improved = (
+        ordered[ordered.boundary_iou_change > 0]
+        .sort_values("boundary_iou_change", ascending=False)
+        .drop_duplicates("id")
+        .head(2)
+    )
+    if len(worsened) != 2 or len(improved) != 2:
+        raise ValueError("Qualitative comparison requires two unique improvements and deteriorations.")
+    chosen = pd.concat([worsened, improved])
     return chosen.sort_values("boundary_iou_change").reset_index(drop=True)
 
 
@@ -406,10 +412,12 @@ def plot_qualitative_examples(project_root: Path, selected: pd.DataFrame) -> Fig
             del model
         axes[row, 0].imshow(read_image(project_root / records[choice.id]["image"]))
         axes[row, 1].imshow(target, cmap="gray", vmin=0, vmax=1)
+        selected_label = "A" if choice.variant == "area_proportional" else "B"
         axes[row, 0].set_ylabel(
             f"ID {choice.id} · seed {choice.subset_seed}\n"
-            f"{INITIALIZATION_LABELS[choice.initialization]} · selected {choice.variant}\n"
-            f"Δ Boundary IoU {choice.boundary_iou_change:+.3f}"
+            f"{INITIALIZATION_LABELS[choice.initialization]} · selected {selected_label}\n"
+            f"Δ BIoU {choice.boundary_iou_change:+.3f}",
+            rotation=0, ha="right", va="center", labelpad=14,
         )
         for column, strategy in enumerate(("reference", *VARIANTS), 2):
             prediction = predictions[strategy]
