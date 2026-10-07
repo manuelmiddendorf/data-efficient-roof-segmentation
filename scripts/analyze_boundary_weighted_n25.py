@@ -27,7 +27,12 @@ for metric, filename in (
     figure = plot_boundary_histories(history, metric)
     figure.savefig(ROOT / "reports/figures" / filename, dpi=170, bbox_inches="tight")
     plt.close(figure)
-selected = choose_qualitative_examples(boundary_metrics)
+# Keep the existing like-for-like qualitative panel on repetitions where both
+# Variant A and Variant B exist. Seed 43 adds only the predeclared Variant B.
+complete_variant_metrics = boundary_metrics[
+    boundary_metrics.subset_seed.isin((17, 29))
+]
+selected = choose_qualitative_examples(complete_variant_metrics)
 selected.to_csv(ROOT / "reports/boundary_weighted_n25_selected_examples.csv", index=False)
 figure = plot_qualitative_examples(ROOT, selected)
 figure.savefig(

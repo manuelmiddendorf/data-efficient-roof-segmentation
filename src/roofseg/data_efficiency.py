@@ -149,10 +149,14 @@ def collect_data_efficiency_results(
 
 def summarize_data_efficiency_repetitions(results: pd.DataFrame) -> pd.DataFrame:
     """Summarize between-subset means and sample SDs without implying a CI."""
-    metrics = ("best_validation_iou", "iou_step_4000")
     return (
-        results.groupby(["training_size", "initialization"])[list(metrics)]
-        .agg(["mean", "std"])
+        results.groupby(["training_size", "initialization"])
+        .agg(
+            best_iou_mean=("best_validation_iou", "mean"),
+            best_iou_sample_sd=("best_validation_iou", "std"),
+            endpoint_iou_mean=("iou_step_4000", "mean"),
+            endpoint_iou_sample_sd=("iou_step_4000", "std"),
+        )
         .reset_index()
     )
 
@@ -174,6 +178,7 @@ def plot_data_efficiency_summary(results: pd.DataFrame) -> Figure:
                 summary.index, summary["mean"], yerr=summary["std"], color=colour,
                 marker="o", linewidth=2, capsize=4, label=f"{label}: mean ± sample SD",
             )
+            seed_offsets = {17: 10, 29: 1, 43: -9}
             for subset_seed, selection in rows.groupby("subset_seed"):
                 selection = selection.sort_values("training_size")
                 axis.plot(
@@ -183,7 +188,8 @@ def plot_data_efficiency_summary(results: pd.DataFrame) -> Figure:
                 for point in selection.itertuples():
                     axis.annotate(
                         str(subset_seed), (point.training_size, getattr(point, metric)),
-                        xytext=(3, 2), textcoords="offset points", fontsize=7,
+                        xytext=(3, seed_offsets[int(subset_seed)]),
+                        textcoords="offset points", fontsize=7,
                         color=colour, alpha=0.8,
                     )
         axis.set_xscale("log")
