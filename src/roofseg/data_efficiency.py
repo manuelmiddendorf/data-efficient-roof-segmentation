@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from itertools import combinations
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -21,10 +22,11 @@ COLOURS = {"random": "#D55E00", "imagenet": "#0072B2"}
 
 def collect_data_efficiency_results(
     project_root: Path,
+    subset_repetitions: tuple[int, ...] = SUBSET_REPETITIONS,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Collect summaries, paired differences, histories, gains and ID overlap."""
     runs, histories = load_fixed_drop_data_efficiency_results(
-        project_root, SUBSET_REPETITIONS
+        project_root, subset_repetitions
     )
     result_rows, history_frames = [], []
     for run in runs:
@@ -123,14 +125,19 @@ def collect_data_efficiency_results(
     splits = json.loads((project_root / "data/metadata/splits.json").read_text())
     repetitions = splits["training_subsets"]["repetitions"]
     overlap_rows = []
-    for size in SIZES:
-        ids17 = set(repetitions["1"]["subsets"][str(size)])
-        ids29 = set(repetitions["2"]["subsets"][str(size)])
-        overlap_rows.append({
-            "training_size": size,
-            "shared_training_ids": len(ids17 & ids29),
-            "share_of_each_subset": len(ids17 & ids29) / size,
-        })
+    for first, second in combinations(subset_repetitions, 2):
+        first_seed = int(repetitions[str(first)]["seed"])
+        second_seed = int(repetitions[str(second)]["seed"])
+        for size in SIZES:
+            first_ids = set(repetitions[str(first)]["subsets"][str(size)])
+            second_ids = set(repetitions[str(second)]["subsets"][str(size)])
+            overlap_rows.append({
+                "first_subset_seed": first_seed,
+                "second_subset_seed": second_seed,
+                "training_size": size,
+                "shared_training_ids": len(first_ids & second_ids),
+                "share_of_each_subset": len(first_ids & second_ids) / size,
+            })
     return (
         results,
         pd.DataFrame(paired_rows),
@@ -140,35 +147,54 @@ def collect_data_efficiency_results(
     )
 
 
+def summarize_data_efficiency_repetitions(results: pd.DataFrame) -> pd.DataFrame:
+    """Summarize between-subset means and sample SDs without implying a CI."""
+    metrics = ("best_validation_iou", "iou_step_4000")
+    return (
+        results.groupby(["training_size", "initialization"])[list(metrics)]
+        .agg(["mean", "std"])
+        .reset_index()
+    )
+
+
 def plot_data_efficiency_summary(results: pd.DataFrame) -> Figure:
-    """Plot selected maxima and fixed endpoints for both subset repetitions."""
-    seeds = sorted(results.subset_seed.unique())
-    figure, axes = plt.subplots(1, len(seeds), figsize=(12, 4.8), sharey=True)
-    for axis, subset_seed in zip(axes, seeds):
-        subset = results[results.subset_seed == subset_seed]
+    """Plot individual subset results with mean and sample SD across selections."""
+    figure, axes = plt.subplots(1, 2, figsize=(11, 4.8), sharey=True)
+    panels = (
+        ("best_validation_iou", "Selected maximum"),
+        ("iou_step_4000", "Step 4,000"),
+    )
+    for axis, (metric, title) in zip(axes, panels):
         for initialization in INITIALIZATIONS:
-            rows = subset[subset.initialization == initialization].sort_values(
-                "training_size"
-            )
+            rows = results[results.initialization == initialization]
+            summary = rows.groupby("training_size")[metric].agg(["mean", "std"])
             colour = COLOURS[initialization]
             label = INITIALIZATION_LABELS[initialization]
-            axis.plot(
-                rows.training_size, rows.best_validation_iou, color=colour,
-                marker="o", linewidth=2, label=f"{label}: selected maximum",
+            axis.errorbar(
+                summary.index, summary["mean"], yerr=summary["std"], color=colour,
+                marker="o", linewidth=2, capsize=4, label=f"{label}: mean ± sample SD",
             )
-            axis.plot(
-                rows.training_size, rows.iou_step_4000, color=colour,
-                marker="x", linestyle="--", label=f"{label}: step 4,000",
-            )
+            for subset_seed, selection in rows.groupby("subset_seed"):
+                selection = selection.sort_values("training_size")
+                axis.plot(
+                    selection.training_size, selection[metric], color=colour,
+                    marker=".", linewidth=0.8, alpha=0.35,
+                )
+                for point in selection.itertuples():
+                    axis.annotate(
+                        str(subset_seed), (point.training_size, getattr(point, metric)),
+                        xytext=(3, 2), textcoords="offset points", fontsize=7,
+                        color=colour, alpha=0.8,
+                    )
         axis.set_xscale("log")
         axis.set_xticks(SIZES, labels=[str(size) for size in SIZES])
         axis.xaxis.set_minor_formatter(NullFormatter())
         axis.set_xlabel("Labelled training images")
-        axis.set_title(f"Subset seed {subset_seed}")
+        axis.set_title(title)
         axis.grid(alpha=0.2)
     axes[0].set_ylabel("Validation mean per-image IoU")
     axes[0].legend(frameon=False, fontsize=8)
-    figure.suptitle("Data-efficiency curves under the common fixed-drop recipe")
+    figure.suptitle("Data-efficiency across three saved image selections")
     figure.tight_layout()
     return figure
 

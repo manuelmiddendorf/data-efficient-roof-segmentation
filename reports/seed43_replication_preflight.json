@@ -1,0 +1,42 @@
+{
+  "device": "mps",
+  "split_name": "rid_southwest_test_north_validation_v2",
+  "run_count": 8,
+  "reference_run_count": 6,
+  "boundary_variant_b_run_count": 2,
+  "subset_repetition": 3,
+  "subset_seed": 43,
+  "nested_sizes_verified": true,
+  "paired_training_conditions_verified": true,
+  "validation_and_test_separation_verified": true,
+  "historical_reference_runs_verified": 12,
+  "boundary_mean_training_band_fraction": 0.03688751220703125,
+  "boundary_coefficient_source": "Seed 43 n=25 training masks only",
+  "training_id_overlap_with_prior_seeds": {
+    "17": {
+      "25": 6,
+      "100": 23,
+      "500": 306
+    },
+    "29": {
+      "25": 6,
+      "100": 26,
+      "500": 296
+    }
+  },
+  "schedule_sha256_by_size": {
+    "25": "b1a72ef313e605ba059c03dce0252b22951437452d441bb83eab812cb7d3a64a",
+    "100": "fdab7c8afbd10ae86f887e886f09e498a3338bd8eec8313a232975c728df327e",
+    "500": "c02c2fcef4e599b1492d485bdb1a46a06763cf9cd2551ee34eb6b5a39b4bdaad"
+  },
+  "run_directories": [
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n25/n25_random_subsetseed43_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n25/n25_imagenet_subsetseed43_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n100/n100_random_subsetseed43_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n100/n100_imagenet_subsetseed43_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n500/n500_random_subsetseed43_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/late_lr_drop_n500/n500_imagenet_subsetseed43_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/boundary_weighted_bce_n25/n25_random_subsetseed43_boundary_equal_r3_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/targeted/rid_southwest_test_north_validation_v2/boundary_weighted_bce_n25/n25_imagenet_subsetseed43_boundary_equal_r3_lr1e-3_to_1e-4_step2001_steps4000"
+  ]
+}

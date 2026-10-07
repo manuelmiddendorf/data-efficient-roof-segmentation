@@ -5,6 +5,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from roofseg.boundary_weighted import (
+    REPLICATION_STRATEGY_REPETITIONS,
     choose_qualitative_examples,
     collect_boundary_results,
     plot_boundary_histories,
@@ -12,7 +13,9 @@ from roofseg.boundary_weighted import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-results, effects, history, boundary_metrics = collect_boundary_results(ROOT)
+results, effects, history, boundary_metrics = collect_boundary_results(
+    ROOT, REPLICATION_STRATEGY_REPETITIONS
+)
 results.to_csv(ROOT / "reports/boundary_weighted_n25_results.csv", index=False)
 effects.to_csv(ROOT / "reports/boundary_weighted_n25_effects.csv", index=False)
 history.to_csv(ROOT / "reports/boundary_weighted_n25_history.csv", index=False)
