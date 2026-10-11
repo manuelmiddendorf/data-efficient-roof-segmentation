@@ -186,7 +186,7 @@ def fit_run(
     project_root: Path, config: dict, metadata: dict, manifest: dict,
     device: torch.device, directory: Path,
 ) -> dict:
-    """Train one resolved run, select by validation IoU, and save six artifacts."""
+    """Train one resolved run and save standard plus configured checkpoints."""
     store = RIDTensorStore(project_root, manifest)
     schedule, schedule_record = paired_schedule(
         config["training_ids"], config["max_steps"], config["batch_size"],
@@ -230,6 +230,14 @@ def fit_run(
     optimizer_record["configured_scheduler"] = config.get("scheduler")
     history: list[dict] = []
     best_iou, best_step = -math.inf, None
+    additional_checkpoints = {
+        checkpoint["name"]: {
+            **checkpoint,
+            "best_iou": -math.inf,
+            "best_step": None,
+        }
+        for checkpoint in config.get("additional_checkpoints", [])
+    }
     training_seconds, evaluation_seconds, examples_processed = 0.0, 0.0, 0
     started = time.perf_counter()
 
@@ -292,6 +300,23 @@ def fit_run(
                 "config_sha256": metadata["compatibility_identity"]["config_sha256"],
                 "input_sha256": metadata["compatibility_identity"]["input_sha256"],
             }, directory / "checkpoint.pt")
+        for checkpoint in additional_checkpoints.values():
+            if (
+                step <= checkpoint["through_step"]
+                and validation["mean_iou"] > checkpoint["best_iou"]
+            ):
+                checkpoint["best_iou"] = validation["mean_iou"]
+                checkpoint["best_step"] = step
+                torch.save({
+                    "model": {
+                        name: value.detach().cpu()
+                        for name, value in model.state_dict().items()
+                    },
+                    "optimizer": optimizer.state_dict(),
+                    "step": step,
+                    "config_sha256": metadata["compatibility_identity"]["config_sha256"],
+                    "input_sha256": metadata["compatibility_identity"]["input_sha256"],
+                }, directory / checkpoint["filename"])
 
     checkpoint = torch.load(directory / "checkpoint.pt", map_location="cpu", weights_only=True)
     model.load_state_dict(checkpoint["model"], strict=True)
@@ -306,6 +331,28 @@ def fit_run(
                     + [{"split": "validation", **row} for row in validation_rows])
     write_csv(directory / "metrics.csv", metrics_rows)
     optimizer_record["final_learning_rates"] = [group["lr"] for group in optimizer.param_groups]
+    best_model_sha256 = state_digest(model)
+    additional_checkpoint_summaries = {}
+    for name, checkpoint_spec in additional_checkpoints.items():
+        checkpoint_path = directory / checkpoint_spec["filename"]
+        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+        model.load_state_dict(checkpoint["model"], strict=True)
+        model.to(device)
+        _, selected_training = evaluate(
+            model, store, config["training_ids"], config["batch_size"], device, include_ap=True
+        )
+        _, selected_validation = evaluate(
+            model, store, config["validation_ids"], config["batch_size"], device, include_ap=True
+        )
+        additional_checkpoint_summaries[name] = {
+            "filename": checkpoint_spec["filename"],
+            "through_step": checkpoint_spec["through_step"],
+            "best_step": checkpoint_spec["best_step"],
+            "best_validation": selected_validation,
+            "matched_training_evaluation": selected_training,
+            "checkpoint_sha256": sha256_file(checkpoint_path),
+        }
+
     summary = {
         "status": "completed",
         "selection": "highest mean per-image validation IoU at threshold 0.5; earlier step wins ties",
@@ -322,7 +369,8 @@ def fit_run(
         "total_seconds": time.perf_counter() - started,
         "initialization": initialization,
         "optimizer_groups": optimizer_record,
-        "best_model_sha256": state_digest(model),
+        "best_model_sha256": best_model_sha256,
+        "additional_checkpoints": additional_checkpoint_summaries,
     }
     summary["checkpoint_sha256"] = sha256_file(directory / "checkpoint.pt")
     write_json(directory / "summary.json", summary)

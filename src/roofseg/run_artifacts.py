@@ -89,4 +89,10 @@ def verify_completed_run(directory: Path) -> dict:
         raise ValueError(f"Run summary is not complete: {directory}")
     if sha256_file(directory / "checkpoint.pt") != summary["checkpoint_sha256"]:
         raise ValueError(f"Checkpoint hash differs from summary: {directory}")
+    for checkpoint in summary.get("additional_checkpoints", {}).values():
+        checkpoint_path = directory / checkpoint["filename"]
+        if not checkpoint_path.is_file():
+            raise ValueError(f"Additional checkpoint is missing: {checkpoint_path}")
+        if sha256_file(checkpoint_path) != checkpoint["checkpoint_sha256"]:
+            raise ValueError(f"Additional checkpoint hash differs from summary: {checkpoint_path}")
     return summary

@@ -27,14 +27,18 @@ METRICS = {
 }
 
 
-def summarize_late_history(history: pd.DataFrame) -> tuple[dict, pd.DataFrame]:
+def summarize_late_history(
+    history: pd.DataFrame, start_step: int = 2100, end_step: int = 4000
+) -> tuple[dict, pd.DataFrame]:
     """Summarize fixed late-window trends for validation IoU and loss.
 
     Parameters
     ----------
     history:
         One run's evaluation history with steps and validation metrics. The
-        required late window is the 20 measurements at steps 2,100--4,000.
+        Required fixed-length evaluation window.
+    start_step, end_step:
+        Inclusive 100-step evaluation window. It must contain 20 measurements.
 
     Returns
     -------
@@ -42,9 +46,15 @@ def summarize_late_history(history: pd.DataFrame) -> tuple[dict, pd.DataFrame]:
         Descriptive slopes per 1,000 updates, residual standard deviations and
         half-window means, plus slopes for every ten-measurement moving window.
     """
-    late = history[history.step.isin(LATE_STEPS)].sort_values("step").copy()
-    if late.step.astype(int).tolist() != LATE_STEPS:
-        raise ValueError("Late history must contain every 100-step measurement from 2,100 to 4,000.")
+    expected_steps = list(range(start_step, end_step + 1, 100))
+    if len(expected_steps) != 20:
+        raise ValueError("A late-history window must contain 20 measurements.")
+    late = history[history.step.isin(expected_steps)].sort_values("step").copy()
+    if late.step.astype(int).tolist() != expected_steps:
+        raise ValueError(
+            f"Late history must contain every 100-step measurement from "
+            f"{start_step:,} to {end_step:,}."
+        )
 
     summary: dict[str, float] = {}
     rolling_rows: list[dict] = []
@@ -56,8 +66,8 @@ def summarize_late_history(history: pd.DataFrame) -> tuple[dict, pd.DataFrame]:
         summary.update({
             f"{label}_trend_per_1000": float(slope * 1000),
             f"{label}_residual_sd": float(np.std(residuals, ddof=0)),
-            f"{label}_mean_2100_3000": float(values[:10].mean()),
-            f"{label}_mean_3100_4000": float(values[10:].mean()),
+            f"{label}_mean_{start_step}_{start_step + 900}": float(values[:10].mean()),
+            f"{label}_mean_{start_step + 1000}_{end_step}": float(values[10:].mean()),
         })
         for start in range(len(late) - ROLLING_MEASUREMENTS + 1):
             window = late.iloc[start:start + ROLLING_MEASUREMENTS]
