@@ -314,3 +314,30 @@ The dataset README states CC BY-NC terms. The aerial imagery was obtained throug
 Google Maps Static API and has a separate provider notice restricting the stated
 use to non-commercial research, education and related fair-use contexts. Review
 the current source terms before redistributing imagery or derived public figures.
+
+
+## Stage 5 third subset repetition and Boundary Variant B
+
+This block uses saved repetition 3 (subset seed 43) for six fixed-recipe
+reference runs and two n=25 image-balanced Boundary Variant-B runs. The preflight
+checks nesting, exact IDs, paired schedules, geographic-role separation, all 12
+historical references, unique run paths and the training-mask-only boundary
+coefficient. The production objective and device path were already covered by
+the earlier real MPS checks, so no additional learning smoke test is repeated.
+
+```bash
+uv run python scripts/check_seed43_replication.py
+caffeinate -i -m uv run python scripts/run_seed43_replication.py
+uv run python scripts/analyze_data_efficiency.py
+uv run python scripts/analyze_boundary_weighted_n25.py
+uv run python scripts/run_notebook.py notebooks/04_data_efficiency.ipynb
+uv run python scripts/run_notebook.py notebooks/05_targeted_experiments.ipynb
+```
+
+The runner requires MPS and reuses only completed compatible artifacts. The eight
+new runs required 163.2 minutes of optimization and 201.9 minutes including
+validation. Each run directory contains exactly `config.json`, `metadata.json`
+and `summary.json` alongside its history, checkpoint and per-image metrics. The
+analyses read 18 fixed-recipe reference runs; the boundary analysis reads
+reference and Variant B for all three repetitions while retaining Variant A only
+for seeds 17 and 29. Neither analysis accesses the locked test role.

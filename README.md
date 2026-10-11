@@ -2,66 +2,65 @@
 
 *How many labelled images do we need, and how much does pretraining help?*
 
-This project will study binary roof segmentation from aerial imagery under
-limited annotation budgets. It will compare an EfficientNet-B0 U-Net initialized
-randomly or with an ImageNet-pretrained encoder, followed by targeted experiments
-on optimization, augmentation and regularization.
+This reproducible study examines binary roof segmentation in aerial imagery when
+annotations are limited. It uses the 1,880-image [Roof Information Dataset
+(RID)](https://mediatum.ub.tum.de/1655470) and compares one EfficientNet-B0 U-Net
+initialized randomly or with an ImageNet-pretrained encoder. Training,
+validation and test regions are geographically separated using full image
+footprints; the compact southwest test region remains locked during development.
 
-The planned dataset is the [Roof Information Dataset (RID)](https://mediatum.ub.tum.de/1655470).
-Training, validation and test regions will be separated geographically, accounting
-for overlapping image footprints. Learning curves will describe performance as
-the number of labelled training images increases, alongside variation across
-repetitions, computational cost and qualitative error analysis.
+## Current evidence
 
-**Status:** RID 1.0 is checksum-verified and the active geographic split
-holds out a compact 259-image southwest test area and a 289-image northern
-validation area, with 1,210 training images and no positive-area cross-role
-footprint overlap. The selected common recipe uses an EfficientNet-B0 U-Net for
-4,000 updates, with learning rate `1e-3` through step 2,000 and `1e-4`
-thereafter. Across two saved training-image selections, best validation IoU for
-random/ImageNet initialization is 0.781/0.837 and 0.783/0.842 at 25 images,
-0.830/0.868 and 0.831/0.863 at 100, and 0.840/0.879 and 0.842/0.877 at 500.
-The paired ImageNet advantage remains positive at every size (+0.032 to +0.059).
-Both n=25 repetitions show large train–validation gaps and rising late validation
-loss; both n=500 random runs improve late. A targeted n=25 experiment then
-increased AdamW weight decay from `1e-4` to `1e-2`. Best-IoU changes across
-Seed 17/29 were +0.004/−0.005 for random initialization and −0.003/−0.006 for
-ImageNet, while the train–validation gap increased in every pair. The stronger
-decay is therefore not adopted. A second targeted block added whole-image
-brightness and contrast factors in `[0.85, 1.15]` at n=25. Random initialization
-improved by +0.0076 and +0.0074 best validation IoU across the two subset
-selections; ImageNet changed by −0.0071 and −0.0007. The comparable
-train–validation gap still increased in every pair, so the colour rule remains
-a Random-only candidate rather than a shared recipe. A third targeted block kept
-the original ImageNet encoder BatchNorm statistics fixed during training. Best
-IoU fell by 0.046 and 0.039 across subset seeds 17 and 29, and the comparable
-train–validation gap increased in both pairs. A fourth block applied decoder
-channel dropout with `p=0.1`. Best-IoU changes were −0.0009/+0.0037 for Random
-and −0.0025/+0.0050 for ImageNet across subset seeds 17/29; endpoints, validation
-loss and late stability were also inconsistent. Ordinary BatchNorm adaptation
-without decoder dropout therefore remains the supported shared strategy. A
-subsequent boundary-weighted BCE block compared area-proportional and image-
-balanced normalization. The area-proportional best-IoU effects ranged from
-−0.0093 to +0.0173 and did not repeat. The image-balanced variant improved
-regional and Boundary IoU in three of four pairs, but reduced both for Seed 17
-ImageNet. It remains a focused follow-up candidate rather than a shared setting.
-These are exploratory results from one shared validation region and two
-partially overlapping subset families. The locked test area has not been evaluated.
+RID 1.0 is checksum-verified. The active split contains 1,210 training images, a
+289-image northern validation region and a 259-image southwest test region, with
+no positive-area cross-role footprint overlap. The common recipe trains for
+4,000 updates with AdamW, D4 augmentation, learning rate `1e-3` through update
+2,000 and `1e-4` thereafter.
 
-The executed [data-exploration notebook](notebooks/01_data_exploration.ipynb)
-presents the data and split evidence, and the executed
-[training-pilot notebook](notebooks/02_training_pilot.ipynb) reports the six
-paired runs. The executed [optimization notebook](notebooks/03_optimization.ipynb)
-reports learning-rate, horizon, late-trajectory, fixed-drop and training-subset
-sensitivity. The executed [data-efficiency notebook](notebooks/04_data_efficiency.ipynb)
-reports the two-repetition fixed-recipe learning curves, and the executed
-[targeted-experiments notebook](notebooks/05_targeted_experiments.ipynb) reports
-the completed targeted regularization blocks. [docs/setup.md](docs/setup.md)
-gives exact reproduction commands,
-[docs/data.md](docs/data.md) records source and label interpretation, and
-[WORK_PLAN.md](WORK_PLAN.md) tracks the research stages.
+The fixed recipe was evaluated on three saved, nested training-image selections
+(seeds 17, 29 and 43), three sizes and both initializations: 18 runs in total.
+Mean best validation IoU across image selections increases from 0.781 to 0.831
+to 0.840 for Random and from 0.833 to 0.866 to 0.878 for ImageNet at 25, 100
+and 500 images. ImageNet leads in every paired comparison; best-IoU differences
+range from +0.032 to +0.059. The observed sample SD across three image
+selections is at most 0.0104. These SDs describe image-selection variation, not
+confidence intervals or all training randomness.
 
-The dataset remains available from its original provider and is not bundled with
-this repository. Its usage terms and attribution are separate from those of the
-project code. Codex assisted with implementation, tests and documentation; the
-scientific decisions and computed outputs remain explicit and reviewable.
+All three n=25 selections show large train–validation separation and rising late
+validation loss. All three n=500 Random runs improve near the 4,000-update limit,
+so the common budget does not establish equal convergence. Gains from 100 to 500
+images are consistently smaller than gains from 25 to 100.
+
+Targeted n=25 experiments did not identify a universal replacement for the
+common recipe. Stronger weight decay, fixed ImageNet encoder BatchNorm
+statistics and decoder channel dropout were inconsistent or harmful. Mild
+brightness/contrast helped Random but not ImageNet. A boundary-weighted BCE
+experiment compared two normalizations. Image-balanced Variant B was repeated
+on all three image selections: it improves Random best IoU by +0.0015 to +0.0037
+and Random Boundary IoU by +0.0153 to +0.0190, but ImageNet regional-IoU effects
+remain mixed (−0.0052, +0.0045 and −0.0033). Variant B is therefore not adopted
+as the shared objective. All findings are provisional validation results from
+one repeatedly used validation region; no locked-test result has been produced.
+
+## Reports and reproduction
+
+The executed notebooks form the scientific report:
+
+- [Data and geographic split](notebooks/01_data_exploration.ipynb)
+- [Training pilot](notebooks/02_training_pilot.ipynb)
+- [Optimization](notebooks/03_optimization.ipynb)
+- [Data efficiency across three image selections](notebooks/04_data_efficiency.ipynb)
+- [Targeted experiments](notebooks/05_targeted_experiments.ipynb)
+
+[docs/setup.md](docs/setup.md) gives exact environment, training, analysis and
+notebook commands. [docs/data.md](docs/data.md) records source and label
+interpretation, while [WORK_PLAN.md](WORK_PLAN.md) tracks scope and decisions.
+Run artifacts retain exact configurations, compatibility identities, histories,
+selected checkpoints and summaries. Analysis notebooks read those artifacts and
+do not start training.
+
+The dataset is downloaded from its provider and is not bundled here. The dataset
+record lists CC BY-NC 4.0; imagery has separate source notices, which should be
+reviewed before redistribution. Codex assisted with implementation, tests and
+documentation; scientific choices and computed results remain explicit and
+reviewable.

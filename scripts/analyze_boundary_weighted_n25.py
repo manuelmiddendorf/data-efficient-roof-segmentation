@@ -5,6 +5,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from roofseg.boundary_weighted import (
+    REPLICATION_STRATEGY_REPETITIONS,
     choose_qualitative_examples,
     collect_boundary_results,
     plot_boundary_histories,
@@ -12,7 +13,9 @@ from roofseg.boundary_weighted import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-results, effects, history, boundary_metrics = collect_boundary_results(ROOT)
+results, effects, history, boundary_metrics = collect_boundary_results(
+    ROOT, REPLICATION_STRATEGY_REPETITIONS
+)
 results.to_csv(ROOT / "reports/boundary_weighted_n25_results.csv", index=False)
 effects.to_csv(ROOT / "reports/boundary_weighted_n25_effects.csv", index=False)
 history.to_csv(ROOT / "reports/boundary_weighted_n25_history.csv", index=False)
@@ -24,7 +27,12 @@ for metric, filename in (
     figure = plot_boundary_histories(history, metric)
     figure.savefig(ROOT / "reports/figures" / filename, dpi=170, bbox_inches="tight")
     plt.close(figure)
-selected = choose_qualitative_examples(boundary_metrics)
+# Keep the existing like-for-like qualitative panel on repetitions where both
+# Variant A and Variant B exist. Seed 43 adds only the predeclared Variant B.
+complete_variant_metrics = boundary_metrics[
+    boundary_metrics.subset_seed.isin((17, 29))
+]
+selected = choose_qualitative_examples(complete_variant_metrics)
 selected.to_csv(ROOT / "reports/boundary_weighted_n25_selected_examples.csv", index=False)
 figure = plot_qualitative_examples(ROOT, selected)
 figure.savefig(
