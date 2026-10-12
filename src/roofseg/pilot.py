@@ -120,6 +120,20 @@ def build_metadata(project_root: Path, manifest: dict, splits: dict, config: dic
     git_commit = subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=project_root, check=True, capture_output=True, text=True
     ).stdout.strip()
+    if "provider_checksum_file" in manifest["dataset"]:
+        raw_reference = {
+            "kind": "provider SHA-256 list",
+            "path": manifest["dataset"]["provider_checksum_file"],
+            "sha256": manifest["dataset"]["provider_checksum_file_sha256"],
+            "verified_once_before_block": True,
+        }
+    else:
+        raw_reference = {
+            "kind": manifest["dataset"]["hash_status"],
+            "path": manifest["dataset"]["archive"],
+            "sha256": manifest["dataset"]["archive_sha256"],
+            "verified_once_before_block": True,
+        }
     return {
         "schema_version": 1,
         "git_commit": git_commit,
@@ -129,12 +143,7 @@ def build_metadata(project_root: Path, manifest: dict, splits: dict, config: dic
                      "system": platform.system()},
         "packages": {name: version(name) for name in ("torch", "torchvision", "numpy", "pillow")},
         "compatibility_identity": {"config_sha256": config_sha, **inputs},
-        "raw_reference": {
-            "kind": "provider SHA-256 list",
-            "path": manifest["dataset"]["provider_checksum_file"],
-            "sha256": manifest["dataset"]["provider_checksum_file_sha256"],
-            "verified_once_before_block": True,
-        },
+        "raw_reference": raw_reference,
         "declared_weight_source": (
             {"kind": "torchvision trusted weight enum", "enum": "EfficientNet_B0_Weights.IMAGENET1K_V1",
              "url": "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth",
