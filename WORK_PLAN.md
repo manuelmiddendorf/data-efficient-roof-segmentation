@@ -189,6 +189,19 @@ modest Random-specific advantage for spatial selection in these repetitions,
 not a causal footprint-area effect or independent geographic generalization.
 The locked test role was not accessed.
 
+The WHU Aerial 0.3 m raster release is prepared for a future external
+replication. The official archive contains 8,188 paired 512 × 512 RGB images
+and binary building-footprint masks across the provider's 4,736/1,036/2,416
+training/validation/test roles. This agrees with the provider's role arithmetic
+but differs from the page's 8,189-tile sentence. The TIFFs contain no CRS,
+physical geotransform or GCPs. The documented separate source areas are retained,
+but per-tile visible-area overlap and spatial maximin selection cannot be
+independently reconstructed from this prepared release. One uniform, label-free
+n=100 training subset is fixed with seed 17 for a proposed paired pilot. The
+roles contain 419/299/685 empty masks; all 1,403 form the only exact mask-
+duplicate group, while no image or complete pair is byte-duplicated. No WHU
+training or RID test evaluation belongs to this data-foundation stage.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -376,6 +389,11 @@ to select another reported winner.
   approximately zero. Retain maximin for the main learning curves; treat the
   apparent interaction with initialization as descriptive evidence from one
   shared validation region.
+- The WHU external-replication foundation retains the provider roles. Exact
+  byte duplicates are checked across roles, while geometric overlap remains
+  only partially verifiable because the prepared TIFFs omit coordinates. Use
+  the saved uniform n=100 training subset for the first proposed pilot; do not
+  claim spatial maximin selection or confirmed external replication yet.
 
 ## Git and delivery
 
@@ -409,3 +427,5 @@ working setup and execution commands.
 - [Boundary loss](https://proceedings.mlr.press/v102/kervadec19a.html)
 - [Boundary IoU](https://arxiv.org/abs/2103.16562)
 - [L2-SP](https://proceedings.mlr.press/v80/li18a.html)
+- [WHU Building Dataset](https://gpcv.whu.edu.cn/data/building_dataset.html)
+- [WHU dataset paper](https://doi.org/10.1109/TGRS.2018.2858817)

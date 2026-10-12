@@ -1,0 +1,274 @@
+{
+  "dataset": {
+    "name": "WHU Building Dataset \u2013 Aerial imagery subset",
+    "variant": "prepared 0.3 m raster images and labels",
+    "source_page": "https://gpcv.whu.edu.cn/data/building_dataset.html",
+    "archive_url": "https://gpcv.whu.edu.cn/data/3.%20The%20cropped%20aerial%20image%20tiles%20and%20raster%20labels.zip",
+    "archive": "data/raw/whu/whu_aerial_0.3m_raster.zip",
+    "archive_bytes": 5432920408,
+    "archive_sha256": "62a4b4ef0fdfc98deee44b29fd0fe949554a928e1e9d38730fc45360668e2892",
+    "hash_status": "Locally computed identity only; the provider page does not publish a trusted checksum for this archive.",
+    "downloaded": "2026-10-12",
+    "http_last_modified": "2018-07-03T01:58:46Z",
+    "paper": "Ji, Wei and Lu (2019), Fully Convolutional Networks for Multisource Building Extraction from an Open Aerial and Satellite Imagery Data Set",
+    "paper_doi": "10.1109/TGRS.2018.2858817",
+    "terms": "The official GPCV index describes the datasets as freely downloadable, but the dataset page and archive contain no explicit reuse licence. Redistribution or use beyond this research project requires checking permission with the provider and the underlying LINZ imagery terms.",
+    "attribution": "Cite Ji, Wei and Lu (2019), acknowledge the GPCV Lab at Wuhan University, and identify New Zealand LINZ as the original imagery source."
+  },
+  "label_contract": {
+    "product": "prepared raster building labels",
+    "building_values": [
+      0
+    ],
+    "background_values": [
+      1
+    ],
+    "binary_mapping": "building = mask == 0",
+    "mapping_evidence": "Direct inspection of development pairs: all-one labels align with tiles containing no buildings, while zero-valued regions align with visible building footprints.",
+    "validity": "Every pixel has value 0 or 1; the files provide no distinct invalid or unknown code and no nodata declaration.",
+    "target_scope": "Rasterized building footprints edited from Christchurch building vectors. This is a building-footprint target, whereas RID masks describe visible roof segments around roof-centred samples."
+  },
+  "audit": {
+    "pair_count": 8188,
+    "role_counts": {
+      "train": 4736,
+      "val": 1036,
+      "test": 2416
+    },
+    "provider_page_tile_total": 8189,
+    "role_count_total": 8188,
+    "count_note": "The downloadable role directories contain 8,188 pairs, matching the provider's displayed role arithmetic (4,736 + 1,036 + 2,416), although the surrounding page text states 8,189 tiles.",
+    "image_shapes_chw": [
+      [
+        3,
+        512,
+        512
+      ]
+    ],
+    "mask_shapes_chw": [
+      [
+        1,
+        512,
+        512
+      ]
+    ],
+    "image_dtypes": [
+      "uint8"
+    ],
+    "mask_dtypes": [
+      "uint8"
+    ],
+    "image_value_range": [
+      0,
+      255
+    ],
+    "mask_values_observed": [
+      0,
+      1
+    ],
+    "empty_mask_counts": {
+      "train": 419,
+      "val": 299,
+      "test": 685
+    },
+    "all_pixels_valid_by_file_mask": true,
+    "crs_values": [
+      null
+    ],
+    "all_transforms_identity": true,
+    "all_gcp_counts_zero": true,
+    "all_nodata_unset": true,
+    "documented_ground_sample_distance_m": 0.3,
+    "ground_sample_distance_evidence": "provider documentation, not embedded TIFF metadata"
+  },
+  "duplicate_group_counts": {
+    "exact_duplicate_image_groups": 0,
+    "exact_duplicate_mask_groups": 1,
+    "exact_duplicate_pair_groups": 0,
+    "cross_role_duplicate_image_groups": 0,
+    "cross_role_duplicate_pair_groups": 0
+  },
+  "duplicate_group_sizes": {
+    "exact_duplicate_image_groups": [],
+    "exact_duplicate_mask_groups": [
+      1403
+    ],
+    "exact_duplicate_pair_groups": [],
+    "cross_role_duplicate_image_groups": [],
+    "cross_role_duplicate_pair_groups": []
+  },
+  "duplicate_masks_are_exactly_empty_masks": true,
+  "role_summaries": {
+    "train": {
+      "count": 4736,
+      "empty_masks": 419,
+      "minimum": 0.0,
+      "median": 0.2158527374267578,
+      "mean": 0.1866387016064412,
+      "maximum": 0.7177352905273438
+    },
+    "val": {
+      "count": 1036,
+      "empty_masks": 299,
+      "minimum": 0.0,
+      "median": 0.040790557861328125,
+      "mean": 0.11000010589835266,
+      "maximum": 0.6739730834960938
+    },
+    "test": {
+      "count": 2416,
+      "empty_masks": 685,
+      "minimum": 0.0,
+      "median": 0.0634307861328125,
+      "mean": 0.11128043812631772,
+      "maximum": 0.7887725830078125
+    }
+  },
+  "split_counts": {
+    "train": 4736,
+    "val": 1036,
+    "test": 2416
+  },
+  "spatial_audit": {
+    "provider_documented_tile_blocks": {
+      "train": [
+        {
+          "width_tiles": 64,
+          "height_tiles": 74
+        }
+      ],
+      "val": [
+        {
+          "width_tiles": 14,
+          "height_tiles": 74
+        }
+      ],
+      "test": [
+        {
+          "width_tiles": 17,
+          "height_tiles": 42
+        },
+        {
+          "width_tiles": 23,
+          "height_tiles": 74
+        }
+      ]
+    },
+    "provider_statement": "The source page shows separate training, evaluation and two test areas and gives each area's tile-grid dimensions.",
+    "embedded_georeferencing": false,
+    "per_tile_coordinates_available": false,
+    "numeric_order_used_as_coordinates": false,
+    "exact_cross_role_image_duplicates": 0,
+    "exact_cross_role_pair_duplicates": 0,
+    "visible_area_overlap_status": "Not independently computable from the prepared tiles: TIFFs contain no CRS, geotransform or GCPs, and the provider does not publish an explicit tile-index-to-coordinate table in this archive. The documented region layout supports geographic separation but cannot verify every footprint."
+  },
+  "future_pilot_subset": {
+    "size": 100,
+    "seed": 17,
+    "method": "Uniform sampling without replacement from the provider training role, using an isolated NumPy generator and no labels.",
+    "ids": [
+      "train/32",
+      "train/57",
+      "train/71",
+      "train/81",
+      "train/166",
+      "train/171",
+      "train/212",
+      "train/232",
+      "train/261",
+      "train/390",
+      "train/423",
+      "train/497",
+      "train/572",
+      "train/661",
+      "train/729",
+      "train/744",
+      "train/746",
+      "train/771",
+      "train/810",
+      "train/837",
+      "train/953",
+      "train/998",
+      "train/1033",
+      "train/1039",
+      "train/1069",
+      "train/1114",
+      "train/1150",
+      "train/1171",
+      "train/1183",
+      "train/1267",
+      "train/1315",
+      "train/1469",
+      "train/1606",
+      "train/1623",
+      "train/1638",
+      "train/1681",
+      "train/1705",
+      "train/1709",
+      "train/1793",
+      "train/1881",
+      "train/1919",
+      "train/1934",
+      "train/1990",
+      "train/1994",
+      "train/2116",
+      "train/2120",
+      "train/2125",
+      "train/2161",
+      "train/2244",
+      "train/2259",
+      "train/2275",
+      "train/2363",
+      "train/2423",
+      "train/2559",
+      "train/2589",
+      "train/2608",
+      "train/2636",
+      "train/2650",
+      "train/2654",
+      "train/2660",
+      "train/2697",
+      "train/2725",
+      "train/2815",
+      "train/2843",
+      "train/2846",
+      "train/2923",
+      "train/2967",
+      "train/2969",
+      "train/3031",
+      "train/3037",
+      "train/3082",
+      "train/3099",
+      "train/3108",
+      "train/3164",
+      "train/3185",
+      "train/3264",
+      "train/3267",
+      "train/3378",
+      "train/3427",
+      "train/3435",
+      "train/3481",
+      "train/3498",
+      "train/3536",
+      "train/3670",
+      "train/3790",
+      "train/3804",
+      "train/3820",
+      "train/3860",
+      "train/3883",
+      "train/3919",
+      "train/4030",
+      "train/4048",
+      "train/4255",
+      "train/4292",
+      "train/4310",
+      "train/4365",
+      "train/4523",
+      "train/4646",
+      "train/4653",
+      "train/4658"
+    ],
+    "spatial_maximin_status": "Not defensible from the prepared release because physical tile coordinates cannot be reconstructed reliably.",
+    "test_used": false
+  }
+}

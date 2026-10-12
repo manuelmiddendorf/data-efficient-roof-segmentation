@@ -60,6 +60,17 @@ remain mixed (−0.0052, +0.0045 and −0.0033). Variant B is therefore not adop
 as the shared objective. All findings are provisional validation results from
 one repeatedly used validation region; no locked-test result has been produced.
 
+The prepared 0.3 m WHU Aerial raster release has now been imported as the data
+foundation for a future external replication. Its 8,188 paired 512 × 512 RGB
+tiles and binary building-footprint masks retain the provider's training,
+validation and test roles. The prepared TIFFs have no embedded CRS, physical
+geotransform or ground-control points, so the provider's documented separate
+areas can be retained but individual footprints cannot be reconstructed. A
+label-independent uniform n=100 training subset is saved for a proposed paired
+Random-versus-ImageNet pilot. No image or complete pair is byte-duplicated;
+1,403 empty masks form the sole repeated-mask group. No WHU model has been
+trained.
+
 ## Reports and reproduction
 
 The executed notebooks form the scientific report:
@@ -69,6 +80,7 @@ The executed notebooks form the scientific report:
 - [Optimization](notebooks/03_optimization.ipynb)
 - [Data efficiency across three image selections](notebooks/04_data_efficiency.ipynb)
 - [Targeted experiments](notebooks/05_targeted_experiments.ipynb)
+- [WHU external-replication data](notebooks/06_external_replication_data.ipynb)
 
 [docs/setup.md](docs/setup.md) gives exact environment, training, analysis and
 notebook commands. [docs/data.md](docs/data.md) records source and label
@@ -77,8 +89,9 @@ Run artifacts retain exact configurations, compatibility identities, histories,
 selected checkpoints and summaries. Analysis notebooks read those artifacts and
 do not start training.
 
-The dataset is downloaded from its provider and is not bundled here. The dataset
-record lists CC BY-NC 4.0; imagery has separate source notices, which should be
-reviewed before redistribution. Codex assisted with implementation, tests and
-documentation; scientific choices and computed results remain explicit and
-reviewable.
+Raw datasets are downloaded from their providers and are not bundled here. The
+RID record lists CC BY-NC 4.0 and a separate imagery notice. The WHU page and
+prepared archive state no explicit reuse licence, so permission and underlying
+LINZ imagery terms require review before redistribution. Codex assisted with
+implementation, tests and documentation; scientific choices and computed
+results remain explicit and reviewable.
