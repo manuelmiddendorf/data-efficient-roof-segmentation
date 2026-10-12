@@ -1,0 +1,65 @@
+{
+  "device": "mps",
+  "training_sizes": [
+    25,
+    100,
+    500
+  ],
+  "subset_seeds": [
+    17,
+    29
+  ],
+  "historical_n100_ids_unchanged": true,
+  "strict_nesting": true,
+  "deterministic_reproduction": true,
+  "provider_test_excluded": true,
+  "pairwise_id_overlaps": [
+    {
+      "training_size": 25,
+      "first_seed": 17,
+      "second_seed": 29,
+      "shared_ids": 0
+    },
+    {
+      "training_size": 100,
+      "first_seed": 17,
+      "second_seed": 29,
+      "shared_ids": 5
+    },
+    {
+      "training_size": 500,
+      "first_seed": 17,
+      "second_seed": 29,
+      "shared_ids": 49
+    }
+  ],
+  "paired_schedule_sha256": {
+    "seed17_n25": "940a5727ceab7e2395d3e0278dad5114114204da6b134b2b0539943d695f70c1",
+    "seed17_n100": "17e4453058ffa444ce932eac8fb6f87d35920e196288d37404fbfbafbabb8733",
+    "seed17_n500": "bfc6f92a8fbbfb21c5acea85801d0b00e472d6cfbf692586f879b97c68f9d56f",
+    "seed29_n25": "a9a9cc22706cc40e9c3f8758eed1cda32331a678f74ee4e3e7a22758e5d978d5",
+    "seed29_n100": "3038afa32f80f72f1aa0034cd64877bd96b3839b3d0df3fe0ee353327f3770d5",
+    "seed29_n500": "3dfe2f1bdb9d2ca12884c6c1756a40d533e330c83b2300bc8e1c70d4a45d40b6"
+  },
+  "real_n25_incomplete_batch": {
+    "size": 1,
+    "ids": [
+      "train/71"
+    ],
+    "d4_codes": [
+      7
+    ],
+    "loss": 0.681631863117218
+  },
+  "historical_n100_runs_verified_without_metadata_rewrite": true,
+  "new_run_directories": [
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n25_random_subsetseed17_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n25_imagenet_subsetseed17_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n500_random_subsetseed17_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n500_imagenet_subsetseed17_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n25_random_subsetseed29_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n25_imagenet_subsetseed29_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n500_random_subsetseed29_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n500_imagenet_subsetseed29_fixed_drop"
+  ]
+}

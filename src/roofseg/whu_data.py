@@ -381,6 +381,37 @@ def _uniform_training_subset(training_ids: list[str], seed: int, size: int = 100
     return [training_ids[int(position)] for position in sorted(selected_positions)]
 
 
+def _nested_whu_learning_curve_subsets(
+    training_ids: list[str], existing_100_ids: list[str], subset_seed: int
+) -> dict:
+    """Extend one historical n=100 selection to fixed nested n=25/100/500 sets."""
+    position = {sample_id: index for index, sample_id in enumerate(training_ids)}
+    if len(existing_100_ids) != 100 or len(set(existing_100_ids)) != 100:
+        raise ValueError("WHU learning curves require 100 unique historical IDs.")
+    if not set(existing_100_ids) <= set(training_ids):
+        raise ValueError("Historical WHU subset contains IDs outside the training role.")
+
+    small_seed = subset_seed * 1000 + 25
+    extension_seed = subset_seed * 1000 + 500
+    small_rng = np.random.default_rng(small_seed)
+    small_positions = small_rng.choice(100, size=25, replace=False)
+    subset_25 = sorted(
+        (existing_100_ids[int(index)] for index in small_positions), key=position.get
+    )
+
+    existing_set = set(existing_100_ids)
+    remaining_ids = [sample_id for sample_id in training_ids if sample_id not in existing_set]
+    extension_rng = np.random.default_rng(extension_seed)
+    extension_positions = extension_rng.choice(len(remaining_ids), size=400, replace=False)
+    extension = [remaining_ids[int(index)] for index in extension_positions]
+    subset_500 = sorted([*existing_100_ids, *extension], key=position.get)
+    return {
+        "subset_seed": subset_seed,
+        "derived_seeds": {"n25_from_n100": small_seed, "n500_extension": extension_seed},
+        "subsets": {"25": subset_25, "100": list(existing_100_ids), "500": subset_500},
+    }
+
+
 def build_whu_splits(manifest: dict, subset_seed: int = 17) -> dict:
     """Record provider roles and three label-independent n=100 subset repetitions."""
     samples = manifest["samples"]
@@ -408,6 +439,24 @@ def build_whu_splits(manifest: dict, subset_seed: int = 17) -> dict:
             "second_seed": all_subsets[second]["seed"],
             "shared_ids": len(set(all_subsets[first]["ids"]) & set(all_subsets[second]["ids"])),
         })
+    learning_curve_repetitions = {
+        repetition: _nested_whu_learning_curve_subsets(
+            roles["train"], all_subsets[repetition]["ids"], all_subsets[repetition]["seed"]
+        )
+        for repetition in ("1", "2")
+    }
+    learning_curve_overlaps = [
+        {
+            "training_size": size,
+            "first_seed": learning_curve_repetitions["1"]["subset_seed"],
+            "second_seed": learning_curve_repetitions["2"]["subset_seed"],
+            "shared_ids": len(
+                set(learning_curve_repetitions["1"]["subsets"][str(size)])
+                & set(learning_curve_repetitions["2"]["subsets"][str(size)])
+            ),
+        }
+        for size in (25, 100, 500)
+    ]
     return {
         "schema_version": 1,
         "dataset_manifest": "data/metadata/whu/data_manifest.json",
@@ -457,6 +506,22 @@ def build_whu_splits(manifest: dict, subset_seed: int = 17) -> dict:
             ),
             "repetitions": additional,
             "pairwise_id_overlaps": overlaps,
+            "test_used": False,
+        },
+        "learning_curve_subsets": {
+            "sizes": [25, 100, 500],
+            "repetitions": learning_curve_repetitions,
+            "method": (
+                "The historical n=100 selection is not the prefix set of a NumPy "
+                "permutation generated with its original seed. Following the predeclared "
+                "fallback, n=25 is sampled without replacement from n=100 and n=500 adds "
+                "400 samples drawn without replacement from the remaining provider training "
+                "role. Source lists use provider numeric order; isolated derived seeds are "
+                "subset_seed * 1000 + 25 and subset_seed * 1000 + 500. Labels, masks and "
+                "model outputs are not used."
+            ),
+            "original_n100_is_same_seed_permutation_prefix": {"17": False, "29": False},
+            "pairwise_id_overlaps": learning_curve_overlaps,
             "test_used": False,
         },
     }

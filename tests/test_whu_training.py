@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from roofseg.training import reference_group_metrics
+from roofseg.training_data import paired_schedule
 from roofseg.whu_pilot_analysis import (
     choose_whu_validation_examples, whu_initialization_effects,
 )
@@ -9,15 +10,28 @@ from roofseg.whu_pilot import build_whu_pilot_config, whu_run_name, whu_subset_r
 
 
 def _splits():
-    return {
+    splits = {
         "split_name": "whu_fixture",
-        "roles": {"train": ["train/1", "train/2"], "val": ["val/1", "val/2"], "test": ["test/1"]},
+        "roles": {"train": [f"train/{i}" for i in range(600)], "val": ["val/1", "val/2"], "test": ["test/1"]},
         "future_pilot_subset": {"size": 100, "seed": 17, "ids": [f"train/{i}" for i in range(100)]},
         "additional_pilot_subsets": {"repetitions": {
             "2": {"size": 100, "seed": 29, "ids": [f"train/{i}" for i in range(100, 200)]},
             "3": {"size": 100, "seed": 43, "ids": [f"train/{i}" for i in range(200, 300)]},
         }},
     }
+    splits["learning_curve_subsets"] = {"repetitions": {
+        "1": {"subset_seed": 17, "subsets": {
+            "25": [f"train/{i}" for i in range(25)],
+            "100": splits["future_pilot_subset"]["ids"],
+            "500": [f"train/{i}" for i in range(500)],
+        }},
+        "2": {"subset_seed": 29, "subsets": {
+            "25": [f"train/{i}" for i in range(100, 125)],
+            "100": splits["additional_pilot_subsets"]["repetitions"]["2"]["ids"],
+            "500": [f"train/{i}" for i in range(100, 600)],
+        }},
+    }}
+    return splits
 
 
 def test_whu_pilot_config_uses_saved_subset_and_provider_validation():
@@ -48,6 +62,38 @@ def test_whu_repetitions_change_only_subset_identity_and_run_name():
         assert differing == {"run_name", "data", "training_ids", "seeds"}
         assert {key for key in reference["data"] if reference["data"][key] != config["data"][key]} == {"training_subset"}
         assert {key for key in reference["seeds"] if reference["seeds"][key] != config["seeds"][key]} == {"subset"}
+
+
+def test_whu_learning_curve_configs_are_nested_paired_and_uniquely_named():
+    splits = _splits()
+    for repetition in (1, 2):
+        subsets = [
+            build_whu_pilot_config(splits, "random", repetition, size)
+            for size in (25, 100, 500)
+        ]
+        assert set(subsets[0]["training_ids"]) < set(subsets[1]["training_ids"])
+        assert set(subsets[1]["training_ids"]) < set(subsets[2]["training_ids"])
+        for size, random in zip((25, 100, 500), subsets):
+            imagenet = build_whu_pilot_config(splits, "imagenet", repetition, size)
+            assert random["training_ids"] == imagenet["training_ids"]
+            assert random["seeds"] == imagenet["seeds"]
+            assert random["run_name"] != imagenet["run_name"]
+    names = {
+        build_whu_pilot_config(splits, initialization, repetition, size)["run_name"]
+        for repetition in (1, 2) for size in (25, 100, 500)
+        for initialization in ("random", "imagenet")
+    }
+    assert len(names) == 12
+
+
+def test_whu_n25_schedule_retains_incomplete_batches():
+    config = build_whu_pilot_config(_splits(), "random", 1, 25)
+    schedule, record = paired_schedule(
+        config["training_ids"], config["max_steps"], config["batch_size"],
+        config["seeds"]["data_order"], config["seeds"]["augmentation"],
+    )
+    assert record["incomplete_batches_retained"]
+    assert any(len(batch_ids) == 1 for batch_ids, _ in schedule)
 
 
 def test_reference_group_metrics_keep_empty_images_separate():

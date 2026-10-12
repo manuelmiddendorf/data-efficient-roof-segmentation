@@ -76,7 +76,7 @@ def test_whu_binary_target_rejects_unknown_values():
 
 def test_whu_future_subset_is_deterministic_and_train_only():
     samples = [
-        {"id": f"train/{index}", "role": "train"} for index in range(120)
+        {"id": f"train/{index}", "role": "train"} for index in range(600)
     ] + [{"id": "val/val_0", "role": "val"}, {"id": "test/0", "role": "test"}]
     manifest = {
         "samples": samples,
@@ -101,6 +101,18 @@ def test_whu_future_subset_is_deterministic_and_train_only():
         assert set(record["ids"]) <= set(first["roles"]["train"])
         assert set(record["ids"]).isdisjoint(first["roles"]["val"] + first["roles"]["test"])
     assert len(first["additional_pilot_subsets"]["pairwise_id_overlaps"]) == 3
+    curves = first["learning_curve_subsets"]
+    assert curves["original_n100_is_same_seed_permutation_prefix"] == {
+        "17": False, "29": False,
+    }
+    for repetition, historical in (("1", subset), ("2", additional["2"]["ids"])):
+        nested = curves["repetitions"][repetition]["subsets"]
+        assert nested["100"] == historical
+        assert len(nested["25"]) == len(set(nested["25"])) == 25
+        assert len(nested["500"]) == len(set(nested["500"])) == 500
+        assert set(nested["25"]) < set(nested["100"]) < set(nested["500"])
+        assert set(nested["500"]) <= set(first["roles"]["train"])
+    assert [row["shared_ids"] for row in curves["pairwise_id_overlaps"]] == [2, 18, 422]
 
 
 def test_whu_role_validation_rejects_overlap():
