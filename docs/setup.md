@@ -405,3 +405,26 @@ uv run python scripts/run_notebook.py notebooks/04_data_efficiency.ipynb
 The six measured runs required 122.9 optimization minutes and 150.3 minutes
 including validation and selected-checkpoint evaluation on MPS. Analysis uses
 saved training and validation artifacts and does not access the locked test role.
+
+## First WHU training pilot
+
+The WHU pilot uses the saved uniform n=100 seed-17 subset and all 1,036 provider
+validation tiles. Its data adapter preserves native 512 × 512 resolution and
+maps raw label zero to building footprint. The preflight uses training data only
+for its learning check and verifies the empty-target mapping, paired ID/D4
+schedule, actual MPS forward/backward execution, original ImageNet weight
+identity and strict checkpoint restoration:
+
+```bash
+uv run python scripts/check_whu_training_pilot.py
+caffeinate -i -m -- uv run python scripts/run_whu_training_pilot.py
+uv run python scripts/analyze_whu_training_pilot.py
+uv run python scripts/run_notebook.py notebooks/07_external_replication_pilot.ipynb
+```
+
+The runner creates exactly two fresh 4,000-update runs under
+`runs/external_replication_pilot/whu_aerial_provider_split_v1/`. Each uses the
+standard three JSON files, history, per-image metrics and one selected
+checkpoint. Compatible completed runs are reused; conflicts or incomplete runs
+are refused. Analysis reads only saved training and validation artifacts and
+never opens the WHU provider-test role.

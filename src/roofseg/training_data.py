@@ -1,4 +1,4 @@
-"""Tensor loading, ImageNet normalization and paired D4 augmentation for RID."""
+"""Tensor loading, ImageNet normalization and paired D4 augmentation."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ import torch
 from torchvision.transforms import functional as tv_functional
 
 from .data import load_binary_target, read_image, read_mask
+from .whu_data import load_whu_binary_target, read_whu_image, read_whu_mask
 
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
@@ -81,6 +82,35 @@ class RIDTensorStore:
             targets = torch.stack([item[1] for item in transformed])
         images = (images - self.mean) / self.std
         return {"id": list(sample_ids), "image": images, "target": targets}
+
+
+class WHUTensorStore(RIDTensorStore):
+    """Load WHU RGB tiles and binary building-footprint targets lazily.
+
+    Images become float32 ``3×512×512`` tensors with the same ImageNet
+    normalization used for RID. Targets are float32 ``1×512×512`` tensors;
+    raw label zero denotes building and one denotes background.
+    """
+
+    def load_raw(self, sample_id: str) -> tuple[torch.Tensor, torch.Tensor]:
+        """Load one WHU image in ``[0, 1]`` and its binary footprint target."""
+        if sample_id not in self.records:
+            raise KeyError(f"WHU sample is absent from the manifest: {sample_id}")
+        record = self.records[sample_id]
+        image_array = read_whu_image(self.project_root / record["image"])
+        image = torch.from_numpy(image_array.copy()).permute(2, 0, 1).float().div_(255.0)
+        mask = read_whu_mask(self.project_root / record["mask"])
+        target = torch.from_numpy(load_whu_binary_target(mask).copy()).unsqueeze(0).float()
+        return image, target
+
+
+def build_tensor_store(project_root: Path, manifest: dict, dataset: str):
+    """Build the strict lazy tensor store declared by a run configuration."""
+    if dataset == "rid":
+        return RIDTensorStore(project_root, manifest)
+    if dataset == "whu_aerial":
+        return WHUTensorStore(project_root, manifest)
+    raise ValueError(f"Unknown training dataset: {dataset}")
 
 
 def apply_brightness_contrast(

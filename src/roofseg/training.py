@@ -20,7 +20,7 @@ from .objectives import (
     segmentation_loss,
 )
 from .run_artifacts import write_csv, write_json
-from .training_data import RIDTensorStore, paired_schedule, photometric_schedule
+from .training_data import RIDTensorStore, build_tensor_store, paired_schedule, photometric_schedule
 
 
 UPDATE_ALL_BATCH_NORM = "update_all_running_statistics"
@@ -187,7 +187,9 @@ def fit_run(
     device: torch.device, directory: Path,
 ) -> dict:
     """Train one resolved run and save standard plus configured checkpoints."""
-    store = RIDTensorStore(project_root, manifest)
+    store = build_tensor_store(
+        project_root, manifest, config.get("data", {}).get("dataset", "rid")
+    )
     schedule, schedule_record = paired_schedule(
         config["training_ids"], config["max_steps"], config["batch_size"],
         config["seeds"]["data_order"], config["seeds"]["augmentation"],
@@ -327,6 +329,8 @@ def fit_run(
     validation_rows, validation_metrics = evaluate(
         model, store, config["validation_ids"], config["batch_size"], device, include_ap=True
     )
+    if config.get("reference_group_diagnostics"):
+        validation_metrics["reference_groups"] = reference_group_metrics(validation_rows)
     metrics_rows = ([{"split": "training", **row} for row in training_rows]
                     + [{"split": "validation", **row} for row in validation_rows])
     write_csv(directory / "metrics.csv", metrics_rows)
@@ -375,6 +379,38 @@ def fit_run(
     summary["checkpoint_sha256"] = sha256_file(directory / "checkpoint.pt")
     write_json(directory / "summary.json", summary)
     return summary
+
+
+def reference_group_metrics(rows: list[dict], pixels_per_image: int = 512 * 512) -> dict:
+    """Summarize positive and empty references from per-image binary metrics.
+
+    Groups are determined only by reference positives (``tp + fn``). Average
+    precision is reported only for positive-reference images, matching the
+    canonical per-image AP convention.
+    """
+    positive = [row for row in rows if row["tp"] + row["fn"] > 0]
+    empty = [row for row in rows if row["tp"] + row["fn"] == 0]
+    if not positive or not empty:
+        raise ValueError("Reference-group diagnostics require positive and empty images.")
+    aps = [row["average_precision"] for row in positive if row.get("average_precision") is not None]
+    return {
+        "positive_reference": {
+            "image_count": len(positive),
+            "mean_iou": float(np.mean([row["iou"] for row in positive])),
+            "mean_dice": float(np.mean([row["dice"] for row in positive])),
+            "mean_average_precision": float(np.mean(aps)),
+            "ap_image_count": len(aps),
+        },
+        "empty_reference": {
+            "image_count": len(empty),
+            "mean_predicted_building_fraction": float(
+                np.mean([(row["tp"] + row["fp"]) / pixels_per_image for row in empty])
+            ),
+            "fraction_with_any_predicted_building": float(
+                np.mean([row["tp"] + row["fp"] > 0 for row in empty])
+            ),
+        },
+    }
 
 
 def restore_checkpoint(model: nn.Module, checkpoint_path: Path, config_sha256: str, input_sha256: str) -> int:

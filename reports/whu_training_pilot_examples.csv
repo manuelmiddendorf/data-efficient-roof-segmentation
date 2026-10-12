@@ -1,0 +1,5 @@
+selection,id,reference_positive,paired_mean_iou,paired_mean_predicted_fraction
+positive failure,val/val_0,True,0.0,4.57763671875e-05
+positive success,val/val_124,True,0.9832266215872623,0.3833446502685547
+empty success,val/val_10,False,1.0,0.0
+empty failure,val/val_158,False,0.5,0.17818260192871094
