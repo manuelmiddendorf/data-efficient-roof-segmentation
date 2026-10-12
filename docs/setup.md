@@ -341,3 +341,27 @@ and `summary.json` alongside its history, checkpoint and per-image metrics. The
 analyses read 18 fixed-recipe reference runs; the boundary analysis reads
 reference and Variant B for all three repetitions while retaining Variant A only
 for seeds 17 and 29. Neither analysis accesses the locked test role.
+
+## Stage 5 n=500 training-budget sensitivity
+
+This bounded block extends only the training horizon for Random and ImageNet on
+saved subset seeds 17 and 29. The four models start fresh, retain the selected
+fixed-drop recipe and run for 8,000 updates. Each run stores the standard best
+checkpoint plus `checkpoint_best_through_step4000.pt`; both selections use the
+same validation IoU and earlier-step tie rule.
+
+```bash
+uv run python scripts/check_training_budget_n500.py
+caffeinate -i -m uv run python scripts/run_training_budget_n500.py
+uv run python scripts/analyze_training_budget_n500.py
+uv run python scripts/run_notebook.py notebooks/04_data_efficiency.ipynb
+```
+
+The preflight verifies MPS, exact n=500 IDs, paired initializations, geographic
+role separation, the fixed learning-rate sequence, the full evaluation schedule
+and identity of the first 4,000 data-order and D4 choices with the historical
+runs. It also verifies completed historical references. The runner reuses only
+compatible completed runs and requires both checkpoint files and their hashes.
+The four measured runs required 171.6 optimization minutes and 212.7 minutes
+including validation and selected-checkpoint evaluation. Analysis reads only
+saved training and validation artifacts; the locked test role remains unused.

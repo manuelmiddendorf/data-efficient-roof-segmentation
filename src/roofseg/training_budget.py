@@ -148,6 +148,7 @@ def collect_training_budget_results(
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Summarize endpoints, stable end windows, trends and paired gaps."""
     runs, histories = load_training_budget_runs(project_root)
+    splits = json.loads((project_root / "data/metadata/splits.json").read_text())
     result_rows, history_frames = [], []
     for run in runs:
         history = _history_frame(histories[run["key"]])
@@ -168,6 +169,17 @@ def collect_training_budget_results(
             raise ValueError(f"Prefix checkpoint selection disagrees for {run['key']}.")
         if int(full["best_step"]) != int(expected_full.step):
             raise ValueError(f"Full checkpoint selection disagrees for {run['key']}.")
+        historical_directory = late_lr_drop_run_directory(
+            project_root, splits, run["initialization"],
+            run["subset_repetition"], TRAINING_SIZE,
+        )
+        historical_summary = json.loads(
+            (historical_directory / "summary.json").read_text()
+        )
+        historical_history = pd.read_csv(historical_directory / "history.csv")
+        historical_endpoint = historical_history.loc[
+            historical_history.step == PREFIX_STEPS
+        ].iloc[0]
         row = {
             "subset_seed": run["subset_seed"],
             "initialization": run["initialization"],
@@ -180,6 +192,21 @@ def collect_training_budget_results(
             ),
             "mean_iou_last5_to_8000": float(
                 trained[trained.step.between(7600, 8000)].validation_mean_iou.mean()
+            ),
+            "historical_best_step_4000": int(historical_summary["best_step"]),
+            "historical_best_iou_4000": float(
+                historical_summary["best_validation"]["mean_iou"]
+            ),
+            "historical_iou_step_4000": float(
+                historical_endpoint.validation_mean_iou
+            ),
+            "new_minus_historical_prefix_best_iou": float(
+                prefix["best_validation"]["mean_iou"]
+                - historical_summary["best_validation"]["mean_iou"]
+            ),
+            "new_minus_historical_iou_step_4000": float(
+                step_4000.validation_mean_iou
+                - historical_endpoint.validation_mean_iou
             ),
             **{f"prefix_{key}": value for key, value in _checkpoint_metrics(prefix).items()},
             **{f"full_{key}": value for key, value in _checkpoint_metrics(full).items()},
