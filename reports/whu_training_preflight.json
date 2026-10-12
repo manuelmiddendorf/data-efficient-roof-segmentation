@@ -1,0 +1,191 @@
+{
+  "device": "mps",
+  "split_name": "whu_aerial_provider_split_v1",
+  "training_ids": [
+    "train/32",
+    "train/57",
+    "train/71",
+    "train/81",
+    "train/166",
+    "train/171",
+    "train/212",
+    "train/232",
+    "train/261",
+    "train/390",
+    "train/423",
+    "train/497",
+    "train/572",
+    "train/661",
+    "train/729",
+    "train/744",
+    "train/746",
+    "train/771",
+    "train/810",
+    "train/837",
+    "train/953",
+    "train/998",
+    "train/1033",
+    "train/1039",
+    "train/1069",
+    "train/1114",
+    "train/1150",
+    "train/1171",
+    "train/1183",
+    "train/1267",
+    "train/1315",
+    "train/1469",
+    "train/1606",
+    "train/1623",
+    "train/1638",
+    "train/1681",
+    "train/1705",
+    "train/1709",
+    "train/1793",
+    "train/1881",
+    "train/1919",
+    "train/1934",
+    "train/1990",
+    "train/1994",
+    "train/2116",
+    "train/2120",
+    "train/2125",
+    "train/2161",
+    "train/2244",
+    "train/2259",
+    "train/2275",
+    "train/2363",
+    "train/2423",
+    "train/2559",
+    "train/2589",
+    "train/2608",
+    "train/2636",
+    "train/2650",
+    "train/2654",
+    "train/2660",
+    "train/2697",
+    "train/2725",
+    "train/2815",
+    "train/2843",
+    "train/2846",
+    "train/2923",
+    "train/2967",
+    "train/2969",
+    "train/3031",
+    "train/3037",
+    "train/3082",
+    "train/3099",
+    "train/3108",
+    "train/3164",
+    "train/3185",
+    "train/3264",
+    "train/3267",
+    "train/3378",
+    "train/3427",
+    "train/3435",
+    "train/3481",
+    "train/3498",
+    "train/3536",
+    "train/3670",
+    "train/3790",
+    "train/3804",
+    "train/3820",
+    "train/3860",
+    "train/3883",
+    "train/3919",
+    "train/4030",
+    "train/4048",
+    "train/4255",
+    "train/4292",
+    "train/4310",
+    "train/4365",
+    "train/4523",
+    "train/4646",
+    "train/4653",
+    "train/4658"
+  ],
+  "validation_image_count": 1036,
+  "provider_test_excluded": true,
+  "target_mapping": "building footprint = mask == 0",
+  "empty_target_checked": "train/0",
+  "paired_schedule_sha256": "17e4453058ffa444ce932eac8fb6f87d35920e196288d37404fbfbafbabb8733",
+  "paired_decoder_sha256": "f63fcf67f917ce536ff0f915e00580998aad3bae23ddb8c43dd252c890e3c30f",
+  "random_encoder_sha256": "8621aebfa51d1f415abfd08bcc18ab465238fbec482209ffc5d4f023bdfc81c6",
+  "imagenet_encoder_sha256": "472a71f44830515296f51ac595a8baa944b82411895830376287e506dc298191",
+  "pretrained_weights": {
+    "enum": "torchvision.models.EfficientNet_B0_Weights.IMAGENET1K_V1",
+    "url": "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth",
+    "trusted_sha256_prefix": "7f5810bc",
+    "actual_sha256": "7f5810bc96def8f7552d5b7e68d53c4786f81167d28291b21c0d90e1fca14934",
+    "cache_file": "efficientnet_b0_rwightman-7f5810bc.pth",
+    "categories": 1000,
+    "state_tensors": 360
+  },
+  "optimizer_groups": {
+    "learning_rates": [
+      0.001,
+      0.001
+    ],
+    "weight_decays": [
+      0.0001,
+      0.0
+    ],
+    "decayed_parameter_tensors": 92,
+    "no_decay_parameter_tensors": 151,
+    "no_decay_rule": "parameter.ndim == 1 or name ends with .bias"
+  },
+  "mps_forward_backward": {
+    "output_shape": [
+      2,
+      1,
+      512,
+      512
+    ],
+    "loss": 0.6574621200561523
+  },
+  "tiny_learning": {
+    "ids": [
+      "train/32",
+      "train/71"
+    ],
+    "augmentation": false,
+    "curve": [
+      {
+        "step": 0,
+        "loss": 0.7233824133872986,
+        "mean_iou": 0.0
+      },
+      {
+        "step": 10,
+        "loss": 0.652961790561676,
+        "mean_iou": 0.7766666087429178
+      },
+      {
+        "step": 20,
+        "loss": 0.46331456303596497,
+        "mean_iou": 0.8551015455416864
+      },
+      {
+        "step": 30,
+        "loss": 0.4103725552558899,
+        "mean_iou": 0.9225993666471916
+      },
+      {
+        "step": 40,
+        "loss": 0.3902575969696045,
+        "mean_iou": 0.9455959336146713
+      },
+      {
+        "step": 50,
+        "loss": 0.3605223298072815,
+        "mean_iou": 0.9544740529368452
+      },
+      {
+        "step": 60,
+        "loss": 0.33444440364837646,
+        "mean_iou": 0.966337632956367
+      }
+    ],
+    "loss_reduction_fraction": 0.5376658355816081
+  },
+  "checkpoint_restoration": true
+}

@@ -1,6 +1,8 @@
 import numpy as np
+import pandas as pd
 
 from roofseg.training import reference_group_metrics
+from roofseg.whu_pilot_analysis import choose_whu_validation_examples
 from roofseg.whu_pilot import build_whu_pilot_config, whu_run_name
 
 
@@ -37,3 +39,23 @@ def test_reference_group_metrics_keep_empty_images_separate():
     assert grouped["empty_reference"]["image_count"] == 2
     assert np.isclose(grouped["empty_reference"]["mean_predicted_building_fraction"], 0.25)
     assert grouped["empty_reference"]["fraction_with_any_predicted_building"] == 0.5
+
+
+def test_common_examples_use_paired_reference_defined_rules():
+    rows = []
+    for initialization, ious, fps in (
+        ("random", [0.2, 0.9, 1.0, 0.0], [0, 0, 0, 8]),
+        ("imagenet", [0.4, 0.8, 1.0, 1.0], [0, 0, 0, 0]),
+    ):
+        for sample_id, positive, iou, fp in zip(
+            ("positive-low", "positive-high", "empty-low", "empty-high"),
+            (True, True, False, False), ious, fps,
+        ):
+            rows.append({
+                "initialization": initialization, "split": "validation", "id": sample_id,
+                "tp": 1 if positive else 0, "fn": 0, "fp": fp, "iou": iou,
+            })
+    selected = choose_whu_validation_examples(pd.DataFrame(rows))
+    assert selected.id.tolist() == [
+        "positive-low", "positive-high", "empty-low", "empty-high"
+    ]

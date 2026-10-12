@@ -60,16 +60,17 @@ remain mixed (−0.0052, +0.0045 and −0.0033). Variant B is therefore not adop
 as the shared objective. All findings are provisional validation results from
 one repeatedly used validation region; no locked-test result has been produced.
 
-The prepared 0.3 m WHU Aerial raster release has now been imported as the data
-foundation for a future external replication. Its 8,188 paired 512 × 512 RGB
-tiles and binary building-footprint masks retain the provider's training,
-validation and test roles. The prepared TIFFs have no embedded CRS, physical
-geotransform or ground-control points, so the provider's documented separate
-areas can be retained but individual footprints cannot be reconstructed. A
-label-independent uniform n=100 training subset is saved for a proposed paired
-Random-versus-ImageNet pilot. No image or complete pair is byte-duplicated;
-1,403 empty masks form the sole repeated-mask group. No WHU model has been
-trained.
+The prepared 0.3 m WHU Aerial raster release contains 8,188 paired 512 × 512
+RGB tiles and binary building-footprint masks in provider training, validation
+and test roles. A first paired pilot trained Random and ImageNet EfficientNet-B0
+U-Nets on the saved uniform n=100 subset. Selected mean validation IoU was 0.712
+and 0.810 respectively, a +0.098 ImageNet difference. On 737 positive-reference
+images the corresponding means were 0.721 and 0.811; ImageNet also produced a
+smaller mean building fraction on 299 empty masks (0.049% versus 1.534%). This is
+one validation-selected subset comparison, not a confirmed external replication.
+The provider documents separate areas, but the ungeoreferenced prepared TIFFs
+do not permit independent reconstruction of every tile footprint. WHU test
+images were not used.
 
 ## Reports and reproduction
 
@@ -81,6 +82,7 @@ The executed notebooks form the scientific report:
 - [Data efficiency across three image selections](notebooks/04_data_efficiency.ipynb)
 - [Targeted experiments](notebooks/05_targeted_experiments.ipynb)
 - [WHU external-replication data](notebooks/06_external_replication_data.ipynb)
+- [First WHU training pilot](notebooks/07_external_replication_pilot.ipynb)
 
 [docs/setup.md](docs/setup.md) gives exact environment, training, analysis and
 notebook commands. [docs/data.md](docs/data.md) records source and label

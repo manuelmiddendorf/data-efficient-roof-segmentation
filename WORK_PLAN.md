@@ -189,7 +189,17 @@ modest Random-specific advantage for spatial selection in these repetitions,
 not a causal footprint-area effect or independent geographic generalization.
 The locked test role was not accessed.
 
-The WHU Aerial 0.3 m raster release is prepared for a future external
+The WHU Aerial 0.3 m raster release was prepared and its first paired training
+pilot is complete. Random and ImageNet EfficientNet-B0 U-Nets were trained from
+fresh initial states on the saved uniform n=100 seed-17 subset with the common
+4,000-update recipe. Selected provider-validation IoU was 0.7116 and 0.8099,
+respectively (+0.0983 for ImageNet). On 737 positive-reference images the means
+were 0.7208 and 0.8115; on 299 empty images the predicted building fractions
+were 1.5339% and 0.0495%. Each run took about 21.1 optimization minutes and
+38.1 total minutes on MPS. The result is a single-subset validation pilot, not a
+confirmed external replication. WHU test imagery remained unused.
+
+The underlying WHU Aerial 0.3 m raster release is prepared for external
 replication. The official archive contains 8,188 paired 512 × 512 RGB images
 and binary building-footprint masks across the provider's 4,736/1,036/2,416
 training/validation/test roles. This agrees with the provider's role arithmetic
@@ -197,10 +207,11 @@ but differs from the page's 8,189-tile sentence. The TIFFs contain no CRS,
 physical geotransform or GCPs. The documented separate source areas are retained,
 but per-tile visible-area overlap and spatial maximin selection cannot be
 independently reconstructed from this prepared release. One uniform, label-free
-n=100 training subset is fixed with seed 17 for a proposed paired pilot. The
+n=100 training subset was fixed with seed 17 and used for the paired pilot. The
 roles contain 419/299/685 empty masks; all 1,403 form the only exact mask-
 duplicate group, while no image or complete pair is byte-duplicated. No WHU
-training or RID test evaluation belongs to this data-foundation stage.
+training belonged to the earlier data-foundation stage, and no RID test image
+was evaluated by the WHU pilot.
 
 ## Dataset and scientific decisions
 
