@@ -1,0 +1,5 @@
+subset_seed,initialization,id,spatial_minus_random_iou
+29,imagenet,34,-0.38059599328532223
+17,random,1838,-0.252239976305655
+29,random,1848,0.6729268270361098
+29,random,74,0.7209115275046869

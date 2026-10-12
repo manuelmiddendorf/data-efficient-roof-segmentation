@@ -37,6 +37,7 @@ RANDOM = "uniform_random"
 STRATEGIES = (SPATIAL, RANDOM)
 STRATEGY_LABELS = {SPATIAL: "Spatial maximin", RANDOM: "Uniform random"}
 STRATEGY_COLOURS = {SPATIAL: "#0072B2", RANDOM: "#D55E00"}
+INITIALIZATION_COLOURS = {"random": "#D55E00", "imagenet": "#0072B2"}
 
 
 def subset_record(splits: dict, strategy: str, repetition: int) -> dict:
@@ -119,6 +120,9 @@ def spatial_subset_diagnostics(manifest: dict, splits: dict) -> pd.DataFrame:
                                   for geometry in geometries])
             distances = np.sqrt(((centres[:, None] - centres[None, :]) ** 2).sum(axis=2))
             np.fill_diagonal(distances, np.inf)
+            overlap_fraction = 1.0 - union_area / summed_area
+            if np.isclose(overlap_fraction, 0.0, rtol=0.0, atol=1e-12):
+                overlap_fraction = 0.0
             rows.append({
                 "selection_strategy": strategy,
                 "subset_repetition": repetition,
@@ -127,7 +131,7 @@ def spatial_subset_diagnostics(manifest: dict, splits: dict) -> pd.DataFrame:
                 "union_area_km2": union_area / 1e6,
                 "available_training_area_fraction": union_area / training_union_area,
                 "summed_area_km2": summed_area / 1e6,
-                "overlap_fraction": max(0.0, 1.0 - union_area / summed_area),
+                "overlap_fraction": overlap_fraction,
                 "median_nearest_centre_distance_m": float(np.median(distances.min(axis=1))),
             })
     return pd.DataFrame(rows)
@@ -262,10 +266,11 @@ def plot_selection_performance(results: pd.DataFrame, effects: pd.DataFrame) -> 
             pair = pair.set_index("strategy")
             axes[0].plot([0, 1], [pair.loc[RANDOM, "best_validation_iou"],
                                   pair.loc[SPATIAL, "best_validation_iou"]],
-                         marker="o", alpha=0.7, label=label if seed == 17 else None)
+                         color=INITIALIZATION_COLOURS[initialization], marker="o",
+                         alpha=0.65, label=label if seed == 17 else None)
         selected = effects[effects.initialization == initialization]
         axes[1].scatter(selected.subset_seed, selected.spatial_minus_random_best_iou,
-                        s=55, label=label)
+                        color=INITIALIZATION_COLOURS[initialization], s=55, label=label)
     axes[0].set_xticks([0, 1], ["Uniform random", "Spatial maximin"])
     axes[0].set_ylabel("Best validation mean per-image IoU")
     axes[0].set_title("Matched subset-seed comparisons")
@@ -277,6 +282,43 @@ def plot_selection_performance(results: pd.DataFrame, effects: pd.DataFrame) -> 
     for axis in axes:
         axis.grid(alpha=0.2)
         axis.legend(frameon=False)
+    figure.tight_layout()
+    return figure
+
+
+def plot_spatial_performance(
+    results: pd.DataFrame, diagnostics: pd.DataFrame
+) -> Figure:
+    """Relate descriptive footprint properties to validation IoU."""
+    values = results.merge(
+        diagnostics[["selection_strategy", "subset_seed", "union_area_km2",
+                     "overlap_fraction"]],
+        left_on=["strategy", "subset_seed"],
+        right_on=["selection_strategy", "subset_seed"],
+    )
+    figure, axes = plt.subplots(1, 2, figsize=(10.5, 4.5), sharey=True)
+    markers = {"random": "o", "imagenet": "s"}
+    for strategy in STRATEGIES:
+        for initialization in INITIALIZATIONS:
+            rows = values[(values.strategy == strategy)
+                          & (values.initialization == initialization)]
+            label = f"{STRATEGY_LABELS[strategy]} · {INITIALIZATION_LABELS[initialization]}"
+            for axis, x_column in zip(axes, ("union_area_km2", "overlap_fraction")):
+                axis.scatter(rows[x_column], rows.best_validation_iou,
+                             color=STRATEGY_COLOURS[strategy], marker=markers[initialization],
+                             s=55, label=label)
+                for point in rows.itertuples():
+                    axis.annotate(str(point.subset_seed),
+                                  (getattr(point, x_column), point.best_validation_iou),
+                                  xytext=(3, 3), textcoords="offset points", fontsize=7)
+    axes[0].set_xlabel("Union footprint area (km²)")
+    axes[1].set_xlabel("Within-subset overlap fraction")
+    axes[0].set_ylabel("Best validation mean per-image IoU")
+    axes[0].set_title("Coverage and validation performance")
+    axes[1].set_title("Overlap and validation performance")
+    for axis in axes:
+        axis.grid(alpha=0.2)
+    axes[0].legend(frameon=False, fontsize=7)
     figure.tight_layout()
     return figure
 

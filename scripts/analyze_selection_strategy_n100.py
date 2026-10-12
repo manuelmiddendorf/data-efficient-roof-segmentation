@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from roofseg.integrity import load_json
 from roofseg.selection_strategy import (choose_qualitative_examples, collect_selection_results,
     plot_qualitative_examples, plot_selection_map, plot_selection_performance,
-    spatial_subset_diagnostics, subset_id_overlaps)
+    plot_spatial_performance, spatial_subset_diagnostics, subset_id_overlaps)
 ROOT = Path(__file__).resolve().parents[1]
 manifest = load_json(ROOT / "data/metadata/data_manifest.json")
 splits = load_json(ROOT / "data/metadata/splits.json")
@@ -22,6 +22,7 @@ for frame, name in ((spatial,"selection_strategy_n100_spatial_diagnostics.csv"),
     frame.to_csv(ROOT / "reports" / name, index=False)
 for figure, name in ((plot_selection_map(manifest, splits),"selection_strategy_n100_map.png"),
                      (plot_selection_performance(results,effects),"selection_strategy_n100_performance.png"),
+                     (plot_spatial_performance(results,spatial),"selection_strategy_n100_spatial_performance.png"),
                      (plot_qualitative_examples(ROOT,selected),"selection_strategy_n100_examples.png")):
     figure.savefig(figures / name, dpi=170, bbox_inches="tight"); plt.close(figure)
 print("Results\n", results.to_string(index=False))

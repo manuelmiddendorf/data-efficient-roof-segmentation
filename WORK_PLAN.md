@@ -176,6 +176,19 @@ and mixed across subsets. These are two image-selection repetitions on the same
 validation region; 8,000 updates do not establish optimal convergence, and the
 locked test role was not accessed.
 
+The n=100 training-selection block then compared the three spatial-maximin
+references with six fresh models trained on uniform-random subsets using the
+same selection seeds. Maximin subsets covered about 0.258 km² with no material
+within-subset footprint overlap; random subsets covered 0.220–0.227 km² with
+12.1–14.5% overlap. Spatial-minus-random best-IoU effects were
++0.0059/+0.0122/+0.0026 for Random initialization and
++0.0047/−0.0038/−0.0010 for ImageNet. Means and sample SDs were +0.0069 ±
+0.0049 and −0.0001 ± 0.0043 respectively. The six new runs required 122.9
+optimization minutes and 150.3 total minutes on MPS. The result supports a
+modest Random-specific advantage for spatial selection in these repetitions,
+not a causal footprint-area effect or independent geographic generalization.
+The locked test role was not accessed.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
@@ -357,6 +370,12 @@ to select another reported winner.
   weighting improved regional and Boundary IoU in three of four pairs but harmed
   Seed 17 ImageNet. Keep the common reference unchanged; retain only the image-
   balanced variant as a possible later confirmation target.
+- Three uniform-random n=100 subsets were fixed before training and compared
+  with the matching spatial-maximin references. Spatial selection improved
+  Random best IoU in all three pairs but had mixed ImageNet effects averaging
+  approximately zero. Retain maximin for the main learning curves; treat the
+  apparent interaction with initialization as descriptive evidence from one
+  shared validation region.
 
 ## Git and delivery
 
