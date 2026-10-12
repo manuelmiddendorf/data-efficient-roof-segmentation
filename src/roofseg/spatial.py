@@ -93,6 +93,34 @@ def select_nested_spatial_subsets(
     return {str(size): sorted(ordered[:size], key=int) for size in requested}
 
 
+def select_uniform_random_subset(
+    pool_ids: Iterable[str], size: int, seed: int
+) -> list[str]:
+    """Select distinct training IDs uniformly without replacement.
+
+    Parameters
+    ----------
+    pool_ids:
+        Candidate IDs from the retained training role. IDs are numerically
+        sorted before sampling so reproduction does not depend on input order.
+    size:
+        Number of images to select.
+    seed:
+        Seed for an isolated NumPy generator.
+
+    Returns
+    -------
+    list[str]
+        Numerically sorted unique selected IDs.
+    """
+    ids = sorted(set(pool_ids), key=int)
+    if size < 1 or size > len(ids):
+        raise ValueError("Subset size must lie within the nonempty training pool.")
+    generator = np.random.default_rng(seed)
+    indices = generator.choice(len(ids), size=size, replace=False)
+    return sorted((ids[int(index)] for index in indices), key=int)
+
+
 def assign_compact_geographic_roles(
     footprints: dict[str, object],
     validation_ids: Iterable[str],

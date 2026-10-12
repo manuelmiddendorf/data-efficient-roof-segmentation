@@ -365,3 +365,22 @@ compatible completed runs and requires both checkpoint files and their hashes.
 The four measured runs required 171.6 optimization minutes and 212.7 minutes
 including validation and selected-checkpoint evaluation. Analysis reads only
 saved training and validation artifacts; the locked test role remains unused.
+
+## Stage 5 random versus spatial n=100 selection
+
+The split record additively stores three uniform-random n=100 subsets. Existing
+maximin subset paths and historical run configurations remain unchanged. The
+preflight reproduces each random draw from numerically sorted training IDs,
+checks role separation and paired schedules, verifies the six historical
+references, and writes footprint diagnostics before training.
+
+```bash
+uv run python scripts/check_selection_strategy_n100.py
+caffeinate -i -m -- uv run python scripts/run_selection_strategy_n100.py
+uv run python scripts/analyze_selection_strategy_n100.py
+uv run python scripts/run_notebook.py notebooks/04_data_efficiency.ipynb
+```
+
+The six measured runs required 122.9 optimization minutes and 150.3 minutes
+including validation and selected-checkpoint evaluation on MPS. Analysis uses
+saved training and validation artifacts and does not access the locked test role.

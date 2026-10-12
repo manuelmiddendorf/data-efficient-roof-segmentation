@@ -40,6 +40,15 @@ show the same pattern. Pretraining remains advantageous under both observed
 budgets, while Random was more sensitive to the available optimization time.
 This does not establish convergence or an initialization-independent optimum.
 
+At 100 images, three fixed uniform-random subsets were compared with the three
+spatial-maximin references under the same training recipe. Spatial selection
+covered about 0.258 km² with no material footprint overlap, versus 0.220–0.227
+km² and 12.1–14.5% overlap for random selection. Spatial-minus-random best-IoU
+effects were consistently positive for Random initialization (+0.0059, +0.0122
+and +0.0026; mean +0.0069) but mixed for ImageNet (+0.0047, −0.0038 and
+−0.0010; mean −0.0001). This descriptive comparison does not isolate footprint
+coverage from the changed roofs, backgrounds and image content.
+
 Targeted n=25 experiments did not identify a universal replacement for the
 common recipe. Stronger weight decay, fixed ImageNet encoder BatchNorm
 statistics and decoder channel dropout were inconsistent or harmful. Mild
