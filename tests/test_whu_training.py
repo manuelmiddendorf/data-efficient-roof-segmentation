@@ -3,7 +3,7 @@ import pandas as pd
 
 from roofseg.training import reference_group_metrics
 from roofseg.whu_pilot_analysis import choose_whu_validation_examples
-from roofseg.whu_pilot import build_whu_pilot_config, whu_run_name
+from roofseg.whu_pilot import build_whu_pilot_config, whu_run_name, whu_subset_record
 
 
 def _splits():
@@ -11,6 +11,10 @@ def _splits():
         "split_name": "whu_fixture",
         "roles": {"train": ["train/1", "train/2"], "val": ["val/1", "val/2"], "test": ["test/1"]},
         "future_pilot_subset": {"size": 100, "seed": 17, "ids": [f"train/{i}" for i in range(100)]},
+        "additional_pilot_subsets": {"repetitions": {
+            "2": {"size": 100, "seed": 29, "ids": [f"train/{i}" for i in range(100, 200)]},
+            "3": {"size": 100, "seed": 43, "ids": [f"train/{i}" for i in range(200, 300)]},
+        }},
     }
 
 
@@ -25,6 +29,23 @@ def test_whu_pilot_config_uses_saved_subset_and_provider_validation():
     assert random["seeds"] == imagenet["seeds"]
     assert random["scheduler"] == imagenet["scheduler"]
     assert whu_run_name("random") != whu_run_name("imagenet")
+
+
+def test_whu_repetitions_change_only_subset_identity_and_run_name():
+    splits = _splits()
+    configs = [build_whu_pilot_config(splits, "random", repetition) for repetition in (1, 2, 3)]
+    assert [config["seeds"]["subset"] for config in configs] == [17, 29, 43]
+    assert len({config["run_name"] for config in configs}) == 3
+    assert whu_subset_record(splits, 1) is splits["future_pilot_subset"]
+    for config in configs[1:]:
+        reference = configs[0]
+        differing = {
+            key for key in reference
+            if reference[key] != config[key]
+        }
+        assert differing == {"run_name", "data", "training_ids", "seeds"}
+        assert {key for key in reference["data"] if reference["data"][key] != config["data"][key]} == {"training_subset"}
+        assert {key for key in reference["seeds"] if reference["seeds"][key] != config["seeds"][key]} == {"subset"}
 
 
 def test_reference_group_metrics_keep_empty_images_separate():
