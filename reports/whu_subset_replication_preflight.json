@@ -1,0 +1,48 @@
+{
+  "device": "mps",
+  "subset_seeds": [
+    17,
+    29,
+    43
+  ],
+  "pairwise_id_overlaps": [
+    {
+      "first_repetition": 1,
+      "first_seed": 17,
+      "second_repetition": 2,
+      "second_seed": 29,
+      "shared_ids": 5
+    },
+    {
+      "first_repetition": 1,
+      "first_seed": 17,
+      "second_repetition": 3,
+      "second_seed": 43,
+      "shared_ids": 2
+    },
+    {
+      "first_repetition": 2,
+      "first_seed": 29,
+      "second_repetition": 3,
+      "second_seed": 43,
+      "shared_ids": 2
+    }
+  ],
+  "seed17_ids_sha256": "bb0d64cae5bf4043ad64c09dbd1343936289ee89773ae63b45496ca96e74ad2e",
+  "paired_schedule_sha256_by_subset_seed": {
+    "17": "17e4453058ffa444ce932eac8fb6f87d35920e196288d37404fbfbafbabb8733",
+    "29": "3038afa32f80f72f1aa0034cd64877bd96b3839b3d0df3fe0ee353327f3770d5",
+    "43": "52ba72e544a92ec1fd7586ab6e48b81c67c4b2fcc27fcbc1c0a70a831bab1ece"
+  },
+  "provider_roles_preserved": true,
+  "validation_image_count": 1036,
+  "provider_test_excluded": true,
+  "historical_seed17_runs_verified_without_metadata_rewrite": true,
+  "historical_checkpoint_restoration": true,
+  "new_run_directories": [
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n100_random_subsetseed29_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n100_imagenet_subsetseed29_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n100_random_subsetseed43_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n100_imagenet_subsetseed43_fixed_drop"
+  ]
+}

@@ -2,8 +2,10 @@ import numpy as np
 import pandas as pd
 
 from roofseg.training import reference_group_metrics
-from roofseg.whu_pilot_analysis import choose_whu_validation_examples
-from roofseg.whu_pilot import build_whu_pilot_config, whu_run_name
+from roofseg.whu_pilot_analysis import (
+    choose_whu_validation_examples, whu_initialization_effects,
+)
+from roofseg.whu_pilot import build_whu_pilot_config, whu_run_name, whu_subset_record
 
 
 def _splits():
@@ -11,6 +13,10 @@ def _splits():
         "split_name": "whu_fixture",
         "roles": {"train": ["train/1", "train/2"], "val": ["val/1", "val/2"], "test": ["test/1"]},
         "future_pilot_subset": {"size": 100, "seed": 17, "ids": [f"train/{i}" for i in range(100)]},
+        "additional_pilot_subsets": {"repetitions": {
+            "2": {"size": 100, "seed": 29, "ids": [f"train/{i}" for i in range(100, 200)]},
+            "3": {"size": 100, "seed": 43, "ids": [f"train/{i}" for i in range(200, 300)]},
+        }},
     }
 
 
@@ -25,6 +31,23 @@ def test_whu_pilot_config_uses_saved_subset_and_provider_validation():
     assert random["seeds"] == imagenet["seeds"]
     assert random["scheduler"] == imagenet["scheduler"]
     assert whu_run_name("random") != whu_run_name("imagenet")
+
+
+def test_whu_repetitions_change_only_subset_identity_and_run_name():
+    splits = _splits()
+    configs = [build_whu_pilot_config(splits, "random", repetition) for repetition in (1, 2, 3)]
+    assert [config["seeds"]["subset"] for config in configs] == [17, 29, 43]
+    assert len({config["run_name"] for config in configs}) == 3
+    assert whu_subset_record(splits, 1) is splits["future_pilot_subset"]
+    for config in configs[1:]:
+        reference = configs[0]
+        differing = {
+            key for key in reference
+            if reference[key] != config[key]
+        }
+        assert differing == {"run_name", "data", "training_ids", "seeds"}
+        assert {key for key in reference["data"] if reference["data"][key] != config["data"][key]} == {"training_subset"}
+        assert {key for key in reference["seeds"] if reference["seeds"][key] != config["seeds"][key]} == {"subset"}
 
 
 def test_reference_group_metrics_keep_empty_images_separate():
@@ -52,10 +75,29 @@ def test_common_examples_use_paired_reference_defined_rules():
             (True, True, False, False), ious, fps,
         ):
             rows.append({
-                "initialization": initialization, "split": "validation", "id": sample_id,
+                "initialization": initialization, "subset_seed": 17,
+                "split": "validation", "id": sample_id,
                 "tp": 1 if positive else 0, "fn": 0, "fp": fp, "iou": iou,
             })
     selected = choose_whu_validation_examples(pd.DataFrame(rows))
     assert selected.id.tolist() == [
         "positive-low", "positive-high", "empty-low", "empty-high"
     ]
+
+
+def test_whu_initialization_effects_are_paired_by_subset_seed():
+    results = pd.DataFrame([
+        {"subset_seed": 17, "initialization": "random", "best_validation_iou": 0.7,
+         "last_validation_iou": 0.6},
+        {"subset_seed": 17, "initialization": "imagenet", "best_validation_iou": 0.8,
+         "last_validation_iou": 0.75},
+        {"subset_seed": 29, "initialization": "random", "best_validation_iou": 0.6,
+         "last_validation_iou": 0.55},
+        {"subset_seed": 29, "initialization": "imagenet", "best_validation_iou": 0.75,
+         "last_validation_iou": 0.65},
+    ])
+    effects, summary = whu_initialization_effects(results)
+    assert np.allclose(effects.imagenet_minus_random_best_iou, [0.1, 0.15])
+    assert np.isclose(summary.iloc[0].mean_imagenet_minus_random_best_iou, 0.125)
+    assert np.isclose(summary.iloc[0].sample_sd_imagenet_minus_random_best_iou,
+                      np.std([0.1, 0.15], ddof=1))

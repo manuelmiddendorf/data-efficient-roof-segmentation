@@ -94,6 +94,13 @@ def test_whu_future_subset_is_deterministic_and_train_only():
     assert len(subset) == len(set(subset)) == 100
     assert set(subset) <= set(first["roles"]["train"])
     assert set(subset).isdisjoint(first["roles"]["val"] + first["roles"]["test"])
+    additional = first["additional_pilot_subsets"]["repetitions"]
+    assert [additional[key]["seed"] for key in ("2", "3")] == [29, 43]
+    for record in additional.values():
+        assert len(record["ids"]) == len(set(record["ids"])) == 100
+        assert set(record["ids"]) <= set(first["roles"]["train"])
+        assert set(record["ids"]).isdisjoint(first["roles"]["val"] + first["roles"]["test"])
+    assert len(first["additional_pilot_subsets"]["pairwise_id_overlaps"]) == 3
 
 
 def test_whu_role_validation_rejects_overlap():

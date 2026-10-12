@@ -374,17 +374,40 @@ def validate_whu_roles(roles: dict[str, Iterable[str]], expected_ids: Iterable[s
         )
 
 
+def _uniform_training_subset(training_ids: list[str], seed: int, size: int = 100) -> list[str]:
+    """Draw one sorted-position uniform subset with an isolated NumPy generator."""
+    rng = np.random.default_rng(seed)
+    selected_positions = rng.choice(len(training_ids), size=size, replace=False)
+    return [training_ids[int(position)] for position in sorted(selected_positions)]
+
+
 def build_whu_splits(manifest: dict, subset_seed: int = 17) -> dict:
-    """Record provider roles and one label-independent future n=100 pilot subset."""
+    """Record provider roles and three label-independent n=100 subset repetitions."""
     samples = manifest["samples"]
     roles = {
         role: [sample["id"] for sample in samples if sample["role"] == role]
         for role in ROLE_ORDER
     }
     validate_whu_roles(roles, [sample["id"] for sample in samples])
-    rng = np.random.default_rng(subset_seed)
-    selected_positions = rng.choice(len(roles["train"]), size=100, replace=False)
-    pilot_ids = [roles["train"][int(position)] for position in sorted(selected_positions)]
+    pilot_ids = _uniform_training_subset(roles["train"], subset_seed)
+    additional = {
+        str(repetition): {
+            "size": 100,
+            "seed": seed,
+            "ids": _uniform_training_subset(roles["train"], seed),
+        }
+        for repetition, seed in ((2, 29), (3, 43))
+    }
+    all_subsets = {"1": {"seed": subset_seed, "ids": pilot_ids}, **additional}
+    overlaps = []
+    for first, second in (("1", "2"), ("1", "3"), ("2", "3")):
+        overlaps.append({
+            "first_repetition": int(first),
+            "first_seed": all_subsets[first]["seed"],
+            "second_repetition": int(second),
+            "second_seed": all_subsets[second]["seed"],
+            "shared_ids": len(set(all_subsets[first]["ids"]) & set(all_subsets[second]["ids"])),
+        })
     return {
         "schema_version": 1,
         "dataset_manifest": "data/metadata/whu/data_manifest.json",
@@ -425,6 +448,15 @@ def build_whu_splits(manifest: dict, subset_seed: int = 17) -> dict:
                 "Not defensible from the prepared release because physical tile "
                 "coordinates cannot be reconstructed reliably."
             ),
+            "test_used": False,
+        },
+        "additional_pilot_subsets": {
+            "method": (
+                "Uniform sampling without replacement from the same ordered provider "
+                "training-role list, using an isolated NumPy generator and no labels."
+            ),
+            "repetitions": additional,
+            "pairwise_id_overlaps": overlaps,
             "test_used": False,
         },
     }

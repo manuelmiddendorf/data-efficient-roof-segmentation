@@ -1,0 +1,2 @@
+dataset,repetitions,mean_imagenet_minus_random_best_iou,sample_sd_imagenet_minus_random_best_iou,mean_imagenet_minus_random_endpoint_iou,sample_sd_imagenet_minus_random_endpoint_iou
+WHU,3,0.08255058798863857,0.013606808623795886,0.09176404136568388,0.022944903691723993
