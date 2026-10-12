@@ -62,15 +62,15 @@ one repeatedly used validation region; no locked-test result has been produced.
 
 The prepared 0.3 m WHU Aerial raster release contains 8,188 paired 512 × 512
 RGB tiles and binary building-footprint masks in provider training, validation
-and test roles. A first paired pilot trained Random and ImageNet EfficientNet-B0
-U-Nets on the saved uniform n=100 subset. Selected mean validation IoU was 0.712
-and 0.810 respectively, a +0.098 ImageNet difference. On 737 positive-reference
-images the corresponding means were 0.721 and 0.811; ImageNet also produced a
-smaller mean building fraction on 299 empty masks (0.049% versus 1.534%). This is
-one validation-selected subset comparison, not a confirmed external replication.
-The provider documents separate areas, but the ungeoreferenced prepared TIFFs
-do not permit independent reconstruction of every tile footprint. WHU test
-images were not used.
+and test roles. Random and ImageNet EfficientNet-B0 U-Nets were compared on
+three saved uniform n=100 training subsets. ImageNet improved selected mean
+validation IoU in every pair by +0.0983, +0.0744 and +0.0750 (mean 0.0826,
+sample SD 0.0136). The result varies only training-image selection while holding
+the other random seeds fixed, and all runs share the same provider validation
+role. It is therefore repeated validation evidence rather than an independent
+test or geographic-generalization result. The provider documents separate
+areas, but the ungeoreferenced prepared TIFFs do not permit independent
+reconstruction of every tile footprint. WHU test images were not used.
 
 ## Reports and reproduction
 
@@ -82,7 +82,7 @@ The executed notebooks form the scientific report:
 - [Data efficiency across three image selections](notebooks/04_data_efficiency.ipynb)
 - [Targeted experiments](notebooks/05_targeted_experiments.ipynb)
 - [WHU external-replication data](notebooks/06_external_replication_data.ipynb)
-- [First WHU training pilot](notebooks/07_external_replication_pilot.ipynb)
+- [WHU n=100 initialization replication](notebooks/07_external_replication_pilot.ipynb)
 
 [docs/setup.md](docs/setup.md) gives exact environment, training, analysis and
 notebook commands. [docs/data.md](docs/data.md) records source and label

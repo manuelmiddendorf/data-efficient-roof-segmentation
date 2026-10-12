@@ -2,7 +2,9 @@ import numpy as np
 import pandas as pd
 
 from roofseg.training import reference_group_metrics
-from roofseg.whu_pilot_analysis import choose_whu_validation_examples
+from roofseg.whu_pilot_analysis import (
+    choose_whu_validation_examples, whu_initialization_effects,
+)
 from roofseg.whu_pilot import build_whu_pilot_config, whu_run_name, whu_subset_record
 
 
@@ -73,10 +75,29 @@ def test_common_examples_use_paired_reference_defined_rules():
             (True, True, False, False), ious, fps,
         ):
             rows.append({
-                "initialization": initialization, "split": "validation", "id": sample_id,
+                "initialization": initialization, "subset_seed": 17,
+                "split": "validation", "id": sample_id,
                 "tp": 1 if positive else 0, "fn": 0, "fp": fp, "iou": iou,
             })
     selected = choose_whu_validation_examples(pd.DataFrame(rows))
     assert selected.id.tolist() == [
         "positive-low", "positive-high", "empty-low", "empty-high"
     ]
+
+
+def test_whu_initialization_effects_are_paired_by_subset_seed():
+    results = pd.DataFrame([
+        {"subset_seed": 17, "initialization": "random", "best_validation_iou": 0.7,
+         "last_validation_iou": 0.6},
+        {"subset_seed": 17, "initialization": "imagenet", "best_validation_iou": 0.8,
+         "last_validation_iou": 0.75},
+        {"subset_seed": 29, "initialization": "random", "best_validation_iou": 0.6,
+         "last_validation_iou": 0.55},
+        {"subset_seed": 29, "initialization": "imagenet", "best_validation_iou": 0.75,
+         "last_validation_iou": 0.65},
+    ])
+    effects, summary = whu_initialization_effects(results)
+    assert np.allclose(effects.imagenet_minus_random_best_iou, [0.1, 0.15])
+    assert np.isclose(summary.iloc[0].mean_imagenet_minus_random_best_iou, 0.125)
+    assert np.isclose(summary.iloc[0].sample_sd_imagenet_minus_random_best_iou,
+                      np.std([0.1, 0.15], ddof=1))
