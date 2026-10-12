@@ -43,6 +43,7 @@ class WHUSample:
     sample_id: str
     role: str
     provider_name: str
+    provider_block: int
     provider_index: int
     image_path: Path
     mask_path: Path
@@ -83,39 +84,50 @@ class WHUDataset:
                 raise ValueError(
                     f"Expected {expected_counts[role]} WHU {role} pairs, found {len(images)}."
                 )
-            for provider_index, provider_name in sorted(
+            for provider_name, indexed_path in sorted(
                 images.items(), key=lambda item: item[1][0]
             ):
-                index, image_path = provider_name
+                (block, index), image_path = indexed_path
                 samples.append(
                     WHUSample(
-                        sample_id=f"{role}/{provider_index}",
+                        sample_id=f"{role}/{provider_name}",
                         role=role,
-                        provider_name=provider_index,
+                        provider_name=provider_name,
+                        provider_block=block,
                         provider_index=index,
                         image_path=image_path,
-                        mask_path=masks[provider_index][1],
+                        mask_path=masks[provider_name][1],
                     )
                 )
         return samples
 
 
-def _indexed_tiffs(directory: Path, role: str) -> dict[str, tuple[int, Path]]:
+def _indexed_tiffs(directory: Path, role: str) -> dict[str, tuple[tuple[int, int], Path]]:
     if not directory.is_dir():
         raise FileNotFoundError(f"Required WHU directory is missing: {directory}")
     files = [path for path in directory.iterdir() if path.is_file()]
     unexpected = [path.name for path in files if path.suffix.lower() not in {".tif", ".tiff"}]
     if unexpected:
         raise ValueError(f"Unexpected files in {directory}: {sorted(unexpected)[:8]}")
-    indexed: dict[str, tuple[int, Path]] = {}
+    indexed: dict[str, tuple[tuple[int, int], Path]] = {}
     for path in files:
         stem = path.stem
-        numeric = stem[4:] if role == "val" and stem.startswith("val_") else stem
-        if not numeric.isdigit() or (role == "val") != stem.startswith("val_"):
+        if role == "val" and stem.startswith("val_"):
+            block, numeric = 1, stem[4:]
+        elif role == "test" and stem.startswith("2_"):
+            block, numeric = 2, stem[2:]
+        else:
+            block, numeric = 1, stem
+        valid_prefix = (
+            (role == "val" and stem.startswith("val_"))
+            or (role == "test" and (stem.isdigit() or stem.startswith("2_")))
+            or (role == "train" and stem.isdigit())
+        )
+        if not numeric.isdigit() or not valid_prefix:
             raise ValueError(f"Unexpected WHU {role} filename: {path.name}")
         if stem in indexed:
             raise ValueError(f"Duplicate WHU {role} filename: {path.name}")
-        indexed[stem] = (int(numeric), path)
+        indexed[stem] = ((block, int(numeric)), path)
     return indexed
 
 
@@ -191,6 +203,7 @@ def _inspect_sample(sample: WHUSample, project_root: Path) -> dict:
         "id": sample.sample_id,
         "role": sample.role,
         "provider_name": sample.provider_name,
+        "provider_block": sample.provider_block,
         "provider_index": sample.provider_index,
         "image": sample.image_path.relative_to(project_root).as_posix(),
         "mask": sample.mask_path.relative_to(project_root).as_posix(),
@@ -445,6 +458,20 @@ def build_whu_report(manifest: dict, splits: dict) -> dict:
             for key, value in manifest["audit"].items()
             if key.endswith("_groups")
         },
+        "duplicate_group_sizes": {
+            key: [len(group) for group in value]
+            for key, value in manifest["audit"].items()
+            if key.endswith("_groups")
+        },
+        "duplicate_masks_are_exactly_empty_masks": (
+            len(manifest["audit"]["exact_duplicate_mask_groups"]) == 1
+            and set(manifest["audit"]["exact_duplicate_mask_groups"][0])
+            == {
+                sample["id"]
+                for sample in manifest["samples"]
+                if sample["building_pixels"] == 0
+            }
+        ),
         "role_summaries": role_summaries,
         "split_counts": splits["counts"],
         "spatial_audit": splits["spatial_audit"],
@@ -459,12 +486,24 @@ def select_development_examples(manifest: dict) -> list[dict]:
         sample["id"]: sample["building_pixels"] / (512 * 512)
         for sample in development
     }
-    nonempty = [sample for sample in development if sample["building_pixels"] > 0]
-    median_fraction = float(np.median([fractions[sample["id"]] for sample in nonempty]))
+    training = [
+        sample
+        for sample in development
+        if sample["role"] == "train" and sample["building_pixels"] > 0
+    ]
+    validation = [
+        sample
+        for sample in development
+        if sample["role"] == "val" and sample["building_pixels"] > 0
+    ]
+    median_fraction = float(np.median([fractions[sample["id"]] for sample in training]))
+    sparse_fraction = float(
+        np.quantile([fractions[sample["id"]] for sample in validation], 0.1)
+    )
     choices = [
-        min(nonempty, key=lambda sample: abs(fractions[sample["id"]] - median_fraction)),
-        min(nonempty, key=lambda sample: fractions[sample["id"]]),
-        max(nonempty, key=lambda sample: fractions[sample["id"]]),
+        min(training, key=lambda sample: abs(fractions[sample["id"]] - median_fraction)),
+        min(validation, key=lambda sample: abs(fractions[sample["id"]] - sparse_fraction)),
+        max(validation, key=lambda sample: fractions[sample["id"]]),
     ]
     empty = next((sample for sample in development if sample["building_pixels"] == 0), None)
     if empty is not None:

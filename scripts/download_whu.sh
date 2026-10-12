@@ -9,7 +9,17 @@ url="https://gpcv.whu.edu.cn/data/3.%20The%20cropped%20aerial%20image%20tiles%20
 expected_bytes=5432920408
 
 mkdir -p "$raw_dir"
-curl --fail --location --continue-at - --output "$archive" "$url"
+current_bytes=0
+if [ -f "$archive" ]; then
+  current_bytes="$(wc -c < "$archive" | tr -d ' ')"
+fi
+if [ "$current_bytes" -gt "$expected_bytes" ]; then
+  echo "Existing archive is larger than expected: $current_bytes bytes." >&2
+  exit 1
+fi
+if [ "$current_bytes" -lt "$expected_bytes" ]; then
+  curl --fail --location --continue-at - --output "$archive" "$url"
+fi
 
 actual_bytes="$(wc -c < "$archive" | tr -d ' ')"
 if [ "$actual_bytes" -ne "$expected_bytes" ]; then

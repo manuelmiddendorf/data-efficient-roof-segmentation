@@ -24,6 +24,27 @@ The notebook runner starts fresh kernels, executes the available scientific
 notebooks in order, stores their outputs, and exports matching HTML reports under
 `reports/`. No notebook cell installs software or starts model training.
 
+## WHU external-replication data foundation
+
+The WHU command downloads only the official prepared 0.3 m Aerial raster
+archive (5,432,920,408 bytes) and extracts it under ignored `data/raw/whu/`.
+The provider publishes no trusted archive checksum; preparation records a local
+SHA-256 as byte identity and does not describe it as provider-verified.
+
+```bash
+sh scripts/download_whu.sh
+uv run python scripts/prepare_whu_data.py
+uv run pytest tests/test_whu_data.py
+uv run python scripts/verify_whu_data.py
+uv run python scripts/run_notebook.py notebooks/06_external_replication_data.ipynb
+```
+
+Preparation writes exactly one WHU manifest and one split record under
+`data/metadata/whu/`. The split record retains provider roles and a deterministic,
+label-independent uniform n=100 subset drawn only from the training role. The
+notebook reads saved records and development examples; it does not train a model
+or open provider-test images for qualitative analysis.
+
 ## Stage 2 training pilot
 
 The pilot adds PyTorch 2.8 and torchvision 0.23 from the same lockfile. Training

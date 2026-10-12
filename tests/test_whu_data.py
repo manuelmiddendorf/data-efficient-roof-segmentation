@@ -43,7 +43,11 @@ def test_whu_pairing_rejects_orphan_label(tmp_path: Path):
 
 
 def test_whu_discovery_is_role_and_numeric_ordered(tmp_path: Path):
-    names = {"train": ["10.tif", "2.tif"], "val": ["val_1.tif"], "test": ["0.tif"]}
+    names = {
+        "train": ["10.tif", "2.tif"],
+        "val": ["val_1.tif"],
+        "test": ["2_0.tif", "0.tif"],
+    }
     for role, role_names in names.items():
         for directory in ("image", "label"):
             root = tmp_path / role / directory
@@ -54,7 +58,7 @@ def test_whu_discovery_is_role_and_numeric_ordered(tmp_path: Path):
     samples = WHUDataset(tmp_path).discover(expected_counts=None)
 
     assert [sample.sample_id for sample in samples] == [
-        "train/2", "train/10", "val/val_1", "test/0"
+        "train/2", "train/10", "val/val_1", "test/0", "test/2_0"
     ]
 
 

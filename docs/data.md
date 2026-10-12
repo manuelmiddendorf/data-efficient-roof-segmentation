@@ -36,3 +36,52 @@ verified ImageNet encoder weights and a newly initialized decoder.
 RID data and code have separate licenses. The dataset README states CC BY-NC;
 the upstream code declares GPLv3. This project reimplements small data-contract
 and spatial-audit operations and does not copy the upstream training pipeline.
+
+## WHU Aerial external-replication data
+
+The external data foundation uses only the provider's prepared **0.3 m Aerial
+raster** archive from the [WHU Building Dataset page](https://gpcv.whu.edu.cn/data/building_dataset.html),
+not the 0.2 m COCO product, satellite subsets or original full-resolution aerial
+imagery. The archive is stored unchanged under `data/raw/whu/`; its locally
+computed SHA-256 in `data/metadata/whu/data_manifest.json` identifies the bytes
+but is not a provider-verified checksum.
+
+The downloaded directories contain 4,736 training, 1,036 validation and 2,416
+test pairs: 8,188 in total. This matches the tile-grid arithmetic on the source
+page, although its descriptive text says 8,189. Images are 512 × 512 three-band
+`uint8` TIFFs. Labels are 512 × 512 single-band `uint8` TIFFs with observed
+values 0 and 1. Direct development-pair inspection shows that 0 denotes a
+building footprint and 1 denotes background, so the binary target is
+`mask == 0`. There is no alpha band,
+explicit invalid label, nodata declaration or invalid dataset-mask pixel.
+
+Training filenames are numeric, validation names use `val_`, and the two test
+blocks use numeric and `2_` prefixes respectively. Pairing preserves these names
+inside role-qualified IDs, so overlapping numeric stems across roles remain
+unambiguous.
+
+The audit finds 419 empty training masks, 299 empty validation masks and 685
+empty test masks. Their identical all-background arrays form the only exact
+mask-duplicate group. No RGB image and no complete image–mask pair is exactly
+duplicated, including across provider roles. These byte checks do not detect
+shifted, resampled or otherwise near-duplicate views.
+
+WHU labels rasterized building footprints from edited Christchurch building
+vectors. RID instead supplies roof-centred samples whose classes describe
+visible roof segments. Both can support binary segmentation, but annotation
+scope, sampling unit, city, imagery and spatial metadata differ. A future WHU
+result is therefore an external replication of the initialization comparison,
+not a like-for-like estimate of the RID target.
+
+The source page documents separate training, evaluation and two test areas with
+tile-block dimensions 64 × 74, 14 × 74, and 17 × 42 plus 23 × 74. The prepared
+TIFFs themselves contain no CRS, physical affine transform, GCPs or coordinate
+table. Exact cross-role file duplicates can be tested, but individual ground
+footprints and visible-area overlap cannot be reconstructed independently.
+Numeric filenames are retained as identifiers and are not treated as coordinates.
+
+The GPCV data index describes its datasets as freely downloadable, but neither
+the dataset page nor this archive states an explicit reuse licence. Cite Ji,
+Wei and Lu (2019), DOI `10.1109/TGRS.2018.2858817`, acknowledge Wuhan
+University's GPCV Lab, identify New Zealand LINZ as the original imagery source,
+and confirm permissions before redistributing the imagery or derived examples.
