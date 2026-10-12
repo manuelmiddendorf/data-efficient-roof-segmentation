@@ -1,0 +1,28 @@
+{
+  "device": "mps",
+  "split_name": "rid_southwest_test_north_validation_v2",
+  "run_count": 6,
+  "selection_seeds": [
+    17,
+    29,
+    43
+  ],
+  "training_size": 100,
+  "random_selection_reproduced": true,
+  "paired_training_conditions_verified": true,
+  "validation_and_test_separation_verified": true,
+  "historical_spatial_references_verified": 6,
+  "schedule_sha256_by_seed": {
+    "17": "2eae4381c0c6d6a150464514b2b9aef419487a17bf7a67d0d4e1b0375d7c4fcd",
+    "29": "c91f7ff1149ce52c89f9a959796c58ff649bfeb2b7fdeb1afcc6647aec10746d",
+    "43": "d07228f8f1ab2fce11b82a6e18449f795958cbdc89d3c398ce9bd5bf8f65f548"
+  },
+  "run_directories": [
+    "runs/learning_curves/rid_southwest_test_north_validation_v2/random_vs_spatial_n100/n100_random_uniform_random_subsetseed17_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/learning_curves/rid_southwest_test_north_validation_v2/random_vs_spatial_n100/n100_imagenet_uniform_random_subsetseed17_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/learning_curves/rid_southwest_test_north_validation_v2/random_vs_spatial_n100/n100_random_uniform_random_subsetseed29_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/learning_curves/rid_southwest_test_north_validation_v2/random_vs_spatial_n100/n100_imagenet_uniform_random_subsetseed29_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/learning_curves/rid_southwest_test_north_validation_v2/random_vs_spatial_n100/n100_random_uniform_random_subsetseed43_lr1e-3_to_1e-4_step2001_steps4000",
+    "runs/learning_curves/rid_southwest_test_north_validation_v2/random_vs_spatial_n100/n100_imagenet_uniform_random_subsetseed43_lr1e-3_to_1e-4_step2001_steps4000"
+  ]
+}

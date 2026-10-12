@@ -1,0 +1,10 @@
+comparison,strategy,first_seed,second_seed,shared_ids
+matched_strategies,spatial_vs_random,17,17,12
+matched_strategies,spatial_vs_random,29,29,9
+matched_strategies,spatial_vs_random,43,43,8
+between_repetitions,spatial_maximin,17,29,24
+between_repetitions,spatial_maximin,17,43,23
+between_repetitions,spatial_maximin,29,43,26
+between_repetitions,uniform_random,17,29,8
+between_repetitions,uniform_random,17,43,10
+between_repetitions,uniform_random,29,43,8

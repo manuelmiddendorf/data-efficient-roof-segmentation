@@ -12,7 +12,8 @@ from .data import RIDDataset, check_role_partition, parse_split_file, raster_met
 from .integrity import read_provider_checksums, sha256_file, verify_files
 from .spatial import (APPROVED_TEST_BOUNDS_M, assign_compact_geographic_roles,
                       directional_nearest_distances, metric_footprints, overlapping_pairs,
-                      remove_crossing_training_images, select_nested_spatial_subsets)
+                      remove_crossing_training_images, select_nested_spatial_subsets,
+                      select_uniform_random_subset)
 
 
 RELEASE_PREFIXES = (
@@ -177,10 +178,17 @@ def build_splits(manifest: dict, project_root: Path) -> dict:
     check_role_partition(roles, all_ids)
     subset_sizes = [size for size in (25, 50, 100, 250, 500) if size < len(roles["training"])]
     repetitions = {}
+    random_repetitions = {}
     for repetition, seed in enumerate((17, 29, 43), 1):
         subsets = select_nested_spatial_subsets(footprints, roles["training"], subset_sizes, seed)
         subsets["full"] = roles["training"]
         repetitions[str(repetition)] = {"seed": seed, "subsets": subsets}
+        random_repetitions[str(repetition)] = {
+            "seed": seed,
+            "subsets": {
+                "100": select_uniform_random_subset(roles["training"], 100, seed)
+            },
+        }
     distance_directions = []
     for from_role, to_role in (("training", "validation"), ("training", "test"),
                                ("validation", "test")):
@@ -190,7 +198,7 @@ def build_splits(manifest: dict, project_root: Path) -> dict:
             **directional_nearest_distances(footprints, roles[from_role], roles[to_role]),
         })
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "dataset_manifest": "data/metadata/data_manifest.json",
         "split_name": "rid_southwest_test_north_validation_v2",
         "source": {
@@ -218,6 +226,14 @@ def build_splits(manifest: dict, project_root: Path) -> dict:
             "method": "Seeded maximin sampling of image-footprint centres within the retained training pool; subsets are nested within each repetition.",
             "uses_labels_or_held_out_data": False,
             "repetitions": repetitions,
+            "additional_strategies": {
+                "uniform_random": {
+                    "method": "Uniform sampling without replacement from numerically sorted retained training IDs using an isolated NumPy generator.",
+                    "uses_labels_or_held_out_data": False,
+                    "nested": False,
+                    "repetitions": random_repetitions,
+                }
+            },
         },
     }
 
