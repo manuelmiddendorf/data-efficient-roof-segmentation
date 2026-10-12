@@ -1,0 +1,27 @@
+{
+  "device": "mps",
+  "split_name": "rid_southwest_test_north_validation_v2",
+  "run_count": 4,
+  "training_size": 500,
+  "subset_seeds": [
+    17,
+    29
+  ],
+  "max_steps": 8000,
+  "prefix_checkpoint_through_step": 4000,
+  "evaluation_interval": 100,
+  "historical_reference_runs_verified": 4,
+  "training_validation_test_separation_verified": true,
+  "paired_conditions_verified": true,
+  "schedule_prefix_matches_historical": true,
+  "schedule_prefix_sha256_by_subset_seed": {
+    "17": "c508469be72a5fc4fb3b58f4122359ec4d2406dea544e5f0856511f8e24b2681",
+    "29": "b2b51b102c1144676d098262b104843e017c780413b911b012be1470b749e1b8"
+  },
+  "run_directories": [
+    "runs/optimization/rid_southwest_test_north_validation_v2/training_budget_n500/n500_random_subsetseed17_lr1e-3_to_1e-4_step2001_steps8000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/training_budget_n500/n500_imagenet_subsetseed17_lr1e-3_to_1e-4_step2001_steps8000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/training_budget_n500/n500_random_subsetseed29_lr1e-3_to_1e-4_step2001_steps8000",
+    "runs/optimization/rid_southwest_test_north_validation_v2/training_budget_n500/n500_imagenet_subsetseed29_lr1e-3_to_1e-4_step2001_steps8000"
+  ]
+}

@@ -31,6 +31,15 @@ validation loss. All three n=500 Random runs improve near the 4,000-update limit
 so the common budget does not establish equal convergence. Gains from 100 to 500
 images are consistently smaller than gains from 25 to 100.
 
+A bounded n=500 budget extension trained Random and ImageNet models for 8,000
+updates on subset seeds 17 and 29. Random endpoint IoU improved by +0.0121 and
++0.0079 relative to each new run's 4,000-update prefix; ImageNet changed by
++0.0004 and −0.0005. The paired endpoint advantage therefore narrowed from
++0.0400 to +0.0284 and from +0.0322 to +0.0238. Final-five evaluation means
+show the same pattern. Pretraining remains advantageous under both observed
+budgets, while Random was more sensitive to the available optimization time.
+This does not establish convergence or an initialization-independent optimum.
+
 Targeted n=25 experiments did not identify a universal replacement for the
 common recipe. Stronger weight decay, fixed ImageNet encoder BatchNorm
 statistics and decoder channel dropout were inconsistent or harmful. Mild

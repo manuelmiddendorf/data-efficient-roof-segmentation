@@ -161,6 +161,21 @@ n=25 selections retain overfitting evidence. These are image-selection
 repetitions on one shared validation region, not independent geographic or full
 training-randomness repetitions.
 
+A bounded training-budget sensitivity block then trained four fresh n=500
+models through 8,000 updates for subset seeds 17 and 29. The original schedule
+was unchanged: `1e-3` through update 2,000 and `1e-4` thereafter. Each run also
+preserved its best checkpoint through update 4,000, so the primary extension
+comparison comes from one continuous trajectory rather than separately started
+runs. Random endpoint IoU improved from 0.8382 to 0.8503 for Seed 17 and from
+0.8419 to 0.8498 for Seed 29; ImageNet changed from 0.8782 to 0.8787 and from
+0.8741 to 0.8736. The ImageNet-minus-Random endpoint gap narrowed from
++0.0400/+0.0322 to +0.0284/+0.0238. Final-five means agree with this pattern.
+The four runs required 171.6 optimization minutes and 212.7 minutes including
+evaluation on MPS. Random continues to improve late, while ImageNet is flatter
+and mixed across subsets. These are two image-selection repetitions on the same
+validation region; 8,000 updates do not establish optimal convergence, and the
+locked test role was not accessed.
+
 ## Dataset and scientific decisions
 
 Start by evaluating RID (2022), not automatically substituting RID2:
