@@ -20,7 +20,7 @@ for ax, dataset in zip(axes, ('rid', 'whu_aerial')):
     for init, label, color in [('random', 'Random', '#b85c38'), ('imagenet', 'ImageNet', '#247ba0')]:
         ax.errorbar(data.training_size, data[init + '_mean'], yerr=data[init + '_std'],
                     marker='o', capsize=4, color=color, label=label)
-    ax.set(xlabel='Labelled training images', title=dataset.upper(), xticks=[25, 100, 500], ylim=(0, 1))
+    ax.set(xlabel='Labelled training images', title=('RID' if dataset == 'rid' else 'WHU'), xticks=[25, 100, 500], ylim=(0, 1))
     ax.grid(alpha=.2)
     ax.legend()
 axes[0].set_ylabel('Mean per-image test IoU')
@@ -86,8 +86,8 @@ for dataset in ('rid', 'whu_aerial'):
         for column, init in ((2, 'random'), (3, 'imagenet')):
             axes[row, column].set_title(f'{init}: IoU {tables[init].loc[sample_id, "iou"]:.3f}')
         selected.append({'dataset': dataset, 'id': sample_id, 'selection_reason': reason})
-    fig.suptitle(f'{dataset.upper()}: metric-selected examples, n=100, subset seed 17')
-    fig.tight_layout()
+    fig.suptitle(f'{"RID" if dataset == "rid" else "WHU"}: metric-selected examples, n=100, subset seed 17', y=0.995, fontsize=12)
+    fig.tight_layout(rect=(0, 0, 1, 0.97))
     fig.savefig(local / f'{dataset}_examples.png', dpi=130)
     plt.close(fig)
 pd.DataFrame(selected).to_csv(ROOT / 'reports/final_test_qualitative_ids.csv', index=False)

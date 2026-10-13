@@ -1,5 +1,13 @@
 # Research plan and project status
 
+## Final test evaluation completed — 13 October 2026
+
+The frozen 62-entry checkpoint matrix was evaluated on MPS without training,
+threshold selection or model changes. Primary populations were RID 254 and WHU
+2,416; the full 259-image RID region remains secondary sensitivity. Source-image
+panels stay local pending redistribution permission. Notebook 08, result CSVs and
+the execution record document all outcomes. Later experiments are post-test work.
+
 ## Research question
 
 How do ImageNet initialization, labelled training-image count and optimization
