@@ -27,11 +27,17 @@ validation, 259 test and 122 excluded images. Exact IDs, reasons and newly
 generated nested subsets are in `data/metadata/splits.json`.
 
 The active test region is excluded from subset selection, preflight learning,
-checkpoint selection and qualitative inspection. Three active test images (146,
-1762 and 1782) were training samples in a discarded pilot under the old split.
-This historical use is disclosed but did not determine the new boundary. Every
-model under the active design starts from fresh random parameters or the original
-verified ImageNet encoder weights and a newly initialized decoder.
+checkpoint selection and qualitative inspection under the restarted design.
+Three active test images (146, 1762 and 1782) were training samples in a discarded
+pilot under the old split. The pre-test metadata review additionally identifies
+positive-area overlap with test IDs 1402 and 1404. The five images are excluded
+from the fixed 254-image primary test population; all 259 remain a declared
+full-region sensitivity analysis. This does not change the saved split or erase
+the historical use, which did not determine the new geographic boundary.
+See the [final evaluation protocol](final_evaluation_protocol.md) and
+[eligibility CSV](../reports/final_evaluation_rid_test_ids.csv) for the rule and
+exact IDs. Every model under the active design starts from fresh random
+parameters or original ImageNet weights and a newly initialized decoder.
 
 RID data and code have separate licenses. The dataset README states CC BY-NC;
 the upstream code declares GPLv3. This project reimplements small data-contract
@@ -69,8 +75,8 @@ shifted, resampled or otherwise near-duplicate views.
 WHU labels rasterized building footprints from edited Christchurch building
 vectors. RID instead supplies roof-centred samples whose classes describe
 visible roof segments. Both can support binary segmentation, but annotation
-scope, sampling unit, city, imagery and spatial metadata differ. A future WHU
-result is therefore an external replication of the initialization comparison,
+scope, sampling unit, city, imagery and spatial metadata differ. WHU results
+therefore provide an external replication of the initialization comparison,
 not a like-for-like estimate of the RID target.
 
 The source page documents separate training, evaluation and two test areas with

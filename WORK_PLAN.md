@@ -2,14 +2,34 @@
 
 ## Research question
 
-How many labelled roof images are needed for useful segmentation on spatially
-separated imagery, and how do pretraining and training choices affect that need?
+How do ImageNet initialization, labelled training-image count and optimization
+budget affect low-data aerial roof and building-footprint segmentation?
 
-The intended contribution is a reproducible empirical study with readable code,
-learning curves, paired comparisons and an honest account of uncertainty.
-The initial architecture is an EfficientNet-B0 U-Net. Random initialization and
-ImageNet encoder initialization are the main comparison; both start with a fresh
-segmentation decoder.
+The intended contribution is a reproducible empirical study with paired
+comparisons on RID and WHU, learning curves and an honest account of uncertainty.
+One EfficientNet-B0 U-Net compares random with ImageNet encoder initialization;
+both start with a fresh decoder. Spatial selection is a secondary RID question.
+Targeted regularization experiments remain exploratory validation analyses.
+
+## Pre-test scope freeze — 13 October 2026
+
+The scientific framing, focused review and
+[final evaluation protocol](docs/final_evaluation_protocol.md) are fixed before
+test prediction. The checkpoint CSV enumerates 36 primary learning-curve and
+26 secondary selection/budget entries from 52 existing runs. All 62 entries
+were strictly restored on CPU; configuration, selection, pairing and saved
+validation-metric checks passed, as did 29 focused synthetic unit tests.
+
+RID primary evaluation uses 254 of the unchanged 259 test-role images. Historical
+configs and footprint geometry identify five previously exposed images: 146,
+1402, 1404, 1762 and 1782. The original full region is a declared sensitivity
+analysis. WHU retains its complete provider test role. No raw test image/mask
+was opened and no new training or test prediction was run in this review.
+
+Next implement the locked test evaluator, including empty-group handling, and
+commit the protocol and frozen CSVs before inference. Training and threshold
+search are closed for this reported comparison. Test execution and final
+scientific conclusions remain pending.
 
 ## Current status
 
