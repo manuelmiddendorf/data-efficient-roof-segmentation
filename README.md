@@ -62,12 +62,13 @@ one repeatedly used validation region; no locked-test result has been produced.
 
 The prepared 0.3 m WHU Aerial raster release contains 8,188 paired 512 × 512
 RGB tiles and binary building-footprint masks in provider training, validation
-and test roles. Nested n=25/100/500 learning curves were measured for two saved
+and test roles. Nested n=25/100/500 learning curves were measured for three saved
 uniform-random training selections. ImageNet improved selected validation IoU
-in all six pairs. n=25 models peaked early and finished lower, whereas every
-n=500 model improved over the late evaluation window. More data improved both
-positive-building overlap and false-positive control on empty references. The
-earlier n=100 result across three selections remains available. These runs vary
+in all nine pairs, by +0.0657 to +0.0983. Every n=25 model finished below its
+selected maximum, whereas all six n=500 late IoU trends remained positive. The
+100-to-500 gain varied substantially across selections: +0.0065 to +0.0562 for
+Random and +0.0114 to +0.0677 for ImageNet. More data improved both positive-
+building overlap and false-positive control on empty references. These runs vary
 training-image selection while holding the other random seeds fixed and share
 one provider validation role. They are repeated validation evidence rather than
 independent test or geographic-generalization results. The ungeoreferenced
