@@ -493,3 +493,8 @@ The quantitative learning-curve figure can be shared with the report. Source-ima
 example panels remain in ignored `.local/final_test_figures/` because public
 redistribution permission has not been established for both imagery products.
 The published example-ID table records their fixed selection rule.
+
+## Development assistance
+
+Codex assisted with implementation, analysis, tests and documentation. This
+assistance does not constitute independent scientific peer review.

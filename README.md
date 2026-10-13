@@ -4,7 +4,7 @@
 
 ## Abstract
 
-This reproducible empirical study compares random initialization with an
+This empirical study compares random initialization with an
 ImageNet-pretrained encoder in one EfficientNet-B0 U-Net. Paired experiments
 use 25, 100 and 500 labelled training images on the Roof Information Dataset
 (RID, Wartenberg) and WHU Aerial (Christchurch). ImageNet initialization improves
@@ -18,8 +18,10 @@ training recipe.
 
 Pixel-level annotations are expensive. The question is how performance changes
 with the number and selection of labelled images, and how much pretraining helps
-under a limited training budget. We distinguish faster learning from higher
-attainable performance and avoid treating repeated views as independent labels.
+under a limited training budget. Does the ImageNet advantage persist across
+training-image counts, and how much does it depend on optimization time?
+We distinguish faster learning from higher attainable performance and treat
+repeated views as correlated observations.
 
 ## Methods
 
@@ -108,9 +110,7 @@ Source-image example panels remain local pending redistribution permission.
 
 [The final protocol](docs/final_evaluation_protocol.md) fixes 36 primary
 checkpoint entries and 26 secondary entries for selection and budget comparisons.
-[The internal review](reports/final_review_checks.json) verified 52 runs,
-strictly loaded all 62 checkpoint entries and passed 29 focused unit tests.
-All 62 frozen checkpoint entries have now been evaluated without additional
+All 62 checkpoint entries were evaluated using saved weights, with no additional
 training or test-driven selection. [Final report](notebooks/08_final_evaluation.ipynb)
 and [execution record](reports/final_test_execution.json) document the completed
 evaluation.
@@ -140,12 +140,9 @@ minimum annotation budget or propose a new segmentation architecture.
 - [Final held-out evaluation](notebooks/08_final_evaluation.ipynb)
 
 [Setup](docs/setup.md) gives reproduction commands; [data documentation](docs/data.md)
-records source and label interpretation. [The project plan](WORK_PLAN.md) keeps
-internal decisions separate from the scientific report. Analysis notebooks load
-saved results rather than silently launching training.
+records source and label interpretation.
 
 Download data from the [RID provider](https://mediatum.ub.tum.de/1655470) and
 [WHU provider](https://gpcv.whu.edu.cn/data/building_dataset.html); raw data,
 weights and environments are not bundled. Dataset and imagery permissions are
-separate from the project code. Codex assisted with implementation, analysis,
-tests and documentation; this is not an independent external peer review.
+separate from the project code.

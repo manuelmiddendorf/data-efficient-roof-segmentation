@@ -7801,7 +7801,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Final-held-out-evaluation">Final held-out evaluation<a class="anchor-link" href="#Final-held-out-evaluation">¶</a></h1><p>This report evaluates the frozen EfficientNet-B0 U-Net comparisons on RID's southwest region and WHU's provider test set. It asks whether the validation observations about initialization, labelled-image count and training budget persist on held-out geography. Models and checkpoint-selection rules were fixed before test inference; no further training or test-driven tuning is performed.</p>
+<h1 id="Final-held-out-evaluation">Final held-out evaluation<a class="anchor-link" href="#Final-held-out-evaluation">¶</a></h1><p>The analysis evaluates the frozen EfficientNet-B0 U-Net comparisons on RID's southwest region and WHU's provider test set. It asks whether the validation observations about initialization, labelled-image count and training budget persist on held-out geography. Models and checkpoint-selection rules were fixed before test inference; no further training or test-driven tuning is performed.</p>
 </div>
 </div>
 </div>
@@ -8196,7 +8196,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>ImageNet initialization leads in <strong>18 of 18</strong> primary paired test comparisons. All entries are reported, including unfavorable outcomes. The observed differences concern this architecture and these test regions; subset SD does not establish statistical significance.</p>
+<p>ImageNet initialization leads in <strong>18 of 18</strong> primary paired test comparisons. The observed differences concern this architecture and these test regions; subset SD does not establish statistical significance.</p>
 </div>
 </div>
 </div>
@@ -8524,7 +8524,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>WHU contains 1,731 positive and 685 empty references; RID's 254 primary references all contain roofs. At n=500, the mean fraction of empty WHU images with any predicted foreground is 13.8% for ImageNet and 19.7% for Random. The ImageNet advantage also remains on positive-reference IoU and AP, so it is not explained solely by empty images. Undefined RID empty-group values are shown as NaN in the table and null in JSON.</p>
+<p>WHU contains 1,731 positive and 685 empty references; RID's 254 primary references all contain roofs. At n=500, the mean fraction of empty WHU images with any predicted foreground is 13.8% for ImageNet and 19.7% for Random. The ImageNet advantage also remains on positive-reference IoU and AP, so it is not explained solely by empty images. RID has no empty-reference group, so those diagnostics are undefined.</p>
 </div>
 </div>
 </div>
@@ -8674,7 +8674,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Mean test-IoU changes from the 4,000-selection range to 8,000 were RID: Random +0.0055, ImageNet +0.0052; WHU: Random +0.0114, ImageNet +0.0019. These are validation-selected checkpoints within each extended run, not fixed-update endpoints.</p>
+<p>Mean test-IoU changes from the 4,000-selection range to 8,000 were RID: Random +0.0055, ImageNet +0.0052; WHU: Random +0.0114, ImageNet +0.0019. Random benefits more from the extended selection budget on WHU, while the two initializations have similar mean gains on RID. The initialization advantage persists under both budgets.</p>
 </div>
 </div>
 </div>
@@ -8866,7 +8866,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="Qualitative-interpretation">Qualitative interpretation<a class="anchor-link" href="#Qualitative-interpretation">¶</a></h2><p>The frozen example rule uses n=100 and seed 17 for each dataset. It selects the two lowest and two highest positive-reference paired mean IoUs, one example nearest the median, and (if present) the empty reference with the largest paired mean foreground fraction. Both initializations appear on the same images. These are metric-selected cases, not representative random samples. Example IDs are saved in <code>reports/final_test_qualitative_ids.csv</code>.</p>
-<p>Source-image panels remain local in <code>.local/final_test_figures/</code> pending clarification of redistribution permissions; the public report includes the quantitative figure. Reconstructing the local panels requires the original data and saved checkpoints.</p>
+<p>Source-image panels remain local in <code>.local/final_test_figures/</code> pending clarification of redistribution permissions; the quantitative learning curves are included above.</p>
 <p>In WHU examples <code>test/26</code> and <code>test/175</code>, both models miss very small labelled structures (IoU zero). The median case <code>test/2_292</code> shows closer alignment for ImageNet, while the empty-reference storage/container scene <code>test/2_1521</code> elicits foreground predictions from both models. This may involve target-definition or annotation ambiguity; the empty-reference scoring rule remains unchanged.</p>
 <p>RID example <code>2071</code> shows visible disagreement between the aerial image and reference foreground. Annotation misalignment or incompleteness is a possible explanation, not a verified finding. Both models have low IoU on this case, while the high-IoU cases have closer visual agreement. No label is repaired, reclassified or excluded after test access.</p>
 </div>
@@ -8879,7 +8879,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="Limitations-and-reproducibility">Limitations and reproducibility<a class="anchor-link" href="#Limitations-and-reproducibility">¶</a></h2><p>Training-image selection repetitions share evaluation geography and sometimes training images. Repeated validation reuse, fixed non-subset seeds, historical RID exposure and unverifiable tile-level WHU coordinates limit generalization claims. Additional validation labels and ImageNet pretraining are outside the reported target-task training-image count. Neither dataset establishes transfer to an unseen city by an already trained model.</p>
-<p>No universal minimum annotation budget, statistical significance, scaling law or convergence is claimed. Later model changes would be post-test exploration. The <a href="../reports/final_test_execution.json">execution record</a> identifies the executed code commit, device, software, fixed input identities and output hashes. The <a href="../docs/setup.md">setup guide</a> gives explicit evaluation commands. This notebook only reads saved results and never launches training or inference.</p>
+<p>No universal minimum annotation budget, statistical significance, scaling law or convergence is claimed. Later model changes would be post-test exploration. The <a href="../reports/final_test_execution.json">execution record</a> identifies the executed code commit, device, software, fixed input identities and output hashes. The <a href="../docs/setup.md">setup guide</a> gives explicit evaluation commands.</p>
 </div>
 </div>
 </div>
