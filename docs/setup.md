@@ -441,3 +441,27 @@ The four Seed-43 n=25 and n=500 runs required 82.1 optimization minutes and
 evaluation on MPS. Across all three selections, ImageNet-minus-Random best
 validation IoU remains positive for all nine learning-curve pairs. Analysis uses
 only saved training and validation artifacts.
+
+## WHU n=500 training-budget sensitivity
+
+This block changes only the horizon from 4,000 to 8,000 updates for the three
+saved WHU n=500 selections and both initializations. Every model starts fresh.
+The learning rate remains `1e-3` through update 2,000 and `1e-4` thereafter;
+the best checkpoint through update 4,000 is retained alongside the full-run
+selection. Run the preflight before the explicit MPS training command:
+
+```bash
+uv run python scripts/check_whu_training_budget.py
+caffeinate -i -m -- uv run python scripts/run_whu_training_budget.py
+uv run python scripts/analyze_whu_training_budget.py
+uv run python scripts/run_notebook.py notebooks/07_external_replication_pilot.ipynb
+```
+
+Completed runs live below
+`runs/external_replication_pilot/whu_aerial_provider_split_v1/training_budget_n500/`.
+The preflight verifies the exact n=500 IDs, paired schedules, unchanged random
+seeds, the 4,000-update ID/D4 prefix, both checkpoint ranges and provider-test
+exclusion. Compatible completed runs are reused; incomplete or conflicting
+directories are refused. Analysis compares the 4,000 and 8,000 prefixes within
+the new continuous trajectories and uses the historical 4,000-update runs only
+as a reproducibility diagnostic. Neither provider test role is accessed.
