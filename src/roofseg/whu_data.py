@@ -443,20 +443,22 @@ def build_whu_splits(manifest: dict, subset_seed: int = 17) -> dict:
         repetition: _nested_whu_learning_curve_subsets(
             roles["train"], all_subsets[repetition]["ids"], all_subsets[repetition]["seed"]
         )
-        for repetition in ("1", "2")
+        for repetition in ("1", "2", "3")
     }
-    learning_curve_overlaps = [
-        {
-            "training_size": size,
-            "first_seed": learning_curve_repetitions["1"]["subset_seed"],
-            "second_seed": learning_curve_repetitions["2"]["subset_seed"],
-            "shared_ids": len(
-                set(learning_curve_repetitions["1"]["subsets"][str(size)])
-                & set(learning_curve_repetitions["2"]["subsets"][str(size)])
-            ),
-        }
-        for size in (25, 100, 500)
-    ]
+    learning_curve_overlaps = []
+    for first, second in (("1", "2"), ("1", "3"), ("2", "3")):
+        for size in (25, 100, 500):
+            learning_curve_overlaps.append({
+                "training_size": size,
+                "first_repetition": int(first),
+                "first_seed": learning_curve_repetitions[first]["subset_seed"],
+                "second_repetition": int(second),
+                "second_seed": learning_curve_repetitions[second]["subset_seed"],
+                "shared_ids": len(
+                    set(learning_curve_repetitions[first]["subsets"][str(size)])
+                    & set(learning_curve_repetitions[second]["subsets"][str(size)])
+                ),
+            })
     return {
         "schema_version": 1,
         "dataset_manifest": "data/metadata/whu/data_manifest.json",
@@ -520,7 +522,9 @@ def build_whu_splits(manifest: dict, subset_seed: int = 17) -> dict:
                 "subset_seed * 1000 + 25 and subset_seed * 1000 + 500. Labels, masks and "
                 "model outputs are not used."
             ),
-            "original_n100_is_same_seed_permutation_prefix": {"17": False, "29": False},
+            "original_n100_is_same_seed_permutation_prefix": {
+                "17": False, "29": False, "43": False,
+            },
             "pairwise_id_overlaps": learning_curve_overlaps,
             "test_used": False,
         },

@@ -13,10 +13,16 @@ from .training_data import IMAGENET_MEAN, IMAGENET_STD, paired_schedule
 
 TRAINING_SIZE = 100
 LEARNING_CURVE_SIZES = (25, 100, 500)
-LEARNING_CURVE_REPETITIONS = (1, 2)
+LEARNING_CURVE_REPETITIONS = (1, 2, 3)
 SUBSET_REPETITIONS = (1, 2, 3)
 SEED17_IDS_SHA256 = "bb0d64cae5bf4043ad64c09dbd1343936289ee89773ae63b45496ca96e74ad2e"
 SEED29_IDS_SHA256 = "da02469128c85264a8251e353c6cae42d0513a0b7040b4023269b267b5c569fc"
+SEED43_IDS_SHA256 = "5288f71232d6607edcf169ead37639c342dd224d0bcf72ebb646c96d4f335bbf"
+HISTORICAL_N100_IDS_SHA256 = {
+    1: SEED17_IDS_SHA256,
+    2: SEED29_IDS_SHA256,
+    3: SEED43_IDS_SHA256,
+}
 
 
 def whu_subset_record(
@@ -170,8 +176,10 @@ def verify_historical_whu_run(
     current_ids = whu_subset_record(splits, subset_repetition, TRAINING_SIZE)["ids"]
     if saved["training_ids"] != current_ids:
         raise ValueError(f"Historical WHU training IDs changed: {directory.name}")
-    if subset_repetition == 1 and json_digest(saved["training_ids"]) != SEED17_IDS_SHA256:
-        raise ValueError("Historical Seed-17 training IDs changed.")
+    if json_digest(saved["training_ids"]) != HISTORICAL_N100_IDS_SHA256[subset_repetition]:
+        raise ValueError(
+            f"Historical Seed-{saved['seeds']['subset']} training IDs changed."
+        )
     if saved["validation_ids"] != splits["roles"]["val"]:
         raise ValueError("Historical WHU validation role changed.")
     identity = metadata["compatibility_identity"]

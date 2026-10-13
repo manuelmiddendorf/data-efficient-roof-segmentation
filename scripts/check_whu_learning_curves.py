@@ -12,8 +12,8 @@ from roofseg.training import adamw, select_device, synchronize, train_step
 from roofseg.training_data import WHUTensorStore, paired_schedule
 from roofseg.whu_data import build_whu_splits
 from roofseg.whu_pilot import (
-    LEARNING_CURVE_REPETITIONS, LEARNING_CURVE_SIZES, SEED17_IDS_SHA256,
-    SEED29_IDS_SHA256, build_whu_pilot_config, verify_historical_whu_run,
+    HISTORICAL_N100_IDS_SHA256, LEARNING_CURVE_REPETITIONS, LEARNING_CURVE_SIZES,
+    build_whu_pilot_config, verify_historical_whu_run,
     whu_run_directory, whu_subset_record,
 )
 
@@ -25,10 +25,7 @@ splits = load_json(ROOT / "data/metadata/whu/splits.json")
 if build_whu_splits(manifest, subset_seed=17) != splits:
     raise SystemExit("Saved WHU roles and learning-curve subsets do not reproduce exactly.")
 
-historical_hashes = {
-    1: SEED17_IDS_SHA256,
-    2: SEED29_IDS_SHA256,
-}
+historical_hashes = HISTORICAL_N100_IDS_SHA256
 training_role = set(splits["roles"]["train"])
 protected = set(splits["roles"]["val"]) | set(splits["roles"]["test"])
 schedule_hashes = {}
@@ -64,7 +61,7 @@ for repetition in LEARNING_CURVE_REPETITIONS:
     for initialization in ("random", "imagenet"):
         verify_historical_whu_run(ROOT, manifest, splits, initialization, repetition)
 
-config = build_whu_pilot_config(splits, "random", subset_repetition=1, training_size=25)
+config = build_whu_pilot_config(splits, "random", subset_repetition=3, training_size=25)
 schedule, schedule_record = paired_schedule(
     config["training_ids"], config["max_steps"], config["batch_size"],
     config["seeds"]["data_order"], config["seeds"]["augmentation"],
@@ -93,7 +90,7 @@ if not all(torch.isfinite(parameter.grad).all().item()
 report = {
     "device": str(device),
     "training_sizes": list(LEARNING_CURVE_SIZES),
-    "subset_seeds": [17, 29],
+    "subset_seeds": [17, 29, 43],
     "historical_n100_ids_unchanged": True,
     "strict_nesting": True,
     "deterministic_reproduction": True,
@@ -107,7 +104,7 @@ report = {
     "historical_n100_runs_verified_without_metadata_rewrite": True,
     "new_run_directories": [
         str(whu_run_directory(ROOT, splits, initialization, repetition, size).relative_to(ROOT))
-        for repetition in LEARNING_CURVE_REPETITIONS
+        for repetition in (3,)
         for size in (25, 500)
         for initialization in ("random", "imagenet")
     ],

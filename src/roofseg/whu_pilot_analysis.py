@@ -99,7 +99,7 @@ def collect_whu_pilot_tables(project_root: Path) -> tuple[pd.DataFrame, pd.DataF
 def collect_whu_learning_curve_tables(
     project_root: Path,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Collect the twelve comparable n=25/100/500 WHU runs."""
+    """Collect the eighteen comparable n=25/100/500 WHU runs."""
     return _collect_whu_tables(load_whu_learning_curve_runs(project_root))
 
 
@@ -247,7 +247,7 @@ def whu_learning_curve_comparisons(
 
 
 def plot_whu_data_efficiency(results: pd.DataFrame):
-    """Plot best and final WHU IoU for both saved image selections."""
+    """Plot best and final WHU IoU for all saved image selections."""
     figure, axes = plt.subplots(1, 2, figsize=(10.5, 4.5), sharey=True)
     colours = {"random": "#E76F51", "imagenet": "#2878B5"}
     for axis, (metric, title) in zip(
@@ -282,7 +282,7 @@ def plot_whu_data_efficiency(results: pd.DataFrame):
         axis.grid(alpha=0.2)
     axes[0].set_ylabel("Validation mean per-image IoU")
     axes[0].legend(frameon=False)
-    figure.suptitle("WHU data-efficiency across two nested image selections")
+    figure.suptitle("WHU data-efficiency across three nested image selections")
     figure.tight_layout()
     return figure
 

@@ -7,7 +7,8 @@
   ],
   "subset_seeds": [
     17,
-    29
+    29,
+    43
   ],
   "historical_n100_ids_unchanged": true,
   "strict_nesting": true,
@@ -16,21 +17,75 @@
   "pairwise_id_overlaps": [
     {
       "training_size": 25,
+      "first_repetition": 1,
       "first_seed": 17,
+      "second_repetition": 2,
       "second_seed": 29,
       "shared_ids": 0
     },
     {
       "training_size": 100,
+      "first_repetition": 1,
       "first_seed": 17,
+      "second_repetition": 2,
       "second_seed": 29,
       "shared_ids": 5
     },
     {
       "training_size": 500,
+      "first_repetition": 1,
       "first_seed": 17,
+      "second_repetition": 2,
       "second_seed": 29,
       "shared_ids": 49
+    },
+    {
+      "training_size": 25,
+      "first_repetition": 1,
+      "first_seed": 17,
+      "second_repetition": 3,
+      "second_seed": 43,
+      "shared_ids": 0
+    },
+    {
+      "training_size": 100,
+      "first_repetition": 1,
+      "first_seed": 17,
+      "second_repetition": 3,
+      "second_seed": 43,
+      "shared_ids": 2
+    },
+    {
+      "training_size": 500,
+      "first_repetition": 1,
+      "first_seed": 17,
+      "second_repetition": 3,
+      "second_seed": 43,
+      "shared_ids": 44
+    },
+    {
+      "training_size": 25,
+      "first_repetition": 2,
+      "first_seed": 29,
+      "second_repetition": 3,
+      "second_seed": 43,
+      "shared_ids": 0
+    },
+    {
+      "training_size": 100,
+      "first_repetition": 2,
+      "first_seed": 29,
+      "second_repetition": 3,
+      "second_seed": 43,
+      "shared_ids": 2
+    },
+    {
+      "training_size": 500,
+      "first_repetition": 2,
+      "first_seed": 29,
+      "second_repetition": 3,
+      "second_seed": 43,
+      "shared_ids": 61
     }
   ],
   "paired_schedule_sha256": {
@@ -39,27 +94,26 @@
     "seed17_n500": "bfc6f92a8fbbfb21c5acea85801d0b00e472d6cfbf692586f879b97c68f9d56f",
     "seed29_n25": "a9a9cc22706cc40e9c3f8758eed1cda32331a678f74ee4e3e7a22758e5d978d5",
     "seed29_n100": "3038afa32f80f72f1aa0034cd64877bd96b3839b3d0df3fe0ee353327f3770d5",
-    "seed29_n500": "3dfe2f1bdb9d2ca12884c6c1756a40d533e330c83b2300bc8e1c70d4a45d40b6"
+    "seed29_n500": "3dfe2f1bdb9d2ca12884c6c1756a40d533e330c83b2300bc8e1c70d4a45d40b6",
+    "seed43_n25": "4364e86ba4b823fb9dfae1222bab7b90eb8437b92e9e36ca16ea165856c15682",
+    "seed43_n100": "52ba72e544a92ec1fd7586ab6e48b81c67c4b2fcc27fcbc1c0a70a831bab1ece",
+    "seed43_n500": "65f154aea8065277b00de8bd90d4dbebf2f6ef34d508b605360370eddc4feabc"
   },
   "real_n25_incomplete_batch": {
     "size": 1,
     "ids": [
-      "train/71"
+      "train/158"
     ],
     "d4_codes": [
       7
     ],
-    "loss": 0.681631863117218
+    "loss": 0.6808366775512695
   },
   "historical_n100_runs_verified_without_metadata_rewrite": true,
   "new_run_directories": [
-    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n25_random_subsetseed17_fixed_drop",
-    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n25_imagenet_subsetseed17_fixed_drop",
-    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n500_random_subsetseed17_fixed_drop",
-    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n500_imagenet_subsetseed17_fixed_drop",
-    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n25_random_subsetseed29_fixed_drop",
-    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n25_imagenet_subsetseed29_fixed_drop",
-    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n500_random_subsetseed29_fixed_drop",
-    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n500_imagenet_subsetseed29_fixed_drop"
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n25_random_subsetseed43_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n25_imagenet_subsetseed43_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n500_random_subsetseed43_fixed_drop",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/n500_imagenet_subsetseed43_fixed_drop"
   ]
 }
