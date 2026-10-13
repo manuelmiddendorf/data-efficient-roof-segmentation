@@ -87,15 +87,15 @@ def verify_frozen_inputs(root: Path):
     if len(matrix) != 62 or matrix['run_directory'].nunique() != 52:
         raise ValueError('Unexpected frozen checkpoint matrix.')
     manifests = {d: load_json(root / p) for d, p in {
-        'rid': 'data/metadata/data_manifest.json', 'whu': 'data/metadata/whu/data_manifest.json'}.items()}
+        'rid': 'data/metadata/data_manifest.json', 'whu_aerial': 'data/metadata/whu/data_manifest.json'}.items()}
     eligibility = pd.read_csv(root / 'reports/final_evaluation_rid_test_ids.csv', dtype={'id': str})
     rid_ids = eligibility['id'].tolist()
     primary_ids = eligibility.loc[eligibility['primary_test'], 'id'].tolist()
     splits = {d: load_json(root / p) for d, p in {
-        'rid': 'data/metadata/splits.json', 'whu': 'data/metadata/whu/splits.json'}.items()}
+        'rid': 'data/metadata/splits.json', 'whu_aerial': 'data/metadata/whu/splits.json'}.items()}
     if rid_ids != splits['rid']['roles']['test'] or len(primary_ids) != 254:
         raise ValueError('RID eligibility differs from frozen population.')
-    populations = {'rid': rid_ids, 'whu': splits['whu']['roles']['test']}
+    populations = {'rid': rid_ids, 'whu_aerial': splits['whu_aerial']['roles']['test']}
     references = review['test_input_identities_from_existing_manifest']
     for dataset, ids in populations.items():
         expected = references['rid_full_region' if dataset == 'rid' else 'whu_provider_test']
