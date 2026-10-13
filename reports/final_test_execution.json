@@ -1,0 +1,43 @@
+{
+  "code_commit": "4c70423e307254127ebfdb3dbe23e2007bd82538",
+  "device": "mps",
+  "torch": "2.8.0",
+  "python": "3.12.13",
+  "platform": "macOS-15.6.1-arm64-arm-64bit",
+  "frozen_protocol": {
+    "docs/final_evaluation_protocol.md": "7bd7413af0be39c6c3e076167b4e67bfe2a15802d6e2474a45c1a4722d033cba",
+    "final_evaluation_checkpoints.csv": "ef12f0a503a09e1bcffadde26c9b360074f72b9f01b036b3f922a1e3d009ce12",
+    "final_evaluation_rid_test_ids.csv": "8d04ce1d7bdba7d01fa72d7b1e8cf0fe7b4eafd93005ee5434c9345c418d08d6"
+  },
+  "threshold": 0.5,
+  "batch_size": 4,
+  "test_inputs": {
+    "rid": "517664130fd09b4d5adc011effc2231be6b3c34a7899286218c180586abeab94",
+    "whu_aerial": "2150a224cad1a9bf5b269ff61127cbccb259b3d741d0a17df78731d1c6151818"
+  },
+  "completed": true,
+  "checkpoint_entries": 62,
+  "elapsed_seconds_this_invocation": 3409.976810291875,
+  "artifacts": {
+    "final_test_results.csv": "7163cdd43fa60a9361bc26f54175fb430325b1145a169316c1cd7069dd74c50b",
+    "final_test_per_image.csv": "03728702bbed408e02accf044df3a2360deee01633507809cde14c95d9b519a0",
+    "final_test_paired.csv": "ed64491dbe306c10afb0065d0332ef7342887846eee5142bb83b8c6e81296022",
+    "final_test_summary.csv": "3df896be690ce7e92ec83481878818d4fd912b982330b472561219bb266b0b23"
+  },
+  "software_versions": {
+    "torch": "2.8.0",
+    "torchvision": "0.23.0",
+    "numpy": "2.5.3",
+    "pandas": "2.3.3",
+    "rasterio": "1.5.2"
+  },
+  "dependency_lock_sha256": "11a6b6b0859f7012ba5b23a689c119d9bde91185f4d74ce7b81fe94e126fe6b4",
+  "output_verification": {
+    "checkpoint_entries": 62,
+    "population_summaries": 94,
+    "per_image_rows": 80768,
+    "manifest_foreground_counts_match": true,
+    "aggregate_metrics_recomputed": true,
+    "output_hashes_verified": true
+  }
+}

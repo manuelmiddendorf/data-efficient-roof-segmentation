@@ -1,0 +1,12 @@
+dataset,id,selection_reason
+rid,2071,low paired IoU
+rid,2074,low paired IoU
+rid,382,high paired IoU
+rid,432,high paired IoU
+rid,1789,near median paired IoU
+whu_aerial,test/26,low paired IoU
+whu_aerial,test/175,low paired IoU
+whu_aerial,test/618,high paired IoU
+whu_aerial,test/2_361,high paired IoU
+whu_aerial,test/2_292,near median paired IoU
+whu_aerial,test/2_1521,highest empty-target foreground
