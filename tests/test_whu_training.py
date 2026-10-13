@@ -31,6 +31,11 @@ def _splits():
             "100": splits["additional_pilot_subsets"]["repetitions"]["2"]["ids"],
             "500": [f"train/{i}" for i in range(100, 600)],
         }},
+        "3": {"subset_seed": 43, "subsets": {
+            "25": [f"train/{i}" for i in range(200, 225)],
+            "100": splits["additional_pilot_subsets"]["repetitions"]["3"]["ids"],
+            "500": [f"train/{i}" for i in range(200, 700)],
+        }},
     }}
     return splits
 
@@ -67,7 +72,7 @@ def test_whu_repetitions_change_only_subset_identity_and_run_name():
 
 def test_whu_learning_curve_configs_are_nested_paired_and_uniquely_named():
     splits = _splits()
-    for repetition in (1, 2):
+    for repetition in (1, 2, 3):
         subsets = [
             build_whu_pilot_config(splits, "random", repetition, size)
             for size in (25, 100, 500)
@@ -81,10 +86,10 @@ def test_whu_learning_curve_configs_are_nested_paired_and_uniquely_named():
             assert random["run_name"] != imagenet["run_name"]
     names = {
         build_whu_pilot_config(splits, initialization, repetition, size)["run_name"]
-        for repetition in (1, 2) for size in (25, 100, 500)
+        for repetition in (1, 2, 3) for size in (25, 100, 500)
         for initialization in ("random", "imagenet")
     }
-    assert len(names) == 12
+    assert len(names) == 18
 
 
 def test_whu_n25_schedule_retains_incomplete_batches():

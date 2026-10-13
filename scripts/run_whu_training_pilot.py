@@ -38,9 +38,9 @@ for subset_repetition in LEARNING_CURVE_REPETITIONS:
             )
             if (set(config["training_ids"]) | set(config["validation_ids"])) & test_ids:
                 raise SystemExit("WHU training or validation inputs intersect provider test data.")
-            if training_size == 100:
+            if directory.exists() and any(directory.iterdir()):
                 verify_historical_whu_run(
-                    ROOT, manifest, splits, initialization, subset_repetition
+                    ROOT, manifest, splits, initialization, subset_repetition, training_size
                 )
                 print(f"Reusing verified historical run: {directory.name}", flush=True)
                 continue

@@ -189,18 +189,20 @@ modest Random-specific advantage for spatial selection in these repetitions,
 not a causal footprint-area effect or independent geographic generalization.
 The locked test role was not accessed.
 
-The WHU comparison now includes nested n=25/100/500 learning curves for uniform-
-random subset seeds 17 and 29 while preserving the three-repetition n=100 result.
-ImageNet improved best validation IoU in all six size/selection pairs: +0.0657/
-+0.0748 at n=25, +0.0983/+0.0744 at n=100 and +0.0980/+0.0793 at n=500. All
-four n=25 endpoints fell below early selected maxima and had the largest matched
-train–validation gaps. All four n=500 late IoU slopes were positive, with best
-steps from 3,500 to 4,000. Positive-reference overlap improved and predicted
-building fraction on empty references declined from n=25 to n=500 in every
-seed/initialization combination. The eight new runs required 164.0 optimization
-minutes and 303.1 total minutes on MPS. Two image selections, fixed remaining
-seeds and one shared validation role do not provide confidence intervals or
-independent geographic-generalization evidence. WHU test imagery remained unused.
+The WHU comparison now includes complete nested n=25/100/500 learning curves
+for uniform-random subset seeds 17, 29 and 43. ImageNet improved best validation
+IoU in all nine size/selection pairs: +0.0657/+0.0748/+0.0937 at n=25,
++0.0983/+0.0744/+0.0750 at n=100 and +0.0980/+0.0793/+0.0865 at n=500. All six
+n=25 endpoints fell below selected maxima and had the largest matched train–
+validation gaps. All six n=500 late IoU slopes were positive, with best steps
+from 3,500 to 4,000. The 100-to-500 best-IoU gains varied from +0.0065 to +0.0562
+for Random and +0.0114 to +0.0677 for ImageNet. Positive-reference overlap
+improved and predicted building fraction on empty references declined from n=25
+to n=500 in every seed/initialization combination. The four Seed-43 extensions
+required 82.1 optimization minutes and 151.5 total minutes on MPS. Three image
+selections, fixed remaining seeds and one shared validation role do not provide
+confidence intervals or independent geographic-generalization evidence. WHU
+test imagery remained unused.
 
 The underlying WHU Aerial 0.3 m raster release is prepared for external
 replication. The official archive contains 8,188 paired 512 × 512 RGB images
@@ -212,8 +214,9 @@ but per-tile visible-area overlap and spatial maximin selection cannot be
 independently reconstructed from this prepared release. Three uniform, label-
 free n=100 training subsets were fixed with seeds 17, 29 and 43 and used for
 paired initialization comparisons. Their pairwise overlaps are 5, 2 and 2 IDs.
-Nested n=25 and n=500 extensions were fixed for seeds 17 and 29 without labels;
-the two families overlap by 0, 5 and 49 IDs at n=25, n=100 and n=500.
+Nested n=25 and n=500 extensions were fixed for all three seeds without labels.
+Pairwise overlaps at n=25/n=100/n=500 are 0/5/49 IDs for seeds 17–29, 0/2/44
+for 17–43 and 0/2/61 for 29–43.
 The roles contain 419/299/685 empty masks; all 1,403 form the only exact mask-
 duplicate group, while no image or complete pair is byte-duplicated. No WHU
 training belonged to the earlier data-foundation stage, and no RID test image
@@ -411,6 +414,13 @@ to select another reported winner.
   only partially verifiable because the prepared TIFFs omit coordinates. Use
   the saved uniform n=100 training subset for the first proposed pilot; do not
   claim spatial maximin selection or confirmed external replication yet.
+- The complete WHU learning curves now cover three nested uniform-random subset
+  families at n=25, 100 and 500. ImageNet led in all nine paired comparisons,
+  but 100-to-500 gains remained image-selection-sensitive. Every n=500 late IoU
+  slope was positive and selected steps were 3,500–4,000. Fresh 8,000-update
+  runs for all three paired n=500 selections are therefore the next justified
+  bounded check; compare each new run's 4,000-update prefix, endpoint and late-
+  window means before final evaluation. No WHU or RID test role was accessed.
 
 ## Git and delivery
 

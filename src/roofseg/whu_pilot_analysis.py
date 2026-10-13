@@ -7,6 +7,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
+from matplotlib.lines import Line2D
 from matplotlib.ticker import NullFormatter
 import numpy as np
 import pandas as pd
@@ -99,7 +100,7 @@ def collect_whu_pilot_tables(project_root: Path) -> tuple[pd.DataFrame, pd.DataF
 def collect_whu_learning_curve_tables(
     project_root: Path,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Collect the twelve comparable n=25/100/500 WHU runs."""
+    """Collect the eighteen comparable n=25/100/500 WHU runs."""
     return _collect_whu_tables(load_whu_learning_curve_runs(project_root))
 
 
@@ -247,9 +248,10 @@ def whu_learning_curve_comparisons(
 
 
 def plot_whu_data_efficiency(results: pd.DataFrame):
-    """Plot best and final WHU IoU for both saved image selections."""
+    """Plot best and final WHU IoU for all saved image selections."""
     figure, axes = plt.subplots(1, 2, figsize=(10.5, 4.5), sharey=True)
     colours = {"random": "#E76F51", "imagenet": "#2878B5"}
+    seed_markers = {17: "o", 29: "s", 43: "^"}
     for axis, (metric, title) in zip(
         axes,
         (("best_validation_iou", "Selected maximum"),
@@ -260,18 +262,12 @@ def plot_whu_data_efficiency(results: pd.DataFrame):
             for seed, selection in rows.groupby("subset_seed"):
                 selection = selection.sort_values("training_size")
                 axis.plot(
-                    selection.training_size, selection[metric], marker="o",
+                    selection.training_size, selection[metric], marker=seed_markers[int(seed)],
                     color=colours[initialization], alpha=0.45, linewidth=1,
                 )
-                for point in selection.itertuples():
-                    axis.annotate(
-                        str(seed), (point.training_size, getattr(point, metric)),
-                        xytext=(3, 3), textcoords="offset points", fontsize=7,
-                        color=colours[initialization],
-                    )
             means = rows.groupby("training_size")[metric].mean()
             axis.plot(
-                means.index, means.values, marker="o", linewidth=2.4,
+                means.index, means.values, marker="D", linewidth=2.4,
                 color=colours[initialization], label=INITIALIZATION_LABELS[initialization],
             )
         axis.set_xscale("log")
@@ -282,7 +278,14 @@ def plot_whu_data_efficiency(results: pd.DataFrame):
         axis.grid(alpha=0.2)
     axes[0].set_ylabel("Validation mean per-image IoU")
     axes[0].legend(frameon=False)
-    figure.suptitle("WHU data-efficiency across two nested image selections")
+    axes[1].legend(
+        handles=[
+            Line2D([0], [0], marker=marker, color="#777777", linewidth=1, label=str(seed))
+            for seed, marker in seed_markers.items()
+        ],
+        title="Subset seed", frameon=False, loc="lower right",
+    )
+    figure.suptitle("WHU data-efficiency across three nested image selections")
     figure.tight_layout()
     return figure
 

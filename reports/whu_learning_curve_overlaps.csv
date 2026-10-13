@@ -1,4 +1,10 @@
-training_size,first_seed,second_seed,shared_ids
-25,17,29,0
-100,17,29,5
-500,17,29,49
+training_size,first_repetition,first_seed,second_repetition,second_seed,shared_ids
+25,1,17,2,29,0
+100,1,17,2,29,5
+500,1,17,2,29,49
+25,1,17,3,43,0
+100,1,17,3,43,2
+500,1,17,3,43,44
+25,2,29,3,43,0
+100,2,29,3,43,2
+500,2,29,3,43,61

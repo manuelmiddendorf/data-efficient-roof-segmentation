@@ -13,10 +13,16 @@ from .training_data import IMAGENET_MEAN, IMAGENET_STD, paired_schedule
 
 TRAINING_SIZE = 100
 LEARNING_CURVE_SIZES = (25, 100, 500)
-LEARNING_CURVE_REPETITIONS = (1, 2)
+LEARNING_CURVE_REPETITIONS = (1, 2, 3)
 SUBSET_REPETITIONS = (1, 2, 3)
 SEED17_IDS_SHA256 = "bb0d64cae5bf4043ad64c09dbd1343936289ee89773ae63b45496ca96e74ad2e"
 SEED29_IDS_SHA256 = "da02469128c85264a8251e353c6cae42d0513a0b7040b4023269b267b5c569fc"
+SEED43_IDS_SHA256 = "5288f71232d6607edcf169ead37639c342dd224d0bcf72ebb646c96d4f335bbf"
+HISTORICAL_N100_IDS_SHA256 = {
+    1: SEED17_IDS_SHA256,
+    2: SEED29_IDS_SHA256,
+    3: SEED43_IDS_SHA256,
+}
 
 
 def whu_subset_record(
@@ -148,18 +154,18 @@ def whu_run_directory(
 
 def verify_historical_whu_run(
     project_root: Path, manifest: dict, splits: dict, initialization: str,
-    subset_repetition: int,
+    subset_repetition: int, training_size: int = TRAINING_SIZE,
 ) -> dict:
-    """Verify an n=100 run by its actual config, selected inputs and checkpoint.
+    """Verify a saved run by its actual config, selected inputs and checkpoint.
 
     The central split JSON may be additively extended after a run. Its historical
     whole-file split hash is therefore retained rather than recomputed.
     """
     directory = whu_run_directory(
-        project_root, splits, initialization, subset_repetition, TRAINING_SIZE
+        project_root, splits, initialization, subset_repetition, training_size
     )
     expected = build_whu_pilot_config(
-        splits, initialization, subset_repetition, TRAINING_SIZE
+        splits, initialization, subset_repetition, training_size
     )
     saved = json.loads((directory / "config.json").read_text())
     metadata = json.loads((directory / "metadata.json").read_text())
@@ -167,16 +173,22 @@ def verify_historical_whu_run(
         raise ValueError(f"Historical WHU configuration changed: {directory.name}")
     if json_digest(saved) != metadata["compatibility_identity"]["config_sha256"]:
         raise ValueError(f"Historical WHU config identity changed: {directory.name}")
-    current_ids = whu_subset_record(splits, subset_repetition, TRAINING_SIZE)["ids"]
+    current_ids = whu_subset_record(splits, subset_repetition, training_size)["ids"]
     if saved["training_ids"] != current_ids:
         raise ValueError(f"Historical WHU training IDs changed: {directory.name}")
-    if subset_repetition == 1 and json_digest(saved["training_ids"]) != SEED17_IDS_SHA256:
-        raise ValueError("Historical Seed-17 training IDs changed.")
+    if (
+        training_size == TRAINING_SIZE
+        and json_digest(saved["training_ids"])
+        != HISTORICAL_N100_IDS_SHA256[subset_repetition]
+    ):
+        raise ValueError(
+            f"Historical Seed-{saved['seeds']['subset']} training IDs changed."
+        )
     if saved["validation_ids"] != splits["roles"]["val"]:
         raise ValueError("Historical WHU validation role changed.")
     identity = metadata["compatibility_identity"]
     if selected_input_digest(manifest, saved["training_ids"]) != identity["training_inputs_sha256"]:
-        raise ValueError("Historical Seed-17 training inputs changed.")
+        raise ValueError("Historical WHU training inputs changed.")
     if selected_input_digest(manifest, saved["validation_ids"]) != identity["validation_inputs_sha256"]:
         raise ValueError("Historical WHU validation inputs changed.")
     _, schedule = paired_schedule(
@@ -184,7 +196,7 @@ def verify_historical_whu_run(
         saved["seeds"]["data_order"], saved["seeds"]["augmentation"],
     )
     if schedule["sha256"] != identity["schedule_sha256"]:
-        raise ValueError("Historical Seed-17 schedule changed.")
+        raise ValueError("Historical WHU schedule changed.")
     return verify_completed_run(directory)
 
 
@@ -242,7 +254,7 @@ def load_whu_pilot_runs(project_root: Path) -> list[dict]:
 
 
 def load_whu_learning_curve_runs(project_root: Path) -> list[dict]:
-    """Load the twelve completed n=25/100/500 WHU learning-curve runs."""
+    """Load the eighteen completed n=25/100/500 WHU learning-curve runs."""
     return _load_whu_runs(
         project_root,
         [

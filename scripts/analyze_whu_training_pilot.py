@@ -51,6 +51,7 @@ figures = {
     "07_whu_data_efficiency.png": plot_whu_data_efficiency(curve_results),
     "07_whu_learning_curves_seed17.png": plot_whu_learning_curve_histories(curve_history, 17),
     "07_whu_learning_curves_seed29.png": plot_whu_learning_curve_histories(curve_history, 29),
+    "07_whu_learning_curves_seed43.png": plot_whu_learning_curve_histories(curve_history, 43),
 }
 for name, figure in figures.items():
     figure.savefig(FIGURES / name, dpi=170, bbox_inches="tight")

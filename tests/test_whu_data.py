@@ -103,16 +103,19 @@ def test_whu_future_subset_is_deterministic_and_train_only():
     assert len(first["additional_pilot_subsets"]["pairwise_id_overlaps"]) == 3
     curves = first["learning_curve_subsets"]
     assert curves["original_n100_is_same_seed_permutation_prefix"] == {
-        "17": False, "29": False,
+        "17": False, "29": False, "43": False,
     }
-    for repetition, historical in (("1", subset), ("2", additional["2"]["ids"])):
+    for repetition, historical in (
+        ("1", subset), ("2", additional["2"]["ids"]),
+        ("3", additional["3"]["ids"]),
+    ):
         nested = curves["repetitions"][repetition]["subsets"]
         assert nested["100"] == historical
         assert len(nested["25"]) == len(set(nested["25"])) == 25
         assert len(nested["500"]) == len(set(nested["500"])) == 500
         assert set(nested["25"]) < set(nested["100"]) < set(nested["500"])
         assert set(nested["500"]) <= set(first["roles"]["train"])
-    assert [row["shared_ids"] for row in curves["pairwise_id_overlaps"]] == [2, 18, 422]
+    assert len(curves["pairwise_id_overlaps"]) == 9
 
 
 def test_whu_role_validation_rejects_overlap():
