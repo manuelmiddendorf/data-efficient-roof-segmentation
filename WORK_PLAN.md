@@ -417,10 +417,15 @@ to select another reported winner.
 - The complete WHU learning curves now cover three nested uniform-random subset
   families at n=25, 100 and 500. ImageNet led in all nine paired comparisons,
   but 100-to-500 gains remained image-selection-sensitive. Every n=500 late IoU
-  slope was positive and selected steps were 3,500–4,000. Fresh 8,000-update
-  runs for all three paired n=500 selections are therefore the next justified
-  bounded check; compare each new run's 4,000-update prefix, endpoint and late-
-  window means before final evaluation. No WHU or RID test role was accessed.
+  slope was positive and selected steps were 3,500–4,000.
+- The planned WHU n=500 budget diagnostic is complete. Six fresh 8,000-update
+  runs preserve the three selections and all non-horizon settings. Random's
+  final-five IoU mean improved by +0.0106/+0.0170/+0.0115 for seeds 17/29/43;
+  ImageNet changed by +0.0019/+0.0165/−0.0069. ImageNet retained positive
+  endpoint advantages of +0.0939/+0.0776/+0.0693. Random late trends remained
+  positive in all three runs; ImageNet was positive for two and negative for
+  Seed 43. The result is budget sensitivity on one shared validation role, not
+  convergence proof or test performance. No WHU or RID test role was accessed.
 
 ## Git and delivery
 

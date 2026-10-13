@@ -8,6 +8,9 @@ from roofseg.whu_pilot_analysis import (
     whu_learning_curve_comparisons,
 )
 from roofseg.whu_pilot import build_whu_pilot_config, whu_run_name, whu_subset_record
+from roofseg.whu_training_budget import (
+    build_whu_training_budget_config, whu_training_budget_run_directory,
+)
 
 
 def _splits():
@@ -100,6 +103,39 @@ def test_whu_n25_schedule_retains_incomplete_batches():
     )
     assert record["incomplete_batches_retained"]
     assert any(len(batch_ids) == 1 for batch_ids, _ in schedule)
+
+
+def test_whu_budget_changes_only_horizon_identity_and_prefix_checkpoint(tmp_path):
+    splits = _splits()
+    directories = set()
+    for repetition in (1, 2, 3):
+        for initialization in ("random", "imagenet"):
+            reference = build_whu_pilot_config(
+                splits, initialization, repetition, 500
+            )
+            extended = build_whu_training_budget_config(
+                splits, initialization, repetition
+            )
+            differences = {
+                key for key in reference | extended
+                if reference.get(key) != extended.get(key)
+            }
+            assert differences == {
+                "run_name", "experiment", "max_steps", "evaluation_steps",
+                "scheduler", "additional_checkpoints",
+            }
+            assert extended["training_ids"] == reference["training_ids"]
+            assert extended["seeds"] == reference["seeds"]
+            assert extended["max_steps"] == 8000
+            assert extended["scheduler"]["phases"][-1] == {
+                "start_step": 2001, "end_step": 8000,
+                "learning_rate": 1e-4,
+            }
+            assert extended["additional_checkpoints"][0]["through_step"] == 4000
+            directories.add(whu_training_budget_run_directory(
+                tmp_path, splits, initialization, repetition
+            ))
+    assert len(directories) == 6
 
 
 def test_reference_group_metrics_keep_empty_images_separate():

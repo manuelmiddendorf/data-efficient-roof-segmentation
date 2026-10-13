@@ -75,6 +75,18 @@ independent test or geographic-generalization results. The ungeoreferenced
 prepared TIFFs do not permit independent reconstruction of every tile footprint.
 WHU test images were not used.
 
+A separate n=500 budget block then trained six fresh models through 8,000
+updates for the same three image selections. From each new run's 4,000-update
+prefix to its 8,000-update endpoint, Random changed by −0.0002, +0.0199 and
++0.0191 IoU for seeds 17, 29 and 43; ImageNet changed by −0.0042, +0.0260 and
+−0.0021. Final-five means give a steadier view: Random improved by +0.0106 to
++0.0170 in all three selections, whereas ImageNet changed by +0.0019, +0.0165
+and −0.0069. ImageNet retained a positive paired endpoint advantage of +0.0939,
++0.0776 and +0.0693. The extension therefore supports greater budget
+sensitivity for Random on average, while showing material selection dependence
+for both initializations. These remain validation results; neither WHU nor RID
+test data were accessed.
+
 ## Reports and reproduction
 
 The executed notebooks form the scientific report:
@@ -85,7 +97,7 @@ The executed notebooks form the scientific report:
 - [Data efficiency across three image selections](notebooks/04_data_efficiency.ipynb)
 - [Targeted experiments](notebooks/05_targeted_experiments.ipynb)
 - [WHU external-replication data](notebooks/06_external_replication_data.ipynb)
-- [WHU data efficiency and initialization](notebooks/07_external_replication_pilot.ipynb)
+- [WHU data efficiency, initialization and training budget](notebooks/07_external_replication_pilot.ipynb)
 
 [docs/setup.md](docs/setup.md) gives exact environment, training, analysis and
 notebook commands. [docs/data.md](docs/data.md) records source and label
