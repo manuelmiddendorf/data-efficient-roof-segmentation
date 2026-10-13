@@ -1,0 +1,31 @@
+{
+  "device": "mps",
+  "split_name": "whu_aerial_provider_split_v1",
+  "run_count": 6,
+  "training_size": 500,
+  "subset_seeds": [
+    17,
+    29,
+    43
+  ],
+  "max_steps": 8000,
+  "prefix_checkpoint_through_step": 4000,
+  "evaluation_interval": 100,
+  "historical_reference_runs_verified": 6,
+  "provider_test_excluded": true,
+  "paired_conditions_verified": true,
+  "schedule_prefix_matches_historical": true,
+  "schedule_prefix_sha256_by_subset_seed": {
+    "17": "bfc6f92a8fbbfb21c5acea85801d0b00e472d6cfbf692586f879b97c68f9d56f",
+    "29": "3dfe2f1bdb9d2ca12884c6c1756a40d533e330c83b2300bc8e1c70d4a45d40b6",
+    "43": "65f154aea8065277b00de8bd90d4dbebf2f6ef34d508b605360370eddc4feabc"
+  },
+  "run_directories": [
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/training_budget_n500/n500_random_subsetseed17_fixed_drop_steps8000",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/training_budget_n500/n500_imagenet_subsetseed17_fixed_drop_steps8000",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/training_budget_n500/n500_random_subsetseed29_fixed_drop_steps8000",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/training_budget_n500/n500_imagenet_subsetseed29_fixed_drop_steps8000",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/training_budget_n500/n500_random_subsetseed43_fixed_drop_steps8000",
+    "runs/external_replication_pilot/whu_aerial_provider_split_v1/training_budget_n500/n500_imagenet_subsetseed43_fixed_drop_steps8000"
+  ]
+}

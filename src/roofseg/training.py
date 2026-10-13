@@ -345,9 +345,13 @@ def fit_run(
         _, selected_training = evaluate(
             model, store, config["training_ids"], config["batch_size"], device, include_ap=True
         )
-        _, selected_validation = evaluate(
+        selected_validation_rows, selected_validation = evaluate(
             model, store, config["validation_ids"], config["batch_size"], device, include_ap=True
         )
+        if config.get("reference_group_diagnostics"):
+            selected_validation["reference_groups"] = reference_group_metrics(
+                selected_validation_rows
+            )
         additional_checkpoint_summaries[name] = {
             "filename": checkpoint_spec["filename"],
             "through_step": checkpoint_spec["through_step"],
