@@ -406,34 +406,36 @@ The six measured runs required 122.9 optimization minutes and 150.3 minutes
 including validation and selected-checkpoint evaluation on MPS. Analysis uses
 saved training and validation artifacts and does not access the locked test role.
 
-## WHU n=100 initialization replication
+## WHU data efficiency and initialization
 
 The WHU comparison uses three saved uniform n=100 subsets (selection seeds 17,
 29 and 43) and all 1,036 provider validation tiles. Its data adapter preserves
 native 512 × 512 resolution and maps raw label zero to building footprint. The
 original pilot preflight verifies the data contract and learning path. The
-replication preflight additionally verifies exact subset reproduction, paired
-ID/D4 schedules, role exclusion, the unchanged historical seed-17 runs, actual
-MPS execution and strict checkpoint restoration:
+replication preflight verifies the three n=100 selections. The learning-curve
+preflight additionally verifies deterministic nested n=25/100/500 sets for
+seeds 17 and 29, paired ID/D4 schedules, role exclusion, unchanged historical
+n=100 runs and a real retained one-image n=25 batch on MPS:
 
 ```bash
 uv run python scripts/check_whu_training_pilot.py
 uv run python scripts/check_whu_subset_replication.py
+uv run python scripts/check_whu_learning_curves.py
 caffeinate -i -m -- uv run python scripts/run_whu_training_pilot.py
 uv run python scripts/analyze_whu_training_pilot.py
 uv run python scripts/run_notebook.py notebooks/07_external_replication_pilot.ipynb
 ```
 
-The runner resolves six 4,000-update runs under
+The runner resolves twelve 4,000-update learning-curve runs under
 `runs/external_replication_pilot/whu_aerial_provider_split_v1/`. It reuses the
-two compatible historical seed-17 runs and creates only missing repetitions.
+four compatible n=100 runs for seeds 17 and 29 and creates only missing n=25 and
+n=500 runs. The separate seed-43 n=100 pair remains available to the analysis.
 Each run uses the standard three JSON files, history, per-image metrics and one
 selected checkpoint. Conflicts or incomplete runs are refused. Analysis reads
 only saved training and validation artifacts and never opens the WHU provider-
 test role.
 
-The four new seed-29 and seed-43 runs required 85.3 optimization minutes and
-153.2 total minutes including scheduled validation and selected-checkpoint
-evaluation on MPS. Across all six runs, the corresponding totals are 127.5 and
-229.4 minutes. ImageNet-minus-Random best validation IoU is +0.0983, +0.0744
-and +0.0750 for subset seeds 17, 29 and 43.
+The eight new n=25 and n=500 runs required 164.0 optimization minutes and 303.1
+total minutes including scheduled validation and selected-checkpoint evaluation
+on MPS. ImageNet-minus-Random best validation IoU remains positive for all six
+learning-curve pairs. Analysis uses only saved training and validation artifacts.

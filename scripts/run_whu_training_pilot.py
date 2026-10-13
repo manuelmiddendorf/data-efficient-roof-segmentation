@@ -1,4 +1,4 @@
-"""Train exactly the paired Random and ImageNet WHU pilot models."""
+"""Train or reuse the paired WHU n=25/100/500 learning-curve models."""
 
 from pathlib import Path
 
@@ -10,8 +10,8 @@ from roofseg.run_artifacts import prepare_run, verify_completed_run
 from roofseg.training import fit_run, select_device
 from roofseg.whu_data import build_whu_splits
 from roofseg.whu_pilot import (
-    SUBSET_REPETITIONS, build_whu_pilot_config, verify_historical_seed17_run,
-    whu_run_directory,
+    LEARNING_CURVE_REPETITIONS, LEARNING_CURVE_SIZES, build_whu_pilot_config,
+    verify_historical_whu_run, whu_run_directory,
 )
 
 
@@ -27,20 +27,27 @@ if device.type != "mps":
 print(f"Training device: {device}", flush=True)
 
 test_ids = set(splits["roles"]["test"])
-for subset_repetition in SUBSET_REPETITIONS:
-    for initialization in INITIALIZATIONS:
-        config = build_whu_pilot_config(splits, initialization, subset_repetition)
-        directory = whu_run_directory(ROOT, splits, initialization, subset_repetition)
-        if (set(config["training_ids"]) | set(config["validation_ids"])) & test_ids:
-            raise SystemExit("WHU training or validation inputs intersect provider test data.")
-        if subset_repetition == 1:
-            verify_historical_seed17_run(ROOT, manifest, splits, initialization)
-            print(f"Reusing verified historical run: {directory.name}", flush=True)
-            continue
-        metadata = build_metadata(ROOT, manifest, splits, config, device)
-        if prepare_run(directory, config, metadata):
+for subset_repetition in LEARNING_CURVE_REPETITIONS:
+    for training_size in LEARNING_CURVE_SIZES:
+        for initialization in INITIALIZATIONS:
+            config = build_whu_pilot_config(
+                splits, initialization, subset_repetition, training_size
+            )
+            directory = whu_run_directory(
+                ROOT, splits, initialization, subset_repetition, training_size
+            )
+            if (set(config["training_ids"]) | set(config["validation_ids"])) & test_ids:
+                raise SystemExit("WHU training or validation inputs intersect provider test data.")
+            if training_size == 100:
+                verify_historical_whu_run(
+                    ROOT, manifest, splits, initialization, subset_repetition
+                )
+                print(f"Reusing verified historical run: {directory.name}", flush=True)
+                continue
+            metadata = build_metadata(ROOT, manifest, splits, config, device)
+            if prepare_run(directory, config, metadata):
+                verify_completed_run(directory)
+                print(f"Reusing compatible completed run: {directory.name}", flush=True)
+                continue
+            fit_run(ROOT, config, metadata, manifest, device, directory)
             verify_completed_run(directory)
-            print(f"Reusing compatible completed run: {directory.name}", flush=True)
-            continue
-        fit_run(ROOT, config, metadata, manifest, device, directory)
-        verify_completed_run(directory)
