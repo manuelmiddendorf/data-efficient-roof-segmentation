@@ -5,6 +5,7 @@ from roofseg.training import reference_group_metrics
 from roofseg.training_data import paired_schedule
 from roofseg.whu_pilot_analysis import (
     choose_whu_validation_examples, whu_initialization_effects,
+    whu_learning_curve_comparisons,
 )
 from roofseg.whu_pilot import build_whu_pilot_config, whu_run_name, whu_subset_record
 
@@ -147,3 +148,25 @@ def test_whu_initialization_effects_are_paired_by_subset_seed():
     assert np.isclose(summary.iloc[0].mean_imagenet_minus_random_best_iou, 0.125)
     assert np.isclose(summary.iloc[0].sample_sd_imagenet_minus_random_best_iou,
                       np.std([0.1, 0.15], ddof=1))
+
+
+def test_whu_learning_curve_comparisons_pair_sizes_and_compute_gains():
+    rows = []
+    for size, random_iou, imagenet_iou in ((25, 0.5, 0.6), (100, 0.6, 0.72), (500, 0.7, 0.8)):
+        for initialization, best in (("random", random_iou), ("imagenet", imagenet_iou)):
+            rows.append({
+                "subset_repetition": 1, "subset_seed": 17, "training_size": size,
+                "initialization": initialization, "best_validation_iou": best,
+                "last_validation_iou": best - 0.01,
+            })
+    splits = {"learning_curve_subsets": {"pairwise_id_overlaps": [
+        {"training_size": 25, "first_seed": 17, "second_seed": 29, "shared_ids": 0}
+    ]}}
+    effects, gains, summary, overlaps = whu_learning_curve_comparisons(
+        pd.DataFrame(rows), splits
+    )
+    assert np.allclose(effects.imagenet_minus_random_best_iou, [0.1, 0.12, 0.1])
+    random_gains = gains[gains.initialization == "random"]
+    assert np.allclose(random_gains.best_iou_gain, [0.1, 0.1])
+    assert summary.best_iou_sample_sd.isna().all()
+    assert overlaps.shared_ids.tolist() == [0]

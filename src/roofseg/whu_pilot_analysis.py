@@ -7,24 +7,27 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
+from matplotlib.ticker import NullFormatter
 import numpy as np
 import pandas as pd
 import torch
 
+from .late_training_analysis import summarize_late_history
 from .model import build_model
 from .training import restore_checkpoint, select_device
 from .training_data import WHUTensorStore
 from .whu_data import load_whu_binary_target, read_whu_image, read_whu_mask
-from .whu_pilot import load_whu_pilot_runs
+from .whu_pilot import load_whu_learning_curve_runs, load_whu_pilot_runs
 
 
 INITIALIZATION_LABELS = {"random": "Random", "imagenet": "ImageNet"}
+LEARNING_CURVE_SIZES = (25, 100, 500)
 
 
-def collect_whu_pilot_tables(project_root: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Collect compact result, history and per-image tables from saved runs."""
+def _collect_whu_tables(runs: list[dict]) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Collect result, history and per-image tables from resolved WHU runs."""
     result_rows, history_frames, metric_frames = [], [], []
-    for run in load_whu_pilot_runs(project_root):
+    for run in runs:
         summary = run["summary"]
         validation = summary["best_validation"]
         training = summary["matched_training_evaluation"]
@@ -34,9 +37,11 @@ def collect_whu_pilot_tables(project_root: Path) -> tuple[pd.DataFrame, pd.DataF
             if column != "initialization":
                 history[column] = pd.to_numeric(history[column], errors="coerce")
         last = history.iloc[-1]
+        late, _ = summarize_late_history(history)
         result_rows.append({
             "subset_repetition": run["subset_repetition"],
             "subset_seed": run["subset_seed"],
+            "training_size": run["training_size"],
             "initialization": run["initialization"],
             "best_step": int(summary["best_step"]),
             "best_validation_iou": validation["mean_iou"],
@@ -53,11 +58,19 @@ def collect_whu_pilot_tables(project_root: Path) -> tuple[pd.DataFrame, pd.DataF
             "empty_mean_predicted_building_fraction": groups["empty_reference"]["mean_predicted_building_fraction"],
             "empty_fraction_with_any_prediction": groups["empty_reference"]["fraction_with_any_predicted_building"],
             "selected_training_iou": training["mean_iou"],
+            "selected_training_loss": training["loss"],
+            "selected_training_dice": training["mean_dice"],
+            "selected_training_ap_positive": training["mean_average_precision"],
             "training_validation_iou_gap": training["mean_iou"] - validation["mean_iou"],
+            "examples_processed": summary["examples_processed"],
+            "equivalent_data_passages": summary["equivalent_data_passages"],
+            "incomplete_batches_retained": summary["incomplete_batches_retained"],
             "training_seconds": summary["training_seconds"],
             "evaluation_seconds_during_training": summary["evaluation_seconds_during_training"],
             "total_seconds": summary["total_seconds"],
+            **late,
         })
+        history.insert(0, "training_size", run["training_size"])
         history.insert(0, "subset_seed", run["subset_seed"])
         history.insert(0, "subset_repetition", run["subset_repetition"])
         history.insert(0, "initialization", run["initialization"])
@@ -70,10 +83,24 @@ def collect_whu_pilot_tables(project_root: Path) -> tuple[pd.DataFrame, pd.DataF
         metrics.insert(0, "initialization", run["initialization"])
         metric_frames.append(metrics)
     return (
-        pd.DataFrame(result_rows).sort_values(["subset_seed", "initialization"]),
+        pd.DataFrame(result_rows).sort_values(
+            ["subset_seed", "training_size", "initialization"]
+        ),
         pd.concat(history_frames, ignore_index=True),
         pd.concat(metric_frames, ignore_index=True),
     )
+
+
+def collect_whu_pilot_tables(project_root: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Collect the six n=100 subset-replication runs."""
+    return _collect_whu_tables(load_whu_pilot_runs(project_root))
+
+
+def collect_whu_learning_curve_tables(
+    project_root: Path,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Collect the twelve comparable n=25/100/500 WHU runs."""
+    return _collect_whu_tables(load_whu_learning_curve_runs(project_root))
 
 
 def choose_whu_validation_examples(metrics: pd.DataFrame, subset_seed: int = 17) -> pd.DataFrame:
@@ -161,6 +188,134 @@ def rid_whu_initialization_effects(project_root: Path, whu_effects: pd.DataFrame
     if len(comparison) != 6:
         raise ValueError("Expected three paired n=100 effects for each dataset.")
     return comparison.sort_values(["dataset", "subset_seed"])
+
+
+def whu_learning_curve_comparisons(
+    results: pd.DataFrame, splits: dict
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Return paired effects, size gains, descriptive summaries and ID overlaps."""
+    paired_rows = []
+    for (repetition, seed, size), group in results.groupby(
+        ["subset_repetition", "subset_seed", "training_size"]
+    ):
+        pair = group.set_index("initialization")
+        paired_rows.append({
+            "subset_repetition": int(repetition), "subset_seed": int(seed),
+            "training_size": int(size),
+            "imagenet_minus_random_best_iou": (
+                pair.loc["imagenet", "best_validation_iou"]
+                - pair.loc["random", "best_validation_iou"]
+            ),
+            "imagenet_minus_random_last_iou": (
+                pair.loc["imagenet", "last_validation_iou"]
+                - pair.loc["random", "last_validation_iou"]
+            ),
+        })
+
+    gain_rows = []
+    for (repetition, seed, initialization), group in results.groupby(
+        ["subset_repetition", "subset_seed", "initialization"]
+    ):
+        by_size = group.set_index("training_size")
+        for lower, upper in zip(LEARNING_CURVE_SIZES[:-1], LEARNING_CURVE_SIZES[1:]):
+            gain_rows.append({
+                "subset_repetition": int(repetition), "subset_seed": int(seed),
+                "initialization": initialization, "size_change": f"{lower}_to_{upper}",
+                "best_iou_gain": (
+                    by_size.loc[upper, "best_validation_iou"]
+                    - by_size.loc[lower, "best_validation_iou"]
+                ),
+                "last_iou_gain": (
+                    by_size.loc[upper, "last_validation_iou"]
+                    - by_size.loc[lower, "last_validation_iou"]
+                ),
+            })
+    summary = (
+        results.groupby(["training_size", "initialization"])
+        .agg(
+            best_iou_mean=("best_validation_iou", "mean"),
+            best_iou_sample_sd=("best_validation_iou", "std"),
+            last_iou_mean=("last_validation_iou", "mean"),
+            last_iou_sample_sd=("last_validation_iou", "std"),
+        )
+        .reset_index()
+    )
+    overlaps = pd.DataFrame(
+        splits["learning_curve_subsets"]["pairwise_id_overlaps"]
+    )
+    return pd.DataFrame(paired_rows), pd.DataFrame(gain_rows), summary, overlaps
+
+
+def plot_whu_data_efficiency(results: pd.DataFrame):
+    """Plot best and final WHU IoU for both saved image selections."""
+    figure, axes = plt.subplots(1, 2, figsize=(10.5, 4.5), sharey=True)
+    colours = {"random": "#E76F51", "imagenet": "#2878B5"}
+    for axis, (metric, title) in zip(
+        axes,
+        (("best_validation_iou", "Selected maximum"),
+         ("last_validation_iou", "Step 4,000")),
+    ):
+        for initialization in ("random", "imagenet"):
+            rows = results[results.initialization == initialization]
+            for seed, selection in rows.groupby("subset_seed"):
+                selection = selection.sort_values("training_size")
+                axis.plot(
+                    selection.training_size, selection[metric], marker="o",
+                    color=colours[initialization], alpha=0.45, linewidth=1,
+                )
+                for point in selection.itertuples():
+                    axis.annotate(
+                        str(seed), (point.training_size, getattr(point, metric)),
+                        xytext=(3, 3), textcoords="offset points", fontsize=7,
+                        color=colours[initialization],
+                    )
+            means = rows.groupby("training_size")[metric].mean()
+            axis.plot(
+                means.index, means.values, marker="o", linewidth=2.4,
+                color=colours[initialization], label=INITIALIZATION_LABELS[initialization],
+            )
+        axis.set_xscale("log")
+        axis.set_xticks(LEARNING_CURVE_SIZES, labels=[str(size) for size in LEARNING_CURVE_SIZES])
+        axis.xaxis.set_minor_formatter(NullFormatter())
+        axis.set_xlabel("Labelled training images")
+        axis.set_title(title)
+        axis.grid(alpha=0.2)
+    axes[0].set_ylabel("Validation mean per-image IoU")
+    axes[0].legend(frameon=False)
+    figure.suptitle("WHU data-efficiency across two nested image selections")
+    figure.tight_layout()
+    return figure
+
+
+def plot_whu_learning_curve_histories(history: pd.DataFrame, subset_seed: int):
+    """Plot complete validation IoU and loss trajectories for one WHU selection."""
+    subset = history[history.subset_seed == subset_seed]
+    figure, axes = plt.subplots(2, 3, figsize=(12, 6.5), sharex=True)
+    colours = {"random": "#E76F51", "imagenet": "#2878B5"}
+    for column, size in enumerate(LEARNING_CURVE_SIZES):
+        for initialization in ("random", "imagenet"):
+            rows = subset[
+                (subset.training_size == size)
+                & (subset.initialization == initialization)
+            ].sort_values("step")
+            axes[0, column].plot(
+                rows.step, rows.validation_mean_iou, color=colours[initialization],
+                label=INITIALIZATION_LABELS[initialization],
+            )
+            axes[1, column].plot(
+                rows.step, rows.validation_loss, color=colours[initialization]
+            )
+        for axis in axes[:, column]:
+            axis.axvline(2000, color="#777777", linestyle="--", linewidth=1)
+            axis.grid(alpha=0.2)
+        axes[0, column].set_title(f"{size} training images")
+        axes[1, column].set_xlabel("Optimizer update")
+    axes[0, 0].set_ylabel("Validation mean IoU")
+    axes[1, 0].set_ylabel("Validation loss")
+    axes[0, 0].legend(frameon=False)
+    figure.suptitle(f"WHU validation trajectories: subset seed {subset_seed}")
+    figure.tight_layout()
+    return figure
 
 
 def plot_whu_learning_curves(history: pd.DataFrame):

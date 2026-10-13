@@ -189,17 +189,18 @@ modest Random-specific advantage for spatial selection in these repetitions,
 not a causal footprint-area effect or independent geographic generalization.
 The locked test role was not accessed.
 
-The WHU n=100 initialization comparison now covers three saved uniform training
-subsets (selection seeds 17, 29 and 43). The historical seed-17 pair was reused
-unchanged; four fresh models used the same 4,000-update recipe and all non-subset
-seeds. ImageNet improved selected provider-validation IoU by +0.0983, +0.0744
-and +0.0750 (mean 0.0826, sample SD 0.0136). Best IoU ranged from 0.7045 to
-0.7334 for Random and 0.7795 to 0.8099 for ImageNet. Every endpoint was below
-its selected checkpoint, with the largest decline on seed-43 Random. The four
-new runs required 85.3 optimization minutes and 153.2 total minutes on MPS.
-The repetitions vary image selection while sharing other random seeds and one
-validation role, so they do not provide a confidence interval or independent
-geographic-generalization result. WHU test imagery remained unused.
+The WHU comparison now includes nested n=25/100/500 learning curves for uniform-
+random subset seeds 17 and 29 while preserving the three-repetition n=100 result.
+ImageNet improved best validation IoU in all six size/selection pairs: +0.0657/
++0.0748 at n=25, +0.0983/+0.0744 at n=100 and +0.0980/+0.0793 at n=500. All
+four n=25 endpoints fell below early selected maxima and had the largest matched
+train–validation gaps. All four n=500 late IoU slopes were positive, with best
+steps from 3,500 to 4,000. Positive-reference overlap improved and predicted
+building fraction on empty references declined from n=25 to n=500 in every
+seed/initialization combination. The eight new runs required 164.0 optimization
+minutes and 303.1 total minutes on MPS. Two image selections, fixed remaining
+seeds and one shared validation role do not provide confidence intervals or
+independent geographic-generalization evidence. WHU test imagery remained unused.
 
 The underlying WHU Aerial 0.3 m raster release is prepared for external
 replication. The official archive contains 8,188 paired 512 × 512 RGB images
@@ -211,6 +212,8 @@ but per-tile visible-area overlap and spatial maximin selection cannot be
 independently reconstructed from this prepared release. Three uniform, label-
 free n=100 training subsets were fixed with seeds 17, 29 and 43 and used for
 paired initialization comparisons. Their pairwise overlaps are 5, 2 and 2 IDs.
+Nested n=25 and n=500 extensions were fixed for seeds 17 and 29 without labels;
+the two families overlap by 0, 5 and 49 IDs at n=25, n=100 and n=500.
 The roles contain 419/299/685 empty masks; all 1,403 form the only exact mask-
 duplicate group, while no image or complete pair is byte-duplicated. No WHU
 training belonged to the earlier data-foundation stage, and no RID test image
