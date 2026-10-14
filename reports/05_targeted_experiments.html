@@ -7801,7 +7801,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Targeted-regularization-with-25-labelled-images">Targeted regularization with 25 labelled images<a class="anchor-link" href="#Targeted-regularization-with-25-labelled-images">¶</a></h1><p><strong>Stage 4 targeted experiments.</strong> This report evaluates one-factor changes to the fixed n=25 recipe. Weight decay, colour augmentation and decoder dropout use two saved training-image selections; the Boundary Variant B follow-up adds the third saved selection. Every comparison remains paired to the D4-only reference and uses the same northern validation region. The geographic test region stays locked.</p>
+<h1 id="Targeted-regularization-with-25-labelled-images">Targeted regularization with 25 labelled images<a class="anchor-link" href="#Targeted-regularization-with-25-labelled-images">¶</a></h1><p>The analysis evaluates one-factor changes to the fixed n=25 recipe. Weight decay, colour augmentation and decoder dropout use two saved training-image selections; the Boundary Variant B follow-up adds the third saved selection. Every comparison remains paired to the D4-only reference and uses the same northern validation region. The test region is excluded from these experiments.</p>
 </div>
 </div>
 </div>
@@ -8087,7 +8087,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The four new runs required 77.3 minutes of optimization and 96.6 minutes including evaluation on MPS. Stronger decay does not improve all four pairs. Seed 17 Random rises from 0.781 to 0.784 best IoU, whereas Seed 29 Random falls from 0.783 to 0.778. Both ImageNet pairs have lower selected maxima under <code>1e-2</code>: 0.834 versus 0.837 for Seed 17 and 0.835 versus 0.842 for Seed 29.</p>
+<p>The four runs required 77.3 minutes of optimization and 96.6 minutes including evaluation on MPS. Stronger decay does not improve all four pairs. Seed 17 Random rises from 0.781 to 0.784 best IoU, whereas Seed 29 Random falls from 0.783 to 0.778. Both ImageNet pairs have lower selected maxima under <code>1e-2</code>: 0.834 versus 0.837 for Seed 17 and 0.835 versus 0.842 for Seed 29.</p>
 </div>
 </div>
 </div>
@@ -8621,9 +8621,8 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="7.-Limitations-and-decision">7. Limitations and decision<a class="anchor-link" href="#7.-Limitations-and-decision">¶</a></h2><p>This is a targeted validation experiment with two partially overlapping training subsets and one repeatedly used validation region. All non-subset random seeds are fixed, so it isolates the configured decay change but does not measure full training variance. Adjacent checkpoints are dependent, and two subset selections do not justify confidence intervals, significance claims or geographic generalization claims. The test region was absent from training, checkpoint selection and qualitative analysis.</p>
+<h2 id="7.-Limitations-and-interpretation">7. Limitations and interpretation<a class="anchor-link" href="#7.-Limitations-and-interpretation">¶</a></h2><p>This is a targeted validation experiment with two partially overlapping training subsets and one repeatedly used validation region. All non-subset random seeds are fixed, so it isolates the configured decay change but does not measure full training variance. Adjacent checkpoints are dependent, and two subset selections do not justify confidence intervals, significance claims or geographic generalization claims. The test region was absent from training, checkpoint selection and qualitative analysis.</p>
 <p>The evidence does not support adopting <code>weight_decay=1e-2</code> for the n=25 recipe: the best-IoU effect is negative in three of four pairs, both ImageNet pairs worsen, Seed 29 worsens for both initializations, and the train–validation gap increases everywhere. This does not show that AdamW weight decay is generally ineffective; it shows that this predeclared strength is not robustly beneficial under the tested schedule.</p>
-<p>The next most informative limited experiment is mild brightness/contrast augmentation at n=25, paired against the existing D4-only references across both subset selections and initializations. It directly targets limited appearance diversity rather than increasing parameter shrinkage. Its range and application order should be predeclared before execution. No follow-up experiment is run here.</p>
 </div>
 </div>
 </div>
@@ -8644,7 +8643,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="9.-Mild-brightness-and-contrast:-question-and-method">9. Mild brightness and contrast: question and method<a class="anchor-link" href="#9.-Mild-brightness-and-contrast:-question-and-method">¶</a></h2><p>The second experiment asks whether mild appearance diversity reduces the n=25 generalization gap. Every occurrence of a training image receives two independent factors drawn from <code>Uniform(0.85, 1.15)</code> with a dedicated seed of 1703. Torchvision applies whole-image RGB brightness first and contrast second to float32 values in <code>[0, 1]</code>; its tensor operations clip results to the valid range. D4 remains aligned between image and mask, while colour changes never touch the mask. ImageNet normalization follows all augmentation.</p>
-<p>Random and ImageNet runs within each subset use identical training IDs, batch order, D4 codes and colour-factor sequence. Model, data-order and D4 seeds are unchanged. Validation and selected-checkpoint training evaluation use original-orientation images without random augmentation. The recipe otherwise remains the accepted <code>weight_decay=1e-4</code>, 4,000-update schedule. The implementation follows the documented tensor semantics of <a href="https://docs.pytorch.org/vision/0.23/generated/torchvision.transforms.functional.adjust_brightness.html">torchvision brightness</a> and <a href="https://docs.pytorch.org/vision/0.23/generated/torchvision.transforms.functional.adjust_contrast.html">contrast</a>.</p>
+<p>Random and ImageNet runs within each subset use identical training IDs, batch order, D4 codes and colour-factor sequence. Model, data-order and D4 seeds are unchanged. Validation and selected-checkpoint training evaluation use original-orientation images without random augmentation. The recipe otherwise remains the accepted <code>weight_decay=1e-4</code>, 4,000-update schedule. The transformations follow the documented tensor semantics of <a href="https://docs.pytorch.org/vision/0.23/generated/torchvision.transforms.functional.adjust_brightness.html">torchvision brightness</a> and <a href="https://docs.pytorch.org/vision/0.23/generated/torchvision.transforms.functional.adjust_contrast.html">contrast</a>.</p>
 </div>
 </div>
 </div>
@@ -8702,7 +8701,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="10.-Validation-results-and-paired-effects">10. Validation results and paired effects<a class="anchor-link" href="#10.-Validation-results-and-paired-effects">¶</a></h2><p>The table reports the same selected-checkpoint and endpoint measures as the weight-decay block. The four new runs processed 14,287 examples each, equivalent to 571.48 passages through their 25-image subsets. Their combined optimization time was 91.7 minutes and total time including scheduled evaluation was 113.1 minutes on MPS.</p>
+<h2 id="10.-Validation-results-and-paired-effects">10. Validation results and paired effects<a class="anchor-link" href="#10.-Validation-results-and-paired-effects">¶</a></h2><p>The table reports the same selected-checkpoint and endpoint measures as the weight-decay block. The four runs processed 14,287 examples each, equivalent to 571.48 passages through their 25-image subsets. Their combined optimization time was 91.7 minutes and total time including scheduled evaluation was 113.1 minutes on MPS.</p>
 </div>
 </div>
 </div>
@@ -9189,7 +9188,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="12.-Comparable-training-fit,-limitations-and-decision">12. Comparable training fit, limitations and decision<a class="anchor-link" href="#12.-Comparable-training-fit,-limitations-and-decision">¶</a></h2><p>The next table uses augmentation-off evaluation in model evaluation mode for both training and validation images. The logged training loss during optimization includes random colour transforms and is not directly comparable with deterministic validation loss.</p>
+<h2 id="12.-Comparable-training-fit,-limitations-and-interpretation">12. Comparable training fit, limitations and interpretation<a class="anchor-link" href="#12.-Comparable-training-fit,-limitations-and-interpretation">¶</a></h2><p>The next table uses augmentation-off evaluation in model evaluation mode for both training and validation images. The logged training loss during optimization includes random colour transforms and is not directly comparable with deterministic validation loss.</p>
 </div>
 </div>
 </div>
@@ -9405,7 +9404,7 @@ a.anchor-link {
 <h2 id="14.-Fixed-ImageNet-BatchNorm-statistics:-question-and-method">14. Fixed ImageNet BatchNorm statistics: question and method<a class="anchor-link" href="#14.-Fixed-ImageNet-BatchNorm-statistics:-question-and-method">¶</a></h2><p>The third targeted experiment asks whether preserving the pretrained encoder's BatchNorm statistics improves ImageNet fine-tuning with batches of four and only 25 labelled images. This is a motivated test, not evidence that BatchNorm caused earlier results or explains the colour-augmentation response.</p>
 <p>A BatchNorm layer has non-trainable running mean and variance buffers and, when <code>affine=True</code>, trainable scale (<code>gamma</code>) and shift (<code>beta</code>) parameters. In the reference runs, encoder and decoder BatchNorm layers use batch statistics during training and update their running buffers. In the new variant, only encoder <code>BatchNorm2d</code> layers remain in evaluation mode after every <code>model.train()</code> call. They therefore normalize training activations with their original ImageNet running statistics and do not update <code>running_mean</code>, <code>running_var</code> or <code>num_batches_tracked</code>. Their affine parameters, all other encoder weights and the full decoder remain trainable; decoder BatchNorm continues to update, and Stochastic Depth remains in training mode.</p>
 <p>This changes the normalization used by every training forward pass; it does more than prevent new statistics from being saved. Evaluation mode is separate from gradient control, so the encoder BatchNorm affine parameters still participate in autograd. These semantics follow the <a href="https://docs.pytorch.org/docs/2.8/generated/torch.nn.BatchNorm2d.html">PyTorch 2.8 BatchNorm2d documentation</a> and its explanation of <a href="https://docs.pytorch.org/docs/2.8/notes/autograd.html#evaluation-mode-nn-module-eval">evaluation mode versus autograd</a>.</p>
-<p>Both fresh ImageNet runs retain D4-only augmentation, baseline <code>weight_decay=1e-4</code>, exact training IDs and seeds, 4,000 updates and the fixed learning-rate change. The paired references update all BatchNorm statistics normally. No Random model, colour augmentation or test image is part of this block.</p>
+<p>The two ImageNet models differ from their paired references only in the encoder BatchNorm strategy. Both use the common D4-only reference recipe; no colour augmentation is introduced.</p>
 </div>
 </div>
 </div>
@@ -9429,7 +9428,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="15.-Validation-results-and-paired-effects">15. Validation results and paired effects<a class="anchor-link" href="#15.-Validation-results-and-paired-effects">¶</a></h2><p>The two new runs processed 14,287 examples each, equivalent to 571.48 passages through their 25-image subsets. Together they required 36.7 minutes of optimization and 46.1 minutes including scheduled validation on MPS.</p>
+<h2 id="15.-Validation-results-and-paired-effects">15. Validation results and paired effects<a class="anchor-link" href="#15.-Validation-results-and-paired-effects">¶</a></h2><p>The two runs processed 14,287 examples each, equivalent to 571.48 passages through their 25-image subsets. Together they required 36.7 minutes of optimization and 46.1 minutes including scheduled validation on MPS.</p>
 </div>
 </div>
 </div>
@@ -9778,7 +9777,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="17.-Comparable-training-fit,-limitations-and-decision">17. Comparable training fit, limitations and decision<a class="anchor-link" href="#17.-Comparable-training-fit,-limitations-and-decision">¶</a></h2><p>Training and validation metrics below are recomputed without augmentation in evaluation mode at the selected checkpoint. They therefore support a like-for-like gap comparison.</p>
+<h2 id="17.-Comparable-training-fit,-limitations-and-interpretation">17. Comparable training fit, limitations and interpretation<a class="anchor-link" href="#17.-Comparable-training-fit,-limitations-and-interpretation">¶</a></h2><p>Training and validation metrics below are recomputed without augmentation in evaluation mode at the selected checkpoint. They therefore support a like-for-like gap comparison.</p>
 </div>
 </div>
 </div>
@@ -9906,7 +9905,7 @@ a.anchor-link {
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p>The comparable train–validation IoU gap grows by +0.0206 for Seed 17 and +0.0321 for Seed 29. Fixed ImageNet statistics therefore neither improve validation performance nor reduce the diagnosed separation. One plausible interpretation is that natural-image running statistics are poorly matched to these normalized aerial images and that adaptation is useful; the experiment observes the performance consequence but does not directly identify the causal distribution mismatch.</p>
 <p>This block varies one fine-tuning strategy for pretrained models. The two 25-image subsets share four IDs, all other random seeds are fixed, and both runs use the same repeatedly inspected validation region. The result does not measure full training variance, establish significance or demonstrate geographic generalization. It also does not show that BatchNorm caused the colour-augmentation result. The locked test region remained absent from training, selection and qualitative inspection.</p>
-<p>Fixed encoder BatchNorm statistics should not be adopted. A focused next block could test <code>Dropout2d(p=0.1)</code> at one predeclared decoder location for both initializations and both subset selections, paired against the existing D4-only references. This would target the persistent small-data fit gap without preserving potentially mismatched ImageNet statistics. No dropout experiment is run here.</p>
+<p>The tested fixed-statistics strategy does not improve validation performance under this recipe.</p>
 </div>
 </div>
 </div>
@@ -9927,7 +9926,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="19.-Decoder-channel-dropout:-question-and-method">19. Decoder channel dropout: question and method<a class="anchor-link" href="#19.-Decoder-channel-dropout:-question-and-method">¶</a></h2><p>The fourth targeted experiment asks whether weak decoder regularization reduces the persistent n=25 train–validation separation. The variant applies channel dropout with probability <code>p=0.1</code> to the final decoder feature map, after <code>up5</code> and immediately before the final <code>1 × 1</code> prediction head. During training, an independent Bernoulli decision is drawn for every example and channel and shared across its spatial pixels; retained channels are divided by <code>0.9</code>. During evaluation the operation is the identity, and it has no learned parameters or following BatchNorm layer. This matches the channel-wise behavior described for <a href="https://docs.pytorch.org/docs/2.8/generated/torch.nn.Dropout2d.html"><code>torch.nn.Dropout2d</code></a>, while using an explicit generator to isolate the experiment's random stream.</p>
-<p>All four new runs retain D4-only augmentation, baseline <code>weight_decay=1e-4</code>, exact training IDs, data order, augmentation schedules, model seeds, 4,000 updates and the fixed learning-rate change. Only decoder channel dropout and its dedicated seed <code>1704</code> are added. Its CPU-generated <code>N × C × 1 × 1</code> mask does not advance PyTorch's global random stream and therefore does not alter EfficientNet Stochastic Depth draws. The paired references are the existing regular-BatchNorm D4-only runs for Random and ImageNet initialization under subset seeds 17 and 29. The locked test region is not loaded.</p>
+<p>The only additions to the common reference recipe are decoder channel dropout and its dedicated seed <code>1704</code>. Its CPU-generated <code>N × C × 1 × 1</code> mask leaves the global PyTorch random stream unchanged, preserving the paired EfficientNet Stochastic Depth draws. Comparisons use both initializations on subset seeds 17 and 29.</p>
 </div>
 </div>
 </div>
@@ -10427,7 +10426,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="22.-Comparable-fit,-limitations-and-decision">22. Comparable fit, limitations and decision<a class="anchor-link" href="#22.-Comparable-fit,-limitations-and-decision">¶</a></h2><p>The table below uses metrics recomputed without augmentation and with dropout disabled in evaluation mode at each selected checkpoint. This is the appropriate like-for-like train–validation comparison. The optimization loss logged during training includes active channel dropout and is not directly equivalent to this evaluation-mode loss.</p>
+<h2 id="22.-Comparable-fit,-limitations-and-interpretation">22. Comparable fit, limitations and interpretation<a class="anchor-link" href="#22.-Comparable-fit,-limitations-and-interpretation">¶</a></h2><p>The table below uses metrics recomputed without augmentation and with dropout disabled in evaluation mode at each selected checkpoint. This is the appropriate like-for-like train–validation comparison. The optimization loss logged during training includes active channel dropout and is not directly equivalent to this evaluation-mode loss.</p>
 </div>
 </div>
 </div>
@@ -10580,7 +10579,7 @@ a.anchor-link {
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p>The comparable IoU gap decreases in three pairs but increases for Seed 29 Random. A smaller gap alone is not evidence of better generalization: in Seed 17 it accompanies unchanged or lower best validation IoU, and all dropout runs still fit their 25 training images much better than the shared validation region.</p>
 <p>This experiment varies one regularizer while holding the other recorded random sources fixed. The two training subsets share four IDs, and all comparisons reuse one repeatedly inspected geographic validation region. These four paired runs do not measure full training variance, justify significance claims or establish geographic generalization. No test-role image was used for training, checkpoint selection, analysis or qualitative inspection.</p>
-<p>Decoder channel dropout at <code>p=0.1</code> should not replace the shared D4-only recipe. A boundary-aware objective is a reasonable next <em>distinct</em> question because it targets contour errors rather than general capacity, but it should begin only after fixing the boundary-band definition, validity handling and normalization, and should compare at most two predeclared variants against the unchanged reference. No boundary-loss run is started here.</p>
+<p>Decoder channel dropout at <code>p=0.1</code> does not provide a consistent validation improvement.</p>
 </div>
 </div>
 </div>
@@ -10745,7 +10744,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="25.-Validation-results-and-paired-effects">25. Validation results and paired effects<a class="anchor-link" href="#25.-Validation-results-and-paired-effects">¶</a></h2><p>Every run processes 14,287 examples, equivalent to 571.48 passages through its 25-image subset. The two Seed-43 Variant-B runs required 41.1 minutes of optimization and 50.9 minutes including scheduled validation on MPS. Together with the six Seed-43 reference runs, the eight new runs required 163.2 optimization minutes and 201.9 total minutes. Checkpoints remain selected by highest mean per-image IoU at threshold 0.5; the step-4,000 endpoint is separate.</p>
+<h2 id="25.-Validation-results-and-paired-effects">25. Validation results and paired effects<a class="anchor-link" href="#25.-Validation-results-and-paired-effects">¶</a></h2><p>Every run processes 14,287 examples, equivalent to 571.48 passages through its 25-image subset. The two Seed-43 Variant-B runs required 41.1 minutes of optimization and 50.9 minutes including scheduled validation on MPS.  Checkpoints remain selected by highest mean per-image IoU at threshold 0.5; the step-4,000 endpoint is separate.</p>
 </div>
 </div>
 </div>
@@ -11195,7 +11194,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p>For the new Seed-43 pair, Variant B changes best regional IoU by +0.0037 for Random and −0.0033 for ImageNet. Endpoint changes are −0.0031 and +0.0006, while Boundary IoU rises by +0.0188 and +0.0184. The added repetition therefore supports a contour-overlap benefit but does not support a shared regional-IoU gain.</p>
-<p>Across all three selections, Variant B improves Random best IoU in every pair (+0.0037, +0.0015, +0.0037) and Random Boundary IoU by +0.0153 to +0.0190. ImageNet best-IoU effects remain mixed (−0.0052, +0.0045, −0.0033), and Boundary IoU improves in two of three ImageNet pairs. Variant A remains a two-repetition historical comparison and is inconsistent. Dice broadly follows regional IoU; AP is mixed.</p>
+<p>Across all three selections, Variant B improves Random best IoU in every pair (+0.0037, +0.0015, +0.0037) and Random Boundary IoU by +0.0153 to +0.0190. ImageNet best-IoU effects remain mixed (−0.0052, +0.0045, −0.0033), and Boundary IoU improves in two of three ImageNet pairs. Variant A remains a two-repetition comparison and is inconsistent. Dice broadly follows regional IoU; AP is mixed.</p>
 </div>
 </div>
 </div>
@@ -11486,8 +11485,8 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="28.-Limitations-and-decision">28. Limitations and decision<a class="anchor-link" href="#28.-Limitations-and-decision">¶</a></h2><p>A fixed three-pixel diagnostic cannot determine whether every one-pixel contour disagreement is meaningful. The three Variant-B repetitions reuse the same repeatedly inspected northern validation region and partially overlapping training selections; their n=25 pairwise overlaps are four or six IDs. Other recorded random sources are fixed, so this measures image-selection sensitivity rather than full training randomness. Three repetitions do not support confidence intervals, significance or geographic-generalization claims. The locked test region remained absent from training, checkpoint selection, Boundary-IoU construction and qualitative inspection.</p>
-<p>Variant A remains unsupported. Variant B now shows a consistent small Random best-IoU gain and consistent Random Boundary-IoU gain, but its ImageNet regional effect is mixed and one ImageNet Boundary-IoU effect is negative. It therefore should not replace the common objective automatically. If contour quality becomes a primary requirement, Variant B merits a separately justified confirmatory or final-model comparison; these validation results alone do not establish it as the shared recipe.</p>
+<h2 id="28.-Limitations-and-interpretation">28. Limitations and interpretation<a class="anchor-link" href="#28.-Limitations-and-interpretation">¶</a></h2><p>A fixed three-pixel diagnostic cannot determine whether every one-pixel contour disagreement is meaningful. The three Variant-B repetitions reuse the same repeatedly inspected northern validation region and partially overlapping training selections; their n=25 pairwise overlaps are four or six IDs. Other recorded random sources are fixed, so this measures image-selection sensitivity rather than full training randomness. Three repetitions do not support confidence intervals, significance or geographic-generalization claims. The locked test region remained absent from training, checkpoint selection, Boundary-IoU construction and qualitative inspection.</p>
+<p>Variant A remains unsupported. Variant B shows a consistent small Random best-IoU gain and consistent Random Boundary-IoU gain, but its ImageNet regional effect is mixed and one ImageNet Boundary-IoU effect is negative. The measured contour gains therefore do not establish a consistent improvement in regional segmentation across both initializations.</p>
 </div>
 </div>
 </div>
@@ -11497,7 +11496,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="29.-Overall-conclusion">29. Overall conclusion<a class="anchor-link" href="#29.-Overall-conclusion">¶</a></h2><p>The targeted experiments have not identified a universal replacement for the D4-only, <code>weight_decay=1e-4</code> recipe with ordinary BatchNorm adaptation and no decoder dropout. The third image selection strengthens evidence that image-balanced Variant B can improve contour overlap, especially for Random initialization, but does not make its regional effect initialization-independent. The common reference objective remains the supported default. These are provisional validation findings; no test result has been produced.</p>
+<h2 id="29.-Overall-conclusion">29. Overall conclusion<a class="anchor-link" href="#29.-Overall-conclusion">¶</a></h2><p>The targeted experiments have not identified a universal replacement for the D4-only, <code>weight_decay=1e-4</code> recipe with ordinary BatchNorm adaptation and no decoder dropout. The third image selection strengthens evidence that image-balanced Variant B can improve contour overlap, especially for Random initialization, but does not make its regional effect initialization-independent. The common reference objective remains the supported default. These are exploratory validation findings. The separate held-out evaluation is reported in <a href="08_final_evaluation.ipynb">Notebook 8</a>.</p>
 </div>
 </div>
 </div>

@@ -7801,7 +7801,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="WHU-data-efficiency,-initialization-and-training-budget">WHU data efficiency, initialization and training budget<a class="anchor-link" href="#WHU-data-efficiency,-initialization-and-training-budget">¶</a></h1><h2 id="Summary">Summary<a class="anchor-link" href="#Summary">¶</a></h2><p>This report studies how labelled training-set size, encoder initialization and a bounded change in training budget interact on the WHU Aerial building-footprint task. The main learning curves use nested sets of 25, 100 and 500 images for three predeclared uniform-random selections (seeds 17, 29 and 43). All eighteen main runs share the same 4,000-update recipe and provider validation role.</p>
+<h1 id="WHU-data-efficiency,-initialization-and-training-budget">WHU data efficiency, initialization and training budget<a class="anchor-link" href="#WHU-data-efficiency,-initialization-and-training-budget">¶</a></h1><h2 id="Summary">Summary<a class="anchor-link" href="#Summary">¶</a></h2><p>The study examines how labelled training-set size, encoder initialization and a bounded change in training budget interact on the WHU Aerial building-footprint task. The main learning curves use nested sets of 25, 100 and 500 images for three predeclared uniform-random selections (seeds 17, 29 and 43). All eighteen main runs share the same 4,000-update recipe and provider validation role.</p>
 <p>ImageNet improves the best mean per-image validation intersection over union (IoU) in all nine main paired comparisons. Every n=25 endpoint is below its selected maximum, whereas every n=500 late IoU trend remains positive. Increasing data improves building overlap and reduces false building predictions on empty images in every selection and initialization.</p>
 <p>A separate sensitivity analysis trains six fresh n=500 models for 8,000 updates while preserving every other condition. Random's mean IoU over the final five evaluations improves in all three continuations relative to the matching window ending at update 4,000; ImageNet improves in two and declines in one. ImageNet nevertheless retains a positive paired endpoint advantage for every selection.</p>
 <p>These are validation results from three training-image selections with fixed remaining seeds. Their sample standard deviations describe image-selection variation; they are not confidence intervals, independent test results or geographic-generalization estimates.</p>
@@ -7857,7 +7857,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="2.-Fixed-method-and-nested-subsets">2. Fixed method and nested subsets<a class="anchor-link" href="#2.-Fixed-method-and-nested-subsets">¶</a></h2><p>Every model starts freshly: Random initializes the full network from the fixed model seed, while ImageNet loads only the original verified torchvision encoder weights; both decoders use the same fresh initialization. Training otherwise remains unchanged: ImageNet normalization, joint D4 image/target transformations, ordinary BatchNorm updates, equal-weight binary cross-entropy and soft-Dice loss, AdamW with weight decay 1e-4, batch size 4, learning rate 1e-3 through update 2,000 and 1e-4 through update 4,000. Validation occurs every 100 updates and selects the highest primary IoU.</p>
-<p>The historical n=100 sets could not be reproduced as prefix sets of same-seed random permutations. The predeclared fallback was therefore used. For each seed, n=25 is sampled without replacement from its unchanged n=100 set; n=500 adds 400 images sampled from the remaining provider training pool. Derived seeds are <code>subset_seed × 1000 + 25</code> and <code>subset_seed × 1000 + 500</code>. Deterministically ordered source lists, isolated NumPy generators and no labels, masks, imagery or model results define the selections.</p>
+<p>Nested subsets are constructed around each fixed n=100 selection. For each seed, n=25 is sampled without replacement from its unchanged n=100 set; n=500 adds 400 images sampled from the remaining provider training pool. Derived seeds are <code>subset_seed × 1000 + 25</code> and <code>subset_seed × 1000 + 500</code>. Deterministically ordered source lists, isolated NumPy generators and no labels, masks, imagery or model results define the selections.</p>
 </div>
 </div>
 </div>
@@ -8095,7 +8095,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.-The-existing-n=100-replication-remains-intact">3. The existing n=100 replication remains intact<a class="anchor-link" href="#3.-The-existing-n=100-replication-remains-intact">¶</a></h2><p>The three n=100 selections established that the ImageNet advantage was not unique to one training sample. Their IDs, configurations and completed run artifacts are unchanged. The new work extends the already saved Seed-43 middle point to n=25 and n=500 using the same predeclared nesting method.</p>
+<h2 id="3.-Initialization-effects-at-100-images">3. Initialization effects at 100 images<a class="anchor-link" href="#3.-Initialization-effects-at-100-images">¶</a></h2><p>The three n=100 selections test whether the ImageNet advantage persists when the training-image sample changes. Architecture, optimization and validation data are held fixed within each comparison.</p>
 </div>
 </div>
 </div>
@@ -9858,7 +9858,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The four new Seed-43 n=25 and n=500 runs required <strong>82.1 optimization minutes</strong> and <strong>151.5 total minutes</strong> on MPS, including scheduled validation and selected-checkpoint evaluation. Together with the eight earlier curve-extension runs, the twelve n=25/n=500 runs required 246.1 optimization minutes and 454.6 total minutes. Runtime differences do not alter the fixed update contract.</p>
+<p>The four Seed-43 n=25 and n=500 runs required <strong>82.1 optimization minutes</strong> and <strong>151.5 total minutes</strong> on MPS, including scheduled validation and selected-checkpoint evaluation. Across all three selections, the twelve n=25/n=500 runs required 246.1 optimization minutes and 454.6 total minutes. Runtime differences do not alter the fixed update contract.</p>
 </div>
 </div>
 </div>
@@ -9985,7 +9985,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Qualitative cases remain the symmetric, automatically selected examples from the original seed-17 n=100 pair. Keeping this audit trail avoids choosing new examples after seeing the learning-curve results. Green denotes true positives, orange false positives and blue false negatives.</p>
+<p>The qualitative examples use the seed-17 n=100 pair and symmetric criteria based on both models' validation metrics. Green denotes true positives, orange false positives and blue false negatives. Metric-selected examples illustrate successes and failures; they do not estimate their prevalence.</p>
 </div>
 </div>
 </div>
@@ -10991,10 +10991,9 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="10.-Conclusions-and-remaining-decisions">10. Conclusions and remaining decisions<a class="anchor-link" href="#10.-Conclusions-and-remaining-decisions">¶</a></h2><p>The main 4,000-update learning curves show that ImageNet pretraining improves validation IoU across all three WHU training selections at 25, 100 and 500 images. The smallest sets retain the clearest train–validation separation, while additional data improves positive-building segmentation and false-positive control on empty images.</p>
+<h2 id="10.-Conclusions-and-limitations">10. Conclusions and limitations<a class="anchor-link" href="#10.-Conclusions-and-limitations">¶</a></h2><p>The main 4,000-update learning curves show that ImageNet pretraining improves validation IoU across all three WHU training selections at 25, 100 and 500 images. The smallest sets retain the clearest train–validation separation, while additional data improves positive-building segmentation and false-positive control on empty images.</p>
 <p>The fresh 8,000-update block shows that training budget matters most consistently for Random initialization: all three final-five means improve, and all three late trends remain positive. ImageNet retains a substantial advantage at both budgets, but its continuation is selection-dependent and includes one declining final-five mean and late trend. The evidence therefore supports a persistent pretraining advantage under this recipe and incomplete common convergence; it does not establish an optimal horizon or an initialization-independent performance limit.</p>
-<p>Before any final test evaluation, the project must still freeze which checkpoint range defines each reported model, whether 4,000 or 8,000 updates is the common final budget, which training-set sizes enter the final comparison, how empty-reference metrics accompany the primary mean IoU, and whether RID and WHU are presented as separate validations or one dataset is designated confirmatory. Test thresholds, metric aggregation and reporting tables must be fixed without inspecting either test role.</p>
-<p>Provider-area separation is documented, but the prepared WHU TIFFs do not contain coordinates needed to reconstruct every tile footprint independently. All WHU findings use one provider validation region and fixed non-subset seeds. Neither WHU nor RID test data were evaluated.</p>
+<p>The checkpoint ranges, test populations and metrics for the held-out comparison were fixed before test inference in <a href="../docs/final_evaluation_protocol.md">the evaluation protocol</a>. <a href="08_final_evaluation.ipynb">Notebook 8</a> reports the resulting test performance separately.</p>
 </div>
 </div>
 </div>

@@ -7801,8 +7801,8 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="RID-data-audit-and-geographic-split">RID data audit and geographic split<a class="anchor-link" href="#RID-data-audit-and-geographic-split">¶</a></h1><p><strong>Stage 1 data report, updated for the active evaluation design.</strong> This notebook asks whether RID 1.0 provides a defensible foundation for studying data-efficient binary roof segmentation. We verify the paired raster and label contract, inspect representative development examples, quantify class coverage and exact duplicates, and describe the approved geographic split. No training is started here.</p>
-<p>The active result is <strong>1,210 training</strong>, <strong>289 validation</strong> and <strong>259 locked test</strong> images. A further <strong>122 images</strong> are excluded at geographic boundaries or as exact duplicate copies. These counts are read from the saved split reference below.</p>
+<h1 id="RID-data-and-geographic-separation">RID data and geographic separation<a class="anchor-link" href="#RID-data-and-geographic-separation">¶</a></h1><p>How suitable is RID 1.0 for studying roof segmentation with limited labelled data? The analysis examines image–mask pairing, label semantics, roof-area variation, duplicate samples and geographic separation.</p>
+<p>The geographic split contains <strong>1,210 training</strong>, <strong>289 validation</strong> and <strong>259 test</strong> images; <strong>122 images</strong> are excluded at region boundaries or as exact duplicates. These are split-role counts. The final evaluation uses a smaller primary test population to account for historical development exposure.</p>
 </div>
 </div>
 </div>
@@ -7812,8 +7812,8 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-Data-source-and-audit-method">1. Data source and audit method<a class="anchor-link" href="#1.-Data-source-and-audit-method">¶</a></h2><p>RID is the Roof Information Dataset by Krapf et al. (<a href="https://doi.org/10.14459/2022mp1655470">dataset DOI</a>; <a href="https://mediatum.ub.tum.de/doc/1735413/document.pdf">paper</a>). It contains roof-centred Google Maps aerial images from Wartenberg, Germany. The provider warns that adjacent images overlap. The release README states CC BY-NC terms and a separate Google imagery-use notice; these constraints are summarized in <code>docs/data.md</code>.</p>
-<p>Before this notebook runs, <code>scripts/prepare_data.py</code> compares every required raw file with the provider SHA-256 list and writes two shared records: one manifest for pairing and file identity, and one split file for exact role and subset membership. The notebook reads those records; it does not alter raw data.</p>
+<h2 id="1.-Data-source-and-verification">1. Data source and verification<a class="anchor-link" href="#1.-Data-source-and-verification">¶</a></h2><p>RID is the Roof Information Dataset by Krapf et al. (<a href="https://doi.org/10.14459/2022mp1655470">dataset DOI</a>; <a href="https://mediatum.ub.tum.de/doc/1735413/document.pdf">paper</a>). It contains roof-centred aerial images from Wartenberg, Germany. Adjacent images can overlap. Source and imagery terms are documented in <a href="../docs/data.md">the data guide</a>.</p>
+<p>File identities are checked against the provider's SHA-256 references. The data manifest records image–mask pairing, while the split record specifies geographic roles and exact training subsets. These checks establish byte identity and membership, not annotation accuracy.</p>
 </div>
 </div>
 </div>
@@ -7930,7 +7930,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Verified finding.</strong> All 1,880 GeoTIFFs have the same RGB contract, declare EPSG:4326 and have a paired reviewed segment mask. All codes 0–17 occur. There is no alpha channel, nodata declaration or unknown mask code, so every pixel has an input value and a provider-defined class. This is a file-format validity statement, not proof that every visible roof is annotated perfectly.</p>
+<p>All 1,880 GeoTIFFs have the same RGB contract, declare EPSG:4326 and have a paired reviewed segment mask. All codes 0–17 occur. There is no alpha channel, nodata declaration or unknown mask code, so every pixel has an input value and a provider-defined class. This is a file-format validity statement, not proof that every visible roof is annotated perfectly.</p>
 </div>
 </div>
 </div>
@@ -7940,7 +7940,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-Binary-roof-target-and-label-coverage">2. Binary roof target and label coverage<a class="anchor-link" href="#2.-Binary-roof-target-and-label-coverage">¶</a></h2><p>The release README lists background, sixteen azimuth directions and flat roof but does not make their numeric order sufficiently explicit. The official generation code resolves it: <code>definitions.py</code> assigns azimuth classes to 0–15 and flat roof to 16; <code>mask_generation.py</code> initializes background as <code>len(label_classes)</code>, which is 17. We therefore define the binary target as <strong>roof = mask != 17</strong>. This is a consequential correction to an initially attempted reversed interpretation, made before the references were committed.</p>
+<h2 id="2.-Binary-roof-target-and-label-coverage">2. Binary roof target and label coverage<a class="anchor-link" href="#2.-Binary-roof-target-and-label-coverage">¶</a></h2><p>The release README lists background, sixteen azimuth directions and flat roof but does not make their numeric order sufficiently explicit. The official generation code resolves it: <code>definitions.py</code> assigns azimuth classes to 0–15 and flat roof to 16; <code>mask_generation.py</code> initializes background as <code>len(label_classes)</code>, which is 17. We therefore define the binary target as <strong>roof = mask != 17</strong>.</p>
 </div>
 </div>
 </div>
@@ -8065,7 +8065,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Interpretation.</strong> Training and validation both span small and large roofs, although image count is only a rough proxy for annotation effort because labelled area and geometric complexity vary. The locked test labels are deliberately absent from this development distribution.</p>
+<p>Training and validation both span small and large roofs, although image count is only a rough proxy for annotation effort because labelled area and geometric complexity vary. The locked test labels are deliberately absent from this development distribution.</p>
 </div>
 </div>
 </div>
@@ -8112,7 +8112,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Observed examples.</strong> The masks generally follow the central roof and sometimes include multiple roof planes or nearby connected roof parts. Background dominates low-area examples, while large roofs approach image borders. This motivates spatially consistent transformations later: images and masks must share geometry, image interpolation may be smooth, and categorical masks require nearest-neighbour interpolation. The gallery is a targeted visual audit, not an estimate of annotation error.</p>
+<p>The masks generally follow the central roof and sometimes include multiple roof planes or nearby connected roof parts. Background dominates low-area examples, while large roofs approach image borders. This motivates spatially consistent transformations later: images and masks must share geometry, image interpolation may be smooth, and categorical masks require nearest-neighbour interpolation. The gallery is a targeted visual audit, not an estimate of annotation error.</p>
 </div>
 </div>
 </div>
@@ -8123,7 +8123,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="4.-Duplicate-and-spatial-leakage-audit">4. Duplicate and spatial leakage audit<a class="anchor-link" href="#4.-Duplicate-and-spatial-leakage-audit">¶</a></h2><p>An exact duplicate is a pair with identical provider-verified image bytes (and, here, identical mask bytes). This is stronger than visual similarity. We found 16 duplicate groups and retain at most one member across active model roles.</p>
-<p>The evaluation design holds out one compact southwest test area and retains the provider-D1 northern area for validation. We project every complete 512 × 512 footprint from EPSG:4326 to metric EPSG:25832. A positive intersection larger than 0.01 m² counts as overlap. Test eligibility requires the complete footprint to lie within the approved southwest coordinate window; boundary-straddling images are excluded. No additional distance buffer is applied.</p>
+<p>The evaluation design holds out one compact southwest test area and retains the provider-D1 northern area for validation. We project every complete 512 × 512 footprint from EPSG:4326 to metric EPSG:25832. A positive intersection larger than 0.01 m² counts as overlap. Test eligibility requires the complete footprint to lie within the southwest coordinate window; boundary-straddling images are excluded. No additional distance buffer is applied.</p>
 </div>
 </div>
 </div>
@@ -8245,7 +8245,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The map shows image centres for orientation; role assignment and exclusions use complete footprints. Grey samples remain in the manifest but are excluded from every active experiment. The southwest test boundary was fixed before the restarted Stage 2 runs and is not used for subset selection, checkpoint selection or qualitative examples.</p>
+<p>The map shows image centres; role assignment uses complete footprints. Grey samples are excluded from modelling. The southwest test boundary was fixed before the reported training experiments and was not selected using model performance.</p>
 </div>
 </div>
 </div>
@@ -8386,8 +8386,8 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Verified finding.</strong> The active roles contain 1,210 training, 289 validation, 259 test and 122 excluded images, with zero positive-area footprint intersections across model roles. Distances are directional: each row starts with every footprint in <code>from_role</code> and finds its nearest footprint in <code>to_role</code>. The minimum training-to-validation distance is only about 0.6 m because the design deliberately adds no buffer; validation-to-test is much farther because the two held-out areas lie in the north and southwest.</p>
-<p><strong>Historical limitation.</strong> IDs 146, 1762 and 1782 are active test images but occurred in the discarded old-split training pilot. This did not determine the new geographic boundary, and no old model state is reused. The restarted study must nevertheless not describe the active test set as untouched since the beginning of the project. All imagery still comes from one municipality, so the split tests within-town geographic transfer rather than transfer to another city.</p>
+<p>The active roles contain 1,210 training, 289 validation, 259 test and 122 excluded images, with zero positive-area footprint intersections across model roles. Distances are directional: each row starts with every footprint in <code>from_role</code> and finds its nearest footprint in <code>to_role</code>. The minimum training-to-validation distance is only about 0.6 m because the design deliberately adds no buffer; validation-to-test is much farther because the two held-out areas lie in the north and southwest.</p>
+<p><strong>Historical limitation.</strong> IDs 146, 1762 and 1782 are active test images but occurred in the discarded old-split training pilot. This did not determine the new geographic boundary, and no old model state is reused. The test region therefore has historical development exposure. The final evaluation also excludes two footprint-overlapping neighbours; the full policy is documented in <a href="../docs/final_evaluation_protocol.md">the test protocol</a>. All imagery still comes from one municipality, so the split tests within-town geographic transfer rather than transfer to another city.</p>
 </div>
 </div>
 </div>
@@ -8397,7 +8397,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="5.-Training-subsets-for-the-later-pilot">5. Training subsets for the later pilot<a class="anchor-link" href="#5.-Training-subsets-for-the-later-pilot">¶</a></h2><p>Within the retained training pool, each repetition starts from a seeded image and repeatedly adds the footprint centre farthest from the selected set (maximin sampling). This uses coordinates only—never masks, validation results or test appearance. Subsets of 25, 50, 100, 250 and 500 are nested within each repetition, followed by the complete training pool. Three repetitions provide paired but different spatial selections.</p>
+<h2 id="5.-Nested-training-subsets">5. Nested training subsets<a class="anchor-link" href="#5.-Nested-training-subsets">¶</a></h2><p>Within the training pool, each repetition starts from a seeded image and repeatedly adds the footprint centre farthest from the selected set (maximin sampling). Selection uses coordinates, without masks or model results. Subsets of 25, 50, 100, 250 and 500 are nested within each repetition, followed by the complete training pool. Three repetitions provide different spatial selections for paired initialization comparisons.</p>
 </div>
 </div>
 </div>
@@ -8495,8 +8495,8 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="6.-Conclusion-for-the-training-pilot">6. Conclusion for the training pilot<a class="anchor-link" href="#6.-Conclusion-for-the-training-pilot">¶</a></h2><p><strong>Evidence supports the restarted pilot:</strong> file pairing and checksums are complete, the binary mapping is explicit, useful roof-area variation exists, and the active train, validation and test roles have no positive-area footprint overlap. The one empty validation mask remains useful for testing false positives and requires explicit metric conventions.</p>
-<p>The southwest test region and northern validation region are now fixed. Stage 2 uses only the new Seed 17 training subsets of 25, 100 and 500 images; test images remain outside training, preflight learning, checkpoint selection and qualitative error analysis. The pilot still measures one repetition in one town, and validation annotations are additional to each stated training-label budget.</p>
+<h2 id="6.-Conclusion">6. Conclusion<a class="anchor-link" href="#6.-Conclusion">¶</a></h2><p>RID provides paired RGB images, an explicit binary roof target and substantial roof-area variation. Complete-footprint separation removes positive-area intersections between training, validation and test roles. The empty validation reference makes false-positive behavior observable.</p>
+<p>The split measures within-town geographic transfer, not transfer to another city. Correlated views and variable annotation complexity limit image count as a measure of annotation effort, and validation labels are additional to every stated training-image budget. Historical development exposure is accounted for separately in the final test protocol.</p>
 </div>
 </div>
 </div>

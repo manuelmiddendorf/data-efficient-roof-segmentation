@@ -7801,7 +7801,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Data-efficiency-and-training-image-selection">Data efficiency and training-image selection<a class="anchor-link" href="#Data-efficiency-and-training-image-selection">¶</a></h1><p><strong>Stage 5 scientific report.</strong> This report asks how validation performance changes from 25 to 500 labelled roof images, whether the advantage of ImageNet encoder initialization repeats across three saved selections, and whether spatially distributed n=100 selection outperforms uniform random selection. The southwest test region remains locked; every reported score is validation evidence.</p>
+<h1 id="Data-efficiency-and-training-image-selection">Data efficiency and training-image selection<a class="anchor-link" href="#Data-efficiency-and-training-image-selection">¶</a></h1><p>The analysis asks how validation performance changes from 25 to 500 labelled roof images, whether the advantage of ImageNet encoder initialization repeats across three saved selections, and whether spatially distributed n=100 selection outperforms uniform random selection. Every score in this analysis is a validation result; the test region is excluded.</p>
 </div>
 </div>
 </div>
@@ -8764,7 +8764,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="5.-Training-trajectories-and-late-behavior">5. Training trajectories and late behavior<a class="anchor-link" href="#5.-Training-trajectories-and-late-behavior">¶</a></h2><p>Each figure shows validation IoU, validation loss and the augmented training objective for one saved selection. The dashed line marks the fixed learning-rate reduction after update 2,000. Separate panels preserve individual trajectories rather than hiding selection sensitivity behind an average curve.</p>
+<h2 id="5.-Training-trajectories-and-late-behavior">5. Training trajectories and late behavior<a class="anchor-link" href="#5.-Training-trajectories-and-late-behavior">¶</a></h2><p>Each figure shows validation IoU, validation loss and the augmented training objective for one saved selection. The dashed line marks the fixed learning-rate reduction after update 2,000. Separate panels show the individual trajectories and their variation across image selections.</p>
 </div>
 </div>
 </div>
@@ -9385,8 +9385,8 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="7.-Sensitivity-to-an-8,000-update-training-budget">7. Sensitivity to an 8,000-update training budget<a class="anchor-link" href="#7.-Sensitivity-to-an-8,000-update-training-budget">¶</a></h2><p>The three 500-image Random trajectories were still improving near update 4,000. We therefore ask whether the ImageNet advantage persists when optimization time is doubled. Four models were trained from scratch: Random and ImageNet initialization on saved subset seeds 17 and 29. They retain the fixed recipe through update 4,000 and continue at learning rate <code>1e-4</code> through update 8,000. Seed 43 was not added to keep this block bounded.</p>
-<p>Each new run preserves its best checkpoint through update 4,000 as well as its best checkpoint over all 8,000 updates. The primary comparison uses endpoints and the mean of the final five evaluations under each budget. Maxima are secondary because a longer run has more opportunities to produce one. The historical 4,000-update runs are context; conclusions about extension come from prefixes and continuations of the new runs.</p>
+<h2 id="7.-Sensitivity-to-an-8,000-update-training-budget">7. Sensitivity to an 8,000-update training budget<a class="anchor-link" href="#7.-Sensitivity-to-an-8,000-update-training-budget">¶</a></h2><p>The three 500-image Random trajectories were still improving near update 4,000. We therefore ask whether the ImageNet advantage persists when optimization time is doubled. Four models were trained from scratch: Random and ImageNet initialization on saved subset seeds 17 and 29. They retain the fixed recipe through update 4,000 and continue at learning rate <code>1e-4</code> through update 8,000. The extension covers two subset repetitions.</p>
+<p>Each extended run retains its best checkpoint through update 4,000 as well as its best checkpoint over all 8,000 updates. The primary comparison uses endpoints and the mean of the final five evaluations under each budget. Maxima are secondary because a longer run has more opportunities to produce one. Budget effects are evaluated within each extended trajectory, using its own 4,000-update prefix.</p>
 </div>
 </div>
 </div>
@@ -10344,7 +10344,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p><strong>Figures.</strong> Paired best-IoU comparisons and the observed relationship between footprint properties and validation performance. For Random initialization, maximin is ahead in all three repetitions by +0.0059, +0.0122 and +0.0026 IoU (mean +0.0069; sample SD 0.0049). For ImageNet, effects are mixed at +0.0047, −0.0038 and −0.0010 (mean −0.0001; sample SD 0.0043). Endpoint differences support the same pattern: mean +0.0073 for Random and −0.0004 for ImageNet.</p>
-<p>The six new runs required 122.9 optimization minutes and 150.3 minutes including validation and selected-checkpoint evaluation on MPS. Larger union area and lower footprint overlap coincide with better Random results here, but six strategy-level observations cannot isolate a causal area effect. The methods also change which roofs, backgrounds and visual conditions appear in training.</p>
+<p>The six runs required 122.9 optimization minutes and 150.3 minutes including validation and selected-checkpoint evaluation on MPS. Larger union area and lower footprint overlap coincide with better Random results here, but six strategy-level observations cannot isolate a causal area effect. The methods also change which roofs, backgrounds and visual conditions appear in training.</p>
 </div>
 </div>
 </div>
@@ -10389,7 +10389,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="9.-Limitations-and-conclusion">9. Limitations and conclusion<a class="anchor-link" href="#9.-Limitations-and-conclusion">¶</a></h2><p>The main data-efficiency experiment varies saved training-image selection, not model initialization, order, augmentation or other training randomness. Subsets overlap, and all development runs reuse one validation region that has informed several decisions. Three observed values per condition justify individual points and sample SD, not confidence intervals or significance. The four training-budget runs add only two image selections and are not mixed into the 4,000-update learning-curve averages. No result measures transfer to the locked southwest test region.</p>
+<h2 id="9.-Limitations-and-conclusion">9. Limitations and conclusion<a class="anchor-link" href="#9.-Limitations-and-conclusion">¶</a></h2><p>Each training subset is evaluated with both initializations. Across repetitions, only image selection varies; model, ordering and augmentation seeds are fixed. Subsets overlap, and all development runs reuse one validation region that has informed several decisions. Three observed values per condition justify individual points and sample SD, not confidence intervals or significance. The four training-budget runs add only two image selections and are not mixed into the 4,000-update learning-curve averages. No result measures transfer to the locked southwest test region.</p>
 <p>Within those limits, more labelled images improve validation performance with diminishing gains, and ImageNet initialization leads in every paired 4,000-update learning-curve comparison. The budget extension shows that Random at 500 images was under-optimized at 4,000 updates. At n=100, spatial maximin selection modestly and consistently improves Random initialization over uniform random selection, while ImageNet effects are mixed and average nearly zero. Maximin also increases covered ground area and centre spacing, but this experiment does not identify which spatial or visual property causes the Random-specific difference.</p>
 </div>
 </div>

@@ -1,114 +1,148 @@
 # Data-Efficient Roof Segmentation
 
-*How many labelled images do we need, and how much does pretraining help?*
+*Pretraining, training-image count and optimization budget in aerial segmentation.*
 
-This reproducible study examines binary roof segmentation in aerial imagery when
-annotations are limited. It uses the 1,880-image [Roof Information Dataset
-(RID)](https://mediatum.ub.tum.de/1655470) and compares one EfficientNet-B0 U-Net
-initialized randomly or with an ImageNet-pretrained encoder. Training,
-validation and test regions are geographically separated using full image
-footprints; the compact southwest test region remains locked during development.
+## Abstract
 
-## Current evidence
+This empirical study compares random initialization with an
+ImageNet-pretrained encoder in one EfficientNet-B0 U-Net. Paired experiments
+use 25, 100 and 500 labelled training images on the Roof Information Dataset
+(RID, Wartenberg) and WHU Aerial (Christchurch). ImageNet initialization improves
+validation IoU in every primary paired comparison. Training-budget diagnostics
+show that the size of this advantage depends on optimization time. The frozen
+held-out evaluation is complete: ImageNet leads in 18/18 primary paired test
+comparisons. Results remain specific to the saved regions, architecture and
+training recipe.
 
-RID 1.0 is checksum-verified. The active split contains 1,210 training images, a
-289-image northern validation region and a 259-image southwest test region, with
-no positive-area cross-role footprint overlap. The common recipe trains for
-4,000 updates with AdamW, D4 augmentation, learning rate `1e-3` through update
-2,000 and `1e-4` thereafter.
+## Motivation
 
-The fixed recipe was evaluated on three saved, nested training-image selections
-(seeds 17, 29 and 43), three sizes and both initializations: 18 runs in total.
-Mean best validation IoU across image selections increases from 0.781 to 0.831
-to 0.840 for Random and from 0.833 to 0.866 to 0.878 for ImageNet at 25, 100
-and 500 images. ImageNet leads in every paired comparison; best-IoU differences
-range from +0.032 to +0.059. The observed sample SD across three image
-selections is at most 0.0104. These SDs describe image-selection variation, not
-confidence intervals or all training randomness.
+Pixel-level annotations are expensive. The question is how performance changes
+with the number and selection of labelled images, and how much pretraining helps
+under a limited training budget. Does the ImageNet advantage persist across
+training-image counts, and how much does it depend on optimization time?
+We distinguish faster learning from higher attainable performance and treat
+repeated views as correlated observations.
 
-All three n=25 selections show large train–validation separation and rising late
-validation loss. All three n=500 Random runs improve near the 4,000-update limit,
-so the common budget does not establish equal convergence. Gains from 100 to 500
-images are consistently smaller than gains from 25 to 100.
+## Methods
 
-A bounded n=500 budget extension trained Random and ImageNet models for 8,000
-updates on subset seeds 17 and 29. Random endpoint IoU improved by +0.0121 and
-+0.0079 relative to each new run's 4,000-update prefix; ImageNet changed by
-+0.0004 and −0.0005. The paired endpoint advantage therefore narrowed from
-+0.0400 to +0.0284 and from +0.0322 to +0.0238. Final-five evaluation means
-show the same pattern. Pretraining remains advantageous under both observed
-budgets, while Random was more sensitive to the available optimization time.
-This does not establish convergence or an initialization-independent optimum.
+RID supplies visible roof targets; WHU supplies building-footprint targets.
+The saved RID split contains 1,210 training, 289 validation and 259 test images,
+with no positive-area cross-role footprint overlap. WHU retains its provider's
+4,736/1,036/2,416 roles; its prepared TIFFs omit coordinates, so complete spatial
+separation cannot be independently reconstructed for every tile.
 
-At 100 images, three fixed uniform-random subsets were compared with the three
-spatial-maximin references under the same training recipe. Spatial selection
-covered about 0.258 km² with no material footprint overlap, versus 0.220–0.227
-km² and 12.1–14.5% overlap for random selection. Spatial-minus-random best-IoU
-effects were consistently positive for Random initialization (+0.0059, +0.0122
-and +0.0026; mean +0.0069) but mixed for ImageNet (+0.0047, −0.0038 and
-−0.0010; mean −0.0001). This descriptive comparison does not isolate footprint
-coverage from the changed roofs, backgrounds and image content.
+Each dataset has three saved nested training-image selections (seeds 17, 29,
+43), three sizes and two initializations: 18 primary runs per dataset. RID
+uses spatial maximin selection and WHU uses uniform random selection. Both
+initializations receive the same images and augmentation schedule within a pair
+and a fresh decoder with the same initial state. Model, ordering and augmentation
+seeds remain fixed across subset repetitions.
 
-Targeted n=25 experiments did not identify a universal replacement for the
-common recipe. Stronger weight decay, fixed ImageNet encoder BatchNorm
-statistics and decoder channel dropout were inconsistent or harmful. Mild
-brightness/contrast helped Random but not ImageNet. A boundary-weighted BCE
-experiment compared two normalizations. Image-balanced Variant B was repeated
-on all three image selections: it improves Random best IoU by +0.0015 to +0.0037
-and Random Boundary IoU by +0.0153 to +0.0190, but ImageNet regional-IoU effects
-remain mixed (−0.0052, +0.0045 and −0.0033). Variant B is therefore not adopted
-as the shared objective. All findings are provisional validation results from
-one repeatedly used validation region; no locked-test result has been produced.
+The common recipe uses native 512 × 512 RGB inputs, ImageNet normalization,
+joint D4 augmentation, ordinary BatchNorm adaptation, AdamW, batch size four,
+and equally weighted BCE and soft Dice loss. Training lasts 4,000 updates with
+learning rate 1e-3 through update 2,000 and 1e-4 thereafter. Checkpoints are
+selected on validation mean per-image IoU at threshold 0.5. Separate n=500
+experiments extend the same schedule to 8,000 updates.
 
-The prepared 0.3 m WHU Aerial raster release contains 8,188 paired 512 × 512
-RGB tiles and binary building-footprint masks in provider training, validation
-and test roles. Nested n=25/100/500 learning curves were measured for three saved
-uniform-random training selections. ImageNet improved selected validation IoU
-in all nine pairs, by +0.0657 to +0.0983. Every n=25 model finished below its
-selected maximum, whereas all six n=500 late IoU trends remained positive. The
-100-to-500 gain varied substantially across selections: +0.0065 to +0.0562 for
-Random and +0.0114 to +0.0677 for ImageNet. More data improved both positive-
-building overlap and false-positive control on empty references. These runs vary
-training-image selection while holding the other random seeds fixed and share
-one provider validation role. They are repeated validation evidence rather than
-independent test or geographic-generalization results. The ungeoreferenced
-prepared TIFFs do not permit independent reconstruction of every tile footprint.
-WHU test images were not used.
+## Main validation results
 
-A separate n=500 budget block then trained six fresh models through 8,000
-updates for the same three image selections. From each new run's 4,000-update
-prefix to its 8,000-update endpoint, Random changed by −0.0002, +0.0199 and
-+0.0191 IoU for seeds 17, 29 and 43; ImageNet changed by −0.0042, +0.0260 and
-−0.0021. Final-five means give a steadier view: Random improved by +0.0106 to
-+0.0170 in all three selections, whereas ImageNet changed by +0.0019, +0.0165
-and −0.0069. ImageNet retained a positive paired endpoint advantage of +0.0939,
-+0.0776 and +0.0693. The extension therefore supports greater budget
-sensitivity for Random on average, while showing material selection dependence
-for both initializations. These remain validation results; neither WHU nor RID
-test data were accessed.
+Mean selected IoU ± sample SD across three training-image selections:
+
+| Dataset | Training images | Random | ImageNet |
+| --- | ---: | ---: | ---: |
+| RID | 25 | 0.781 ± 0.001 | 0.833 ± 0.010 |
+| RID | 100 | 0.831 ± 0.001 | 0.866 ± 0.003 |
+| RID | 500 | 0.840 ± 0.001 | 0.878 ± 0.002 |
+| WHU | 25 | 0.636 ± 0.019 | 0.714 ± 0.011 |
+| WHU | 100 | 0.717 ± 0.015 | 0.799 ± 0.017 |
+| WHU | 500 | 0.749 ± 0.011 | 0.837 ± 0.015 |
+
+Sources: [RID summary](reports/data_efficiency_repetition_summary.csv) and
+[WHU summary](reports/whu_learning_curve_summary.csv). SD describes subset
+selection on shared validation geography, not a confidence interval.
+
+Performance increases with data for both initializations; ImageNet leads in all
+nine primary pairs on each dataset. At 25 images, large train–validation gaps
+and degradation after the selected checkpoint indicate overfitting. At 500,
+late improvement motivates the separate training-budget analysis. Longer
+training helps Random on average, but does not remove the observed ImageNet
+advantage under the examined protocols; convergence is not established.
+
+A secondary RID n=100 comparison finds a mean spatial-selection advantage of
+0.0069 IoU for Random and approximately zero for ImageNet. It does not isolate
+geographic coverage from changes in sampled image content. Targeted
+regularization experiments found no consistent shared replacement for the
+reference recipe and remain exploratory validation analyses.
+
+## Held-out test results
+
+Mean per-image IoU ± sample SD across three saved training-image selections:
+
+| Dataset | Training images | Random | ImageNet | Paired advantage |
+| --- | ---: | ---: | ---: | ---: |
+| RID | 25 | 0.753 ± 0.036 | 0.815 ± 0.025 | +0.062 |
+| RID | 100 | 0.803 ± 0.011 | 0.854 ± 0.005 | +0.051 |
+| RID | 500 | 0.818 ± 0.003 | 0.868 ± 0.001 | +0.050 |
+| WHU | 25 | 0.671 ± 0.017 | 0.731 ± 0.007 | +0.060 |
+| WHU | 100 | 0.738 ± 0.003 | 0.805 ± 0.004 | +0.067 |
+| WHU | 500 | 0.770 ± 0.006 | 0.830 ± 0.014 | +0.060 |
+
+ImageNet leads in **18/18** primary paired comparisons. RID uses
+254 primary test images; WHU uses all 2,416 provider test images. SD describes
+subset-selection variability on shared evaluation geography, not a confidence
+interval. Targets, resolution and selection strategy differ between datasets.
+
+Extending the selection budget from 4,000 to 8,000 updates increased mean test
+IoU by +0.0055 (Random) and +0.0052 (ImageNet) on RID, and +0.0114 and +0.0019
+on WHU. These are validation-selected checkpoints within each extended run,
+not fixed-update endpoints.
+
+![Held-out learning curves](reports/figures/08_final_test_learning_curves.png)
+
+[All checkpoint results](reports/final_test_results.csv),
+[paired comparisons](reports/final_test_paired.csv) and
+[full final report](notebooks/08_final_evaluation.ipynb) include secondary
+metrics, empty-reference diagnostics, selection effects and RID history sensitivity.
+Source-image example panels remain local pending redistribution permission.
+
+## Final evaluation and limitations
+
+[The final protocol](docs/final_evaluation_protocol.md) fixes 36 primary
+checkpoint entries and 26 secondary entries for selection and budget comparisons.
+All 62 checkpoint entries were evaluated using saved weights, with no additional
+training or test-driven selection. [Final report](notebooks/08_final_evaluation.ipynb)
+and [execution record](reports/final_test_execution.json) document the completed
+evaluation.
+
+The primary RID test population is fixed at 254 images: three directly used
+historical-pilot IDs and two footprint-overlapping neighbours are excluded from
+the original 259-image region. All 259 remain a declared sensitivity analysis;
+the saved split is unchanged. WHU uses all 2,416 provider test images. This
+history and the differing spatial evidence are documented in the protocol.
+
+Repeated validation use, shared geographic regions, overlapping subsets and
+fixed non-subset seeds limit uncertainty claims. Training-image counts exclude
+validation annotations and external ImageNet pretraining. Targets, ground
+resolution and sampling differ between datasets, so absolute scores are not a
+controlled cross-dataset comparison. The study does not establish a universal
+minimum annotation budget or propose a new segmentation architecture.
 
 ## Reports and reproduction
-
-The executed notebooks form the scientific report:
 
 - [Data and geographic split](notebooks/01_data_exploration.ipynb)
 - [Training pilot](notebooks/02_training_pilot.ipynb)
 - [Optimization](notebooks/03_optimization.ipynb)
-- [Data efficiency across three image selections](notebooks/04_data_efficiency.ipynb)
-- [Targeted experiments](notebooks/05_targeted_experiments.ipynb)
+- [RID data efficiency, image selection and budget](notebooks/04_data_efficiency.ipynb)
+- [Exploratory targeted experiments](notebooks/05_targeted_experiments.ipynb)
 - [WHU external-replication data](notebooks/06_external_replication_data.ipynb)
-- [WHU data efficiency, initialization and training budget](notebooks/07_external_replication_pilot.ipynb)
+- [WHU data efficiency and training budget](notebooks/07_external_replication_pilot.ipynb)
+- [Final held-out evaluation](notebooks/08_final_evaluation.ipynb)
 
-[docs/setup.md](docs/setup.md) gives exact environment, training, analysis and
-notebook commands. [docs/data.md](docs/data.md) records source and label
-interpretation, while [WORK_PLAN.md](WORK_PLAN.md) tracks scope and decisions.
-Run artifacts retain exact configurations, compatibility identities, histories,
-selected checkpoints and summaries. Analysis notebooks read those artifacts and
-do not start training.
+[Setup](docs/setup.md) gives reproduction commands; [data documentation](docs/data.md)
+records source and label interpretation.
 
-Raw datasets are downloaded from their providers and are not bundled here. The
-RID record lists CC BY-NC 4.0 and a separate imagery notice. The WHU page and
-prepared archive state no explicit reuse licence, so permission and underlying
-LINZ imagery terms require review before redistribution. Codex assisted with
-implementation, tests and documentation; scientific choices and computed
-results remain explicit and reviewable.
+Download data from the [RID provider](https://mediatum.ub.tum.de/1655470) and
+[WHU provider](https://gpcv.whu.edu.cn/data/building_dataset.html); raw data,
+weights and environments are not bundled. Dataset and imagery permissions are
+separate from the project code.

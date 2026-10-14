@@ -7801,7 +7801,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Learning-rate,-training-horizon-and-subset-sensitivity-at-100-labelled-images">Learning-rate, training-horizon and subset sensitivity at 100 labelled images<a class="anchor-link" href="#Learning-rate,-training-horizon-and-subset-sensitivity-at-100-labelled-images">¶</a></h1><p><strong>Stage 3 scientific report.</strong> This notebook compares fixed learning rates for random and ImageNet initialization, tests a longer horizon and one predeclared learning-rate drop, and repeats the selected common recipe on a second saved training subset. All results use the same northern validation region and remain exploratory validation evidence; the geographically locked test region remains untouched.</p>
+<h1 id="Learning-rate,-training-horizon-and-subset-sensitivity-at-100-labelled-images">Learning-rate, training-horizon and subset sensitivity at 100 labelled images<a class="anchor-link" href="#Learning-rate,-training-horizon-and-subset-sensitivity-at-100-labelled-images">¶</a></h1><p>The analysis compares fixed learning rates for random and ImageNet initialization, tests a longer horizon and one predeclared learning-rate drop, and repeats the selected common recipe on a second saved training subset. All results use the same northern validation region and remain exploratory validation evidence; these experiments exclude the test region.</p>
 </div>
 </div>
 </div>
@@ -7811,8 +7811,8 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-Research-question-and-fixed-comparison">1. Research question and fixed comparison<a class="anchor-link" href="#1.-Research-question-and-fixed-comparison">¶</a></h2><p>The Stage 2 pilot found validation IoU 0.813 for random initialization and 0.862 for ImageNet initialization at 100 training images and learning rate <code>3e-4</code>. We ask whether either initialization is sensitive to learning rate, whether random initialization benefits from a different rate, and whether the pretraining advantage remains at matched rates.</p>
-<p>The approved candidates are <code>1e-4</code>, <code>3e-4</code> and <code>1e-3</code>. The two <code>3e-4</code> runs are the verified Stage 2 references; the other four models start fresh. All six configurations use the same Seed 17 subset, model seed, data order, D4 augmentation sequence, architecture, normalization, objective, weight decay, BatchNorm policy and 2,000-update horizon. The 259 test images remain excluded from training, selection, threshold analysis and examples.</p>
+<h2 id="1.-Research-question-and-fixed-comparison">1. Research question and fixed comparison<a class="anchor-link" href="#1.-Research-question-and-fixed-comparison">¶</a></h2><p>The initial pilot found validation IoU 0.813 for random initialization and 0.862 for ImageNet initialization at 100 training images and learning rate <code>3e-4</code>. We ask whether either initialization is sensitive to learning rate, whether random initialization benefits from a different rate, and whether the pretraining advantage remains at matched rates.</p>
+<p>The candidate learning rates are <code>1e-4</code>, <code>3e-4</code> and <code>1e-3</code>. The two <code>3e-4</code> runs are the pilot reference runs; the other four models start fresh. All six configurations use the same Seed 17 subset, model seed, data order, D4 augmentation sequence, architecture, normalization, objective, weight decay, BatchNorm policy and 2,000-update horizon. The 259 test images remain excluded from training, selection, threshold analysis and examples.</p>
 </div>
 </div>
 </div>
@@ -7981,7 +7981,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p>At matched learning rates, ImageNet initialization has the higher selected IoU in all three comparisons. Random initialization improves from 0.793 at <code>1e-4</code> to 0.813 at <code>3e-4</code> and 0.817 at <code>1e-3</code>. ImageNet improves from 0.857 to 0.862 and 0.865. The best observed rate is therefore <code>1e-3</code> for both initializations, but this conclusion is selected on the same validation region and the margins over <code>3e-4</code> are small: 0.004 for random and 0.003 for ImageNet.</p>
-<p>The four new runs required 42.2 minutes of optimization and 52.7 minutes including evaluation on MPS, closely matching the 53-minute estimate. All AP values average the same 288 non-empty validation images.</p>
+<p>The four runs required 42.2 minutes of optimization and 52.7 minutes including evaluation on MPS. All AP values average the same 288 non-empty validation images.</p>
 </div>
 </div>
 </div>
@@ -8294,7 +8294,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="7.-Does-extending-training-change-the-learning-rate-conclusion?">7. Does extending training change the learning-rate conclusion?<a class="anchor-link" href="#7.-Does-extending-training-change-the-learning-rate-conclusion?">¶</a></h2><p>Both historical <code>1e-4</code> runs selected the final available checkpoint at 2,000 updates, so their lower scores could reflect insufficient optimization time. We therefore ran exactly four fresh configurations: random and ImageNet initialization at constant learning rates <code>1e-4</code> and <code>1e-3</code>, each for 4,000 updates. Evaluation was fixed at step 0 and every 100 updates. The split, 100-image subset, D4 schedule seeds, architecture, loss, batch size, AdamW parameter groups and threshold remained unchanged.</p>
+<h2 id="7.-Does-extending-training-change-the-learning-rate-conclusion?">7. Does extending training change the learning-rate conclusion?<a class="anchor-link" href="#7.-Does-extending-training-change-the-learning-rate-conclusion?">¶</a></h2><p>Both initial <code>1e-4</code> runs selected the final available checkpoint at 2,000 updates, so their lower scores could reflect insufficient optimization time. We therefore ran exactly four fresh configurations: random and ImageNet initialization at constant learning rates <code>1e-4</code> and <code>1e-3</code>, each for 4,000 updates. Evaluation was fixed at step 0 and every 100 updates. The split, 100-image subset, D4 schedule seeds, architecture, loss, batch size, AdamW parameter groups and threshold remained unchanged.</p>
 <p>The four runs start from the original random or ImageNet state with a fresh decoder; no trained weights or optimizer states are resumed. Their first 2,000 sample IDs and D4 transforms have the same verified schedule hash as the earlier runs. Values through 2,000 and through 4,000 below are two views of each new curve, avoiding a comparison between independently trained trajectories.</p>
 </div>
 </div>
@@ -8682,7 +8682,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="10.-Predeclared-fixed-learning-rate-drop">10. Predeclared fixed learning-rate drop<a class="anchor-link" href="#10.-Predeclared-fixed-learning-rate-drop">¶</a></h2><p>The late behavior motivates one limited schedule test rather than a wider search. Two fresh runs use <code>1e-3</code> for optimizer steps 1–2,000 and <code>1e-4</code> for steps 2,001–4,000, once with random initialization and once with the original ImageNet encoder weights. The decoder is freshly initialized in both cases. Subset, batch order, D4 augmentation, loss, weight decay, validation schedule and all other settings match the constant-<code>1e-3</code> references. The optimizer applies and logs the new rate before step 2,001 for every parameter group; the preflight verified that weight decay is unchanged.</p>
+<h2 id="10.-Predeclared-fixed-learning-rate-drop">10. Predeclared fixed learning-rate drop<a class="anchor-link" href="#10.-Predeclared-fixed-learning-rate-drop">¶</a></h2><p>The late behavior motivates one limited schedule test rather than a wider search. Two fresh runs use <code>1e-3</code> for optimizer steps 1–2,000 and <code>1e-4</code> for steps 2,001–4,000, once with random initialization and once with the original ImageNet encoder weights. The decoder is freshly initialized in both cases. Subset, batch order, D4 augmentation, loss, weight decay, validation schedule and all other settings match the constant-<code>1e-3</code> references. The optimizer applies and logs the new rate before step 2,001 for every parameter group; weight decay remains unchanged.</p>
 </div>
 </div>
 </div>
@@ -9067,7 +9067,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p>The selected recipe reaches similar random-initialization maxima on both subsets: 0.830 for Seed 17 and 0.831 for Seed 29. ImageNet reaches 0.868 and 0.863, respectively. The paired ImageNet-minus-random best-IoU advantage is therefore positive in both repetitions (+0.038 and +0.032), as is the fixed step-4,000 difference (+0.036 and +0.034). Dice and AP give the same ordering.</p>
-<p>All four late trajectories have positive IoU slopes and low residual SD (0.0010–0.0016). Seed 29 ends at IoU 0.827 for random and 0.861 for ImageNet, close to its selected maxima at step 3,600; validation losses at step 4,000 are 0.128 and 0.120. The two new runs each required 25.7 minutes including evaluation.</p>
+<p>All four late trajectories have positive IoU slopes and low residual SD (0.0010–0.0016). Seed 29 ends at IoU 0.827 for random and 0.861 for ImageNet, close to its selected maxima at step 3,600; validation losses at step 4,000 are 0.128 and 0.120. The two runs each required 25.7 minutes including evaluation.</p>
 <p>This repetition supports the claim that the common recipe trains both initializations stably and that ImageNet initialization retains an advantage when the training-image selection changes. It does <strong>not</strong> isolate a benefit from the drop on Seed 29 because no constant-rate Seed-29 control was run. The two subsets overlap by 24 images, share one validation region and keep all non-subset random sources fixed. Two repetitions cannot establish statistical significance or geographic generalization.</p>
 </div>
 </div>
@@ -9078,8 +9078,8 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="12.-Conclusion-and-next-decision">12. Conclusion and next decision<a class="anchor-link" href="#12.-Conclusion-and-next-decision">¶</a></h2><p>The optimization evidence now supports <code>1e-3</code> through step 2,000 followed by <code>1e-4</code> through step 4,000 as the common working recipe at n=100. Its late behavior is stable on two saved training subsets, and the ImageNet advantage repeats with similar magnitude. The result concerns training-subset sensitivity on one validation region; independent performance remains reserved for the locked test region.</p>
-<p>The recommended next limited block is to apply this now-fixed recipe at n=25 and n=500 on the Seed 17 nested subsets for both initializations (four fresh runs). This tests whether the common recipe and pretraining advantage behave similarly at the small and larger label budgets before committing to the full repeated learning-curve series. It is a proposal only; no additional run is started here.</p>
+<h2 id="12.-Conclusion">12. Conclusion<a class="anchor-link" href="#12.-Conclusion">¶</a></h2><p>The optimization results support <code>1e-3</code> through step 2,000 followed by <code>1e-4</code> through step 4,000 as the common working recipe at n=100. Its late behavior is stable on two saved training subsets, and the ImageNet advantage repeats with similar magnitude. The result concerns training-subset sensitivity on one validation region; test performance is evaluated separately in <a href="08_final_evaluation.ipynb">Notebook 8</a>.</p>
+<p>The resulting recipe defines the data-efficiency comparisons in <a href="04_data_efficiency.ipynb">Notebook 4</a>.</p>
 </div>
 </div>
 </div>

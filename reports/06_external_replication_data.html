@@ -7801,8 +7801,8 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="WHU-Aerial-data-for-external-replication">WHU Aerial data for external replication<a class="anchor-link" href="#WHU-Aerial-data-for-external-replication">¶</a></h1><p>This report establishes the data foundation for a future external replication of the RID initialization comparison. It asks whether the official prepared <strong>WHU Aerial 0.3 m raster release</strong> supplies a clear binary target, reproducible provider roles, and enough spatial information for the same sampling design. No model is trained here, and no WHU test image is used for qualitative analysis or example selection.</p>
-<p>The audit distinguishes direct file observations from provider statements. The <a href="https://gpcv.whu.edu.cn/data/building_dataset.html">official dataset page</a> describes Christchurch aerial imagery, the documented tile blocks and the original LINZ source. The associated paper is Ji, Wei and Lu (2019), <a href="https://doi.org/10.1109/TGRS.2018.2858817">doi:10.1109/TGRS.2018.2858817</a>.</p>
+<h1 id="WHU-Aerial-data-for-external-replication">WHU Aerial data for external replication<a class="anchor-link" href="#WHU-Aerial-data-for-external-replication">¶</a></h1><p>Can WHU Aerial support an external replication of the RID initialization comparison? The analysis examines the prepared <strong>0.3 m raster release</strong>, binary target semantics, provider roles, class balance and spatial metadata. Qualitative examples use training and validation images only.</p>
+<p>The <a href="https://gpcv.whu.edu.cn/data/building_dataset.html">official dataset page</a> describes Christchurch aerial imagery and its LINZ source. The associated paper is Ji, Wei and Lu (2019), <a href="https://doi.org/10.1109/TGRS.2018.2858817">doi:10.1109/TGRS.2018.2858817</a>. File observations are distinguished from provider statements.</p>
 </div>
 </div>
 </div>
@@ -7928,7 +7928,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Observed result.</strong> The role directories contain 4,736 training, 1,036 validation and 2,416 test pairs, or 8,188 pairs altogether. This agrees with the arithmetic printed on the provider page, although its surrounding prose states 8,189 tiles. The downloadable files and their role arithmetic are the operational contract; the discrepancy is retained in the manifest rather than concealed.</p>
+<p>The role directories contain 4,736 training, 1,036 validation and 2,416 test pairs, or 8,188 pairs altogether. This agrees with the arithmetic printed on the provider page, although its surrounding prose states 8,189 tiles. The downloadable files and their role arithmetic are the operational contract; the discrepancy is retained in the manifest rather than concealed.</p>
 </div>
 </div>
 </div>
@@ -8096,7 +8096,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Interpretation.</strong> The examples show that the mask geometry follows building footprints rather than RID's roof-segment taxonomy. Empty and very sparse tiles are legitimate background cases, not missing labels. They must remain in training and evaluation, with the empty-target metric convention stated before any pilot.</p>
+<p>The examples show that the mask geometry follows building footprints rather than RID's roof-segment taxonomy. Empty and very sparse tiles are legitimate background cases, not missing labels. They must remain in training and evaluation, with the empty-target metric convention stated before any pilot.</p>
 </div>
 </div>
 </div>
@@ -8410,7 +8410,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Proposed-bounded-pilot">Proposed bounded pilot<a class="anchor-link" href="#Proposed-bounded-pilot">¶</a></h2><p>The split record predeclares one label-independent, uniform sample of 100 IDs from the provider training role using an isolated NumPy generator with seed 17. Validation remains the provider validation region, and the provider test role remains outside subset selection, checkpoint choice and qualitative analysis.</p>
+<h2 id="Sampling-design">Sampling design<a class="anchor-link" href="#Sampling-design">¶</a></h2><p>Uniform random sampling selects 100 training IDs using a NumPy generator with seed 17, without reference to labels or model results. Validation uses the provider validation role. Physical tile coordinates are unavailable, so the spatial-maximin design used for RID cannot be reproduced defensibly on this release.</p>
 </div>
 </div>
 </div>
@@ -8501,9 +8501,8 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The proposed next block is exactly two fresh n=100 runs: Random initialization versus the original ImageNet EfficientNet-B0 encoder, both with a newly initialized decoder and the existing common 4,000-update rule (<code>1e-3</code> through update 2,000, then <code>1e-4</code>). IDs, order seed, augmentation seed and validation must be paired. Before training, the loader and normalization must be adapted explicitly to WHU's RGB TIFF and inverted 0/1 target contract, while the loss and metrics can use all pixels.</p>
-<p>This pilot would test whether the direction of the pretraining advantage recurs in a different city and footprint-label product. It would not prove geographic generalization within WHU, equal annotation effort to RID, or robustness to training-image selection. A second stored uniform subset should be considered only after the first paired result is reviewed.</p>
-<h2 id="Conclusion">Conclusion<a class="anchor-link" href="#Conclusion">¶</a></h2><p>The prepared WHU data are technically suitable for a bounded external-replication pilot: pairing, binary labels, role membership and byte identity are reproducible. The principal unresolved limitation is spatial metadata. Provider roles should be retained, the test role should stay locked, and spatial-maximin selection should not be claimed from this release. No training or RID test evaluation was performed in this stage.</p>
+<h2 id="Conclusion">Conclusion<a class="anchor-link" href="#Conclusion">¶</a></h2><p>The prepared WHU release provides reproducible image–mask pairing, a binary building-footprint target and defined provider roles. Its target semantics, spatial resolution and empty-image frequency differ from RID, so replication concerns the initialization contrast rather than equal annotation effort or directly comparable absolute scores.</p>
+<p>The principal limitation is missing spatial metadata: provider-area separation can be documented, but tile-footprint overlap cannot be independently reconstructed. The provider split is retained and uniform sampling is used. <a href="07_external_replication_pilot.ipynb">Notebook 7</a> reports the paired initialization experiments.</p>
 </div>
 </div>
 </div>

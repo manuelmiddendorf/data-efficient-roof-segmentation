@@ -7801,7 +7801,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Paired-training-pilot-on-a-geographic-roof-split">Paired training pilot on a geographic roof split<a class="anchor-link" href="#Paired-training-pilot-on-a-geographic-roof-split">¶</a></h1><p><strong>Stage 2 scientific report.</strong> This notebook evaluates whether ImageNet encoder initialization changes learning under limited roof labels when architecture, data order, augmentation and update budget are paired. It reads completed run artifacts; no cell starts training.</p>
+<h1 id="Paired-training-pilot-on-a-geographic-roof-split">Paired training pilot on a geographic roof split<a class="anchor-link" href="#Paired-training-pilot-on-a-geographic-roof-split">¶</a></h1><p>The experiment asks whether ImageNet encoder initialization changes learning under limited roof labels when architecture, data order, augmentation and update budget are paired.</p>
 </div>
 </div>
 </div>
@@ -8412,8 +8412,8 @@ Name: images, dtype: int64</pre>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="7.-Limitations-and-next-decision">7. Limitations and next decision<a class="anchor-link" href="#7.-Limitations-and-next-decision">¶</a></h2><p>Under one paired subset repetition, a common learning rate and the same 2,000-update budget, ImageNet initialization performs better than random initialization at all three label budgets. The evidence supports carrying pretraining forward as a strong candidate, while the curve shapes show that the common recipe does not give equal convergence: the smallest pretrained run overfits early and several other runs select late checkpoints.</p>
-<p>The pilot does not measure variation across subset seeds, does not tune either initialization separately and does not evaluate the held-out test region. A limited next block should screen learning rate at n=100 before expanding the study: add 1×10⁻⁴ and 1×10⁻³ for both initializations, paired against the existing 3×10⁻⁴ runs. This requires four new runs, estimated at about 55 minutes on the measured MPS setup. No such run is started here.</p>
+<h2 id="7.-Conclusion-and-limitations">7. Conclusion and limitations<a class="anchor-link" href="#7.-Conclusion-and-limitations">¶</a></h2><p>Under one paired subset repetition, a common learning rate and the same 2,000-update budget, ImageNet initialization performs better than random initialization at all three label budgets. The evidence supports carrying pretraining forward as a strong candidate, while the curve shapes show that the common recipe does not give equal convergence: the smallest pretrained run overfits early and several other runs select late checkpoints.</p>
+<p>The pilot does not measure variation across subset seeds, does not tune either initialization separately and does not evaluate the held-out test region. Learning-rate sensitivity is examined in <a href="03_optimization.ipynb">Notebook 3</a>.</p>
 </div>
 </div>
 </div>

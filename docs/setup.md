@@ -465,3 +465,36 @@ exclusion. Compatible completed runs are reused; incomplete or conflicting
 directories are refused. Analysis compares the 4,000 and 8,000 prefixes within
 the new continuous trajectories and uses the historical 4,000-update runs only
 as a reproducibility diagnostic. Neither provider test role is accessed.
+
+## Final held-out evaluation
+
+The committed [final protocol](final_evaluation_protocol.md) freezes the
+checkpoint matrix and evaluation populations before test inference. Restore the
+original datasets and the 52 saved training runs if reproducing predictions.
+The runner verifies actual test-file bytes, frozen protocol files and checkpoint
+identities before evaluation; it never launches training or downloads weights.
+
+```bash
+caffeinate -i -m .venv/bin/python scripts/run_final_evaluation.py
+.venv/bin/python scripts/analyze_final_evaluation.py
+.venv/bin/python scripts/run_notebook.py notebooks/08_final_evaluation.ipynb
+```
+
+The inference runner requires a clean committed checkout and MPS. Compatible
+completed entries in `runs/final_evaluation/` are reused; an interrupted entry
+without a completion summary is recomputed. Conflicting identities or changed
+completed metrics are rejected. Resume from the same code commit and environment.
+Per-entry directories use the existing three-JSON contract plus `metrics.csv`.
+Small complete results, paired differences, descriptive summaries and the
+execution record are exported to `reports/`. Notebook 08 reads these saved
+reports without datasets, model weights, training or inference.
+
+The quantitative learning-curve figure can be shared with the report. Source-image
+example panels remain in ignored `.local/final_test_figures/` because public
+redistribution permission has not been established for both imagery products.
+The published example-ID table records their fixed selection rule.
+
+## Development assistance
+
+Codex assisted with implementation, analysis, tests and documentation. This
+assistance does not constitute independent scientific peer review.
